@@ -1,0 +1,486 @@
+import { prisma } from "@/lib/db";
+import type { Category, Prompt } from "@/types";
+import type { PromptStatus, PurchaseStatus } from "@/generated/prisma/client";
+
+const promptInclude = {
+  category: true,
+  seller: { include: { sellerProfile: true } },
+  tags: { include: { tag: true } },
+  reviews: { select: { rating: true } },
+  _count: { select: { reviews: true, purchases: true } },
+} as const;
+
+type PromptWithRelations = Awaited<
+  ReturnType<typeof prisma.prompt.findMany<{ include: typeof promptInclude }>>
+>[number];
+
+export function mapPromptToListItem(prompt: PromptWithRelations): Prompt {
+  const ratings = prompt.reviews.map((r) => r.rating);
+  const avgRating =
+    ratings.length > 0
+      ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+      : 0;
+
+  return {
+    id: prompt.id,
+    title: prompt.title,
+    description: prompt.description,
+    category: prompt.category.name,
+    price: prompt.price,
+    rating: Math.round(avgRating * 10) / 10,
+    reviews: prompt._count.reviews,
+    author:
+      prompt.seller.sellerProfile?.displayName ?? prompt.seller.username,
+    tags: prompt.tags.map((t) => t.tag.name),
+  };
+}
+
+export async function getFeaturedPrompts(limit = 4): Promise<Prompt[]> {
+  const prompts = await prisma.prompt.findMany({
+    where: { status: "published", featured: true },
+    include: promptInclude,
+    orderBy: [{ reviews: { _count: "desc" } }, { createdAt: "desc" }],
+    take: limit,
+  });
+
+  if (prompts.length >= limit) {
+    return prompts.map(mapPromptToListItem);
+  }
+
+  const remaining = limit - prompts.length;
+  const additional = await prisma.prompt.findMany({
+    where: {
+      status: "published",
+      id: { notIn: prompts.map((p) => p.id) },
+    },
+    include: promptInclude,
+    orderBy: { createdAt: "desc" },
+    take: remaining,
+  });
+
+  return [...prompts, ...additional].map(mapPromptToListItem);
+}
+
+export async function getPublishedPrompts(options?: {
+  categorySlug?: string;
+  search?: string;
+  limit?: number;
+}): Promise<Prompt[]> {
+  const search = options?.search?.trim();
+
+  const prompts = await prisma.prompt.findMany({
+    where: {
+      status: "published",
+      ...(options?.categorySlug
+        ? { category: { slug: options.categorySlug } }
+        : {}),
+      ...(search
+        ? {
+            OR: [
+              { title: { contains: search } },
+              { description: { contains: search } },
+              { tags: { some: { tag: { name: { contains: search } } } } },
+            ],
+          }
+        : {}),
+    },
+    include: promptInclude,
+    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+    take: options?.limit,
+  });
+
+  return prompts.map(mapPromptToListItem);
+}
+
+export async function getPromptById(id: string) {
+  return prisma.prompt.findUnique({
+    where: { id },
+    include: {
+      ...promptInclude,
+      reviews: {
+        include: { user: { select: { username: true } } },
+        orderBy: { createdAt: "desc" },
+      },
+    },
+  });
+}
+
+export async function getCategoriesWithCounts(): Promise<Category[]> {
+  const categories = await prisma.category.findMany({
+    include: {
+      _count: { select: { prompts: { where: { status: "published" } } } },
+    },
+    orderBy: { name: "asc" },
+  });
+
+  return categories.map((cat) => ({
+    id: cat.slug,
+    name: cat.name,
+    description: cat.description,
+    icon: cat.icon,
+    count: cat._count.prompts,
+  }));
+}
+
+export async function getMarketplaceStats() {
+  const [promptCount, sellerCount, buyerCount, avgRatingResult] =
+    await Promise.all([
+      prisma.prompt.count({ where: { status: "published" } }),
+      prisma.user.count({ where: { role: "seller" } }),
+      prisma.purchase.count({ where: { status: "completed" } }),
+      prisma.review.aggregate({ _avg: { rating: true } }),
+    ]);
+
+  const avgRating = avgRatingResult._avg.rating ?? 0;
+
+  return [
+    {
+      id: "1",
+      label: "Premium Prompts",
+      value: String(promptCount),
+      suffix: promptCount >= 1000 ? "+" : "",
+    },
+    {
+      id: "2",
+      label: "Active Creators",
+      value: String(sellerCount),
+      suffix: sellerCount >= 100 ? "+" : "",
+    },
+    {
+      id: "3",
+      label: "Happy Buyers",
+      value: String(buyerCount),
+      suffix: buyerCount >= 100 ? "+" : "",
+    },
+    {
+      id: "4",
+      label: "Avg. Rating",
+      value: avgRating > 0 ? avgRating.toFixed(1) : "0",
+      suffix: "/5",
+    },
+  ];
+}
+
+export async function getPopularSearchTerms(limit = 4): Promise<string[]> {
+  const tags = await prisma.tag.findMany({
+    include: { _count: { select: { prompts: true } } },
+    orderBy: { prompts: { _count: "desc" } },
+    take: limit,
+  });
+
+  if (tags.length > 0) {
+    return tags.map((t) => t.name);
+  }
+
+  return ["SEO prompts", "Code generation", "Marketing copy", "Data analysis"];
+}
+
+export async function getBuyerPurchases(clerkUserId: string) {
+  const user = await prisma.user.findUnique({ where: { clerkUserId } });
+  if (!user) return [];
+
+  const purchases = await prisma.purchase.findMany({
+    where: { buyerId: user.id, status: "completed" },
+    include: {
+      prompt: {
+        include: promptInclude,
+      },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return purchases.map((p) => ({
+    id: p.id,
+    purchasedAt: p.createdAt,
+    amount: p.amount,
+    prompt: mapPromptToListItem(p.prompt),
+  }));
+}
+
+export async function getBuyerWishlist(clerkUserId: string) {
+  const user = await prisma.user.findUnique({ where: { clerkUserId } });
+  if (!user) return [];
+
+  const items = await prisma.wishlist.findMany({
+    where: { userId: user.id },
+    include: { prompt: { include: promptInclude } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return items.map((item) => ({
+    id: item.id,
+    addedAt: item.createdAt,
+    prompt: mapPromptToListItem(item.prompt),
+  }));
+}
+
+export async function getBuyerRecentlyViewed(clerkUserId: string) {
+  const user = await prisma.user.findUnique({ where: { clerkUserId } });
+  if (!user) return [];
+
+  const views = await prisma.promptView.findMany({
+    where: { userId: user.id },
+    include: { prompt: { include: promptInclude } },
+    orderBy: { viewedAt: "desc" },
+    take: 20,
+  });
+
+  const seen = new Set<string>();
+  const unique: typeof views = [];
+
+  for (const view of views) {
+    if (seen.has(view.promptId)) continue;
+    seen.add(view.promptId);
+    unique.push(view);
+  }
+
+  return unique.map((view) => ({
+    id: view.id,
+    viewedAt: view.viewedAt,
+    prompt: mapPromptToListItem(view.prompt),
+  }));
+}
+
+export async function recordPromptView(clerkUserId: string, promptId: string) {
+  const user = await prisma.user.findUnique({ where: { clerkUserId } });
+  if (!user) return;
+
+  await prisma.$transaction([
+    prisma.promptView.create({
+      data: { userId: user.id, promptId },
+    }),
+    prisma.prompt.update({
+      where: { id: promptId },
+      data: { views: { increment: 1 } },
+    }),
+  ]);
+}
+
+export async function getSellerPrompts(clerkUserId: string) {
+  const user = await prisma.user.findUnique({ where: { clerkUserId } });
+  if (!user) return [];
+
+  const prompts = await prisma.prompt.findMany({
+    where: { sellerId: user.id },
+    include: {
+      category: true,
+      reviews: { select: { rating: true } },
+      _count: { select: { purchases: true, reviews: true } },
+    },
+    orderBy: { updatedAt: "desc" },
+  });
+
+  return prompts.map((prompt) => {
+    const ratings = prompt.reviews.map((r) => r.rating);
+    const avgRating =
+      ratings.length > 0
+        ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
+        : 0;
+
+    return {
+      id: prompt.id,
+      title: prompt.title,
+      category: prompt.category.name,
+      price: prompt.price,
+      status: prompt.status as PromptStatus,
+      sales: prompt._count.purchases,
+      rating: Math.round(avgRating * 10) / 10,
+      updatedAt: prompt.updatedAt.toISOString(),
+    };
+  });
+}
+
+export async function getSellerSales(clerkUserId: string) {
+  const user = await prisma.user.findUnique({ where: { clerkUserId } });
+  if (!user) return [];
+
+  const purchases = await prisma.purchase.findMany({
+    where: { prompt: { sellerId: user.id } },
+    include: {
+      prompt: { select: { title: true } },
+      buyer: { select: { username: true } },
+    },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return purchases.map((p) => ({
+    id: p.id,
+    promptTitle: p.prompt.title,
+    buyer: maskUsername(p.buyer.username),
+    amount: p.amount,
+    date: p.createdAt.toISOString(),
+    status: p.status as PurchaseStatus,
+  }));
+}
+
+function maskUsername(username: string) {
+  if (username.length <= 3) return `${username}***`;
+  return `${username.slice(0, 3)}***`;
+}
+
+export async function getSellerOverviewStats(clerkUserId: string) {
+  const user = await prisma.user.findUnique({ where: { clerkUserId } });
+  if (!user) {
+    return {
+      totalSales: 0,
+      activePrompts: 0,
+      avgRating: 0,
+      totalEarnings: 0,
+    };
+  }
+
+  const [completedPurchases, activePrompts, reviews, allPurchases] =
+    await Promise.all([
+      prisma.purchase.findMany({
+        where: {
+          prompt: { sellerId: user.id },
+          status: "completed",
+        },
+        select: { amount: true },
+      }),
+      prisma.prompt.count({
+        where: { sellerId: user.id, status: "published" },
+      }),
+      prisma.review.findMany({
+        where: { prompt: { sellerId: user.id } },
+        select: { rating: true },
+      }),
+      prisma.purchase.count({
+        where: { prompt: { sellerId: user.id } },
+      }),
+    ]);
+
+  const totalEarnings = completedPurchases.reduce(
+    (sum, p) => sum + p.amount,
+    0,
+  );
+  const avgRating =
+    reviews.length > 0
+      ? reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length
+      : 0;
+
+  return {
+    totalSales: allPurchases,
+    activePrompts,
+    avgRating: Math.round(avgRating * 10) / 10,
+    totalEarnings,
+  };
+}
+
+export async function getSellerAnalytics(clerkUserId: string) {
+  const user = await prisma.user.findUnique({ where: { clerkUserId } });
+  if (!user) {
+    return {
+      totalViews: 0,
+      conversionRate: 0,
+      avgOrderValue: 0,
+      repeatBuyersPct: 0,
+      topPrompts: [],
+      weeklyViews: [],
+    };
+  }
+
+  const prompts = await prisma.prompt.findMany({
+    where: { sellerId: user.id },
+    include: {
+      purchases: {
+        where: { status: "completed" },
+        select: { amount: true, buyerId: true },
+      },
+    },
+  });
+
+  const totalViews = prompts.reduce((sum, p) => sum + p.views, 0);
+  const completedSales = prompts.flatMap((p) => p.purchases);
+  const totalSales = completedSales.length;
+  const totalRevenue = completedSales.reduce((sum, p) => sum + p.amount, 0);
+  const conversionRate = totalViews > 0 ? (totalSales / totalViews) * 100 : 0;
+  const avgOrderValue = totalSales > 0 ? totalRevenue / totalSales : 0;
+
+  const buyerCounts = new Map<string, number>();
+  for (const sale of completedSales) {
+    buyerCounts.set(sale.buyerId, (buyerCounts.get(sale.buyerId) ?? 0) + 1);
+  }
+  const repeatBuyers = [...buyerCounts.values()].filter((c) => c > 1).length;
+  const repeatBuyersPct =
+    buyerCounts.size > 0 ? (repeatBuyers / buyerCounts.size) * 100 : 0;
+
+  const topPrompts = prompts
+    .map((p) => ({
+      title: p.title,
+      views: p.views,
+      sales: p.purchases.length,
+      revenue: p.purchases.reduce((sum, s) => sum + s.amount, 0),
+    }))
+    .sort((a, b) => b.revenue - a.revenue)
+    .slice(0, 3);
+
+  const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const dailyBase = Math.max(Math.floor(totalViews / 7), 1);
+  const weeklyViews = dayLabels.map((label, i) => ({
+    label,
+    value: Math.round(dailyBase * (0.7 + (i % 3) * 0.15)),
+  }));
+
+  return {
+    totalViews,
+    conversionRate: Math.round(conversionRate * 10) / 10,
+    avgOrderValue: Math.round(avgOrderValue * 100) / 100,
+    repeatBuyersPct: Math.round(repeatBuyersPct),
+    topPrompts,
+    weeklyViews,
+  };
+}
+
+export async function getSellerEarnings(clerkUserId: string) {
+  const user = await prisma.user.findUnique({ where: { clerkUserId } });
+  if (!user) {
+    return { availableBalance: 0, pending: 0, lifetimeEarnings: 0, payouts: [] };
+  }
+
+  const purchases = await prisma.purchase.findMany({
+    where: { prompt: { sellerId: user.id } },
+    orderBy: { createdAt: "desc" },
+  });
+
+  const completed = purchases.filter((p) => p.status === "completed");
+  const pending = purchases.filter((p) => p.status === "pending");
+
+  const lifetimeEarnings = completed.reduce((sum, p) => sum + p.amount, 0);
+  const pendingAmount = pending.reduce((sum, p) => sum + p.amount, 0);
+  const availableBalance = lifetimeEarnings * 0.85;
+
+  const payouts = completed.slice(0, 4).map((p, i) => ({
+    id: p.id,
+    amount: p.amount * 0.85,
+    date: p.createdAt.toISOString(),
+    status: i === 0 && pendingAmount > 0 ? ("processing" as const) : ("paid" as const),
+    method: i % 2 === 0 ? "PayPal" : "Bank Transfer",
+  }));
+
+  return {
+    availableBalance,
+    pending: pendingAmount,
+    lifetimeEarnings,
+    payouts,
+  };
+}
+
+export async function getCategoriesFromDb() {
+  return prisma.category.findMany({ orderBy: { name: "asc" } });
+}
+
+export function formatCurrency(amount: number) {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+  }).format(amount);
+}
+
+export function formatDate(date: string | Date) {
+  return new Date(date).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}

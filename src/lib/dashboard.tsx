@@ -1,0 +1,36 @@
+import { currentUser } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { getCurrentUserRole } from "@/lib/user";
+import type { DashboardSection } from "@/types/dashboard";
+import type { UserRole } from "@/types/user";
+
+export async function createDashboardLayout(
+  section: DashboardSection,
+  allowedRoles: UserRole[],
+  children: React.ReactNode,
+) {
+  const user = await currentUser();
+
+  if (!user) {
+    redirect("/sign-in");
+  }
+
+  const role = await getCurrentUserRole();
+
+  if (!allowedRoles.includes(role)) {
+    redirect(role === "admin" ? "/admin" : role === "seller" ? "/seller" : "/buyer");
+  }
+
+  const userName =
+    user.fullName ||
+    user.username ||
+    user.primaryEmailAddress?.emailAddress ||
+    "User";
+
+  return (
+    <DashboardShell section={section} userName={userName}>
+      {children}
+    </DashboardShell>
+  );
+}

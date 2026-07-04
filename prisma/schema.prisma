@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum UserRole {
+  buyer
+  seller
+  admin
+}
+
+enum PromptStatus {
+  draft
+  review
+  published
+}
+
+enum PurchaseStatus {
+  pending
+  completed
+  refunded
+}
+
+model User {
+  id          String   @id @default(cuid())
+  clerkUserId String   @unique
+  username    String
+  email       String
+  role        UserRole @default(buyer)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  sellerProfile SellerProfile?
+  prompts       Prompt[]       @relation("SellerPrompts")
+  purchases     Purchase[]     @relation("BuyerPurchases")
+  reviews       Review[]
+  wishlist      Wishlist[]
+  promptViews   PromptView[]
+}
+
+model SellerProfile {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName String
+  bio         String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Category {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String
+  icon        String
+  prompts     Prompt[]
+  createdAt   DateTime @default(now())
+}
+
+model Tag {
+  id      String      @id @default(cuid())
+  name    String      @unique
+  prompts PromptTag[]
+}
+
+model Prompt {
+  id          String       @id @default(cuid())
+  title       String
+  description String
+  content     String
+  price       Float
+  status      PromptStatus @default(draft)
+  featured    Boolean      @default(false)
+  views       Int          @default(0)
+  sellerId    String
+  seller      User         @relation("SellerPrompts", fields: [sellerId], references: [id], onDelete: Cascade)
+  categoryId  String
+  category    Category     @relation(fields: [categoryId], references: [id])
+  tags        PromptTag[]
+  purchases   Purchase[]
+  reviews     Review[]
+  wishlist    Wishlist[]
+  promptViews PromptView[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model PromptTag {
+  promptId String
+  tagId    String
+  prompt   Prompt @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  tag      Tag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([promptId, tagId])
+}
+
+model Purchase {
+  id        String         @id @default(cuid())
+  promptId  String
+  prompt    Prompt         @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  buyerId   String
+  buyer     User           @relation("BuyerPurchases", fields: [buyerId], references: [id], onDelete: Cascade)
+  amount    Float
+  status    PurchaseStatus @default(completed)
+  createdAt DateTime       @default(now())
+}
+
+model Review {
+  id        String   @id @default(cuid())
+  promptId  String
+  prompt    Prompt   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  rating    Int
+  comment   String?
+  createdAt DateTime @default(now())
+
+  @@unique([promptId, userId])
+}
+
+model Wishlist {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promptId  String
+  prompt    Prompt   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, promptId])
+}
+
+model PromptView {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  promptId String
+  prompt   Prompt   @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  viewedAt DateTime @default(now())
+
+  @@index([userId, viewedAt])
+}
