@@ -66,10 +66,10 @@ export function PurchaseButton({
 
   const label = isPending
     ? price <= 0
-      ? "Claiming…"
+      ? "Getting pack…"
       : "Starting checkout…"
     : price <= 0
-      ? "Get Free"
+      ? "Get Free Pack"
       : "Purchase Prompt";
 
   return (

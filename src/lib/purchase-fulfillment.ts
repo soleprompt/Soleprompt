@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import {
   sendPurchaseReceipt,
   sendSellerSaleNotification,
+  sendWelcomeEmail,
 } from "@/lib/email";
 import { getAppUrl } from "@/lib/stripe";
 
@@ -383,6 +384,21 @@ export async function completePurchase(
       });
     } catch (error) {
       console.error("[email] Failed to send purchase receipt:", error);
+    }
+
+    if (isFreePurchase(amount)) {
+      const buyerName = buyer.username ?? "there";
+
+      try {
+        await sendWelcomeEmail({
+          to: buyer.email,
+          buyerName,
+          exploreUrl: `${appUrl}/explore`,
+          purchasesUrl: `${appUrl}/buyer`,
+        });
+      } catch (error) {
+        console.error("[email] Failed to send welcome email:", error);
+      }
     }
 
     const sellerName =
