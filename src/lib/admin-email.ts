@@ -2,19 +2,29 @@
  * Edge-safe admin email helpers (no Prisma/Node-only imports).
  * ADMIN_EMAIL must be set in Vercel project env for production admin access.
  */
+export function normalizeEmail(
+  email: string | null | undefined,
+): string | undefined {
+  if (!email) return undefined;
+
+  const normalized = email.trim().toLowerCase();
+  return normalized || undefined;
+}
+
 export function getAdminEmail(): string | undefined {
   const raw = process.env.ADMIN_EMAIL;
   if (!raw) return undefined;
 
   const email = raw.trim().replace(/^["']|["']$/g, "");
-  return email || undefined;
+  return normalizeEmail(email);
 }
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   const adminEmail = getAdminEmail();
-  if (!adminEmail || !email) return false;
+  const normalized = normalizeEmail(email);
+  if (!adminEmail || !normalized) return false;
 
-  return email.trim().toLowerCase() === adminEmail.trim().toLowerCase();
+  return normalized === adminEmail;
 }
 
 export function isAnyAdminEmail(

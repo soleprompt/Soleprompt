@@ -1,18 +1,22 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { prisma } from "@/lib/db";
+import { createAuditLog } from "@/lib/audit";
 import { requireAdmin } from "@/lib/admin";
+import { prisma } from "@/lib/db";
+import { syncCurrentUser } from "@/lib/user";
 import type { PromptStatus } from "@/generated/prisma/client";
 
 async function updatePromptReviewStatus(
   promptId: string,
   status: Extract<PromptStatus, "published" | "rejected">,
 ) {
+  const admin = await syncCurrentUser();
   await requireAdmin();
 
   const prompt = await prisma.prompt.findFirst({
     where: { id: promptId, status: "review" },
+    select: { id: true, title: true },
   });
 
   if (!prompt) return;
@@ -22,6 +26,15 @@ async function updatePromptReviewStatus(
     data: { status },
   });
 
+  await createAuditLog({
+    action: status === "published" ? "prompt.approved" : "prompt.rejected",
+    actorId: admin?.id ?? null,
+    entityType: "prompt",
+    entityId: promptId,
+    metadata: { title: prompt.title, status },
+  });
+
+  revalidatePath("/admin");
   revalidatePath("/admin/prompts");
   revalidatePath("/seller/prompts");
   revalidatePath("/explore");

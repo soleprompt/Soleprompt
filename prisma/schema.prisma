@@ -26,6 +26,13 @@ enum PurchaseStatus {
   refunded
 }
 
+enum TransactionStatus {
+  pending
+  completed
+  failed
+  refunded
+}
+
 model User {
   id          String   @id @default(cuid())
   clerkUserId String   @unique
@@ -35,22 +42,27 @@ model User {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  sellerProfile SellerProfile?
-  prompts       Prompt[]       @relation("SellerPrompts")
-  purchases     Purchase[]     @relation("BuyerPurchases")
-  reviews       Review[]
-  wishlist      Wishlist[]
-  promptViews   PromptView[]
+  sellerProfile       SellerProfile?
+  prompts             Prompt[]       @relation("SellerPrompts")
+  purchases           Purchase[]     @relation("BuyerPurchases")
+  buyerTransactions   Transaction[]  @relation("BuyerTransactions")
+  sellerTransactions  Transaction[]  @relation("SellerTransactions")
+  auditLogs           AuditLog[]
+  reviews             Review[]
+  wishlist            Wishlist[]
+  promptViews         PromptView[]
 }
 
 model SellerProfile {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  displayName String
-  bio         String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName   String
+  bio           String?
+  salesCount    Int      @default(0)
+  totalEarnings Float    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 }
 
 model Category {
@@ -86,12 +98,13 @@ model Prompt {
   categoryId  String
   category    Category     @relation(fields: [categoryId], references: [id])
   tags        PromptTag[]
-  purchases   Purchase[]
-  reviews     Review[]
-  wishlist    Wishlist[]
-  promptViews PromptView[]
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  purchases    Purchase[]
+  transactions Transaction[]
+  reviews      Review[]
+  wishlist     Wishlist[]
+  promptViews  PromptView[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 }
 
 model PromptTag {
@@ -104,14 +117,49 @@ model PromptTag {
 }
 
 model Purchase {
-  id        String         @id @default(cuid())
-  promptId  String
-  prompt    Prompt         @relation(fields: [promptId], references: [id], onDelete: Cascade)
-  buyerId   String
-  buyer     User           @relation("BuyerPurchases", fields: [buyerId], references: [id], onDelete: Cascade)
-  amount    Float
-  status    PurchaseStatus @default(completed)
-  createdAt DateTime       @default(now())
+  id          String         @id @default(cuid())
+  promptId    String
+  prompt      Prompt         @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  buyerId     String
+  buyer       User           @relation("BuyerPurchases", fields: [buyerId], references: [id], onDelete: Cascade)
+  amount      Float
+  status      PurchaseStatus @default(completed)
+  transaction Transaction?
+  createdAt   DateTime       @default(now())
+}
+
+model Transaction {
+  id              String            @id @default(cuid())
+  purchaseId      String            @unique
+  purchase        Purchase          @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  stripeSessionId String?           @unique
+  amount          Float
+  status          TransactionStatus @default(completed)
+  buyerId         String
+  buyer           User              @relation("BuyerTransactions", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId        String
+  seller          User              @relation("SellerTransactions", fields: [sellerId], references: [id], onDelete: Cascade)
+  promptId        String
+  prompt          Prompt            @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  createdAt       DateTime          @default(now())
+
+  @@index([sellerId, createdAt])
+  @@index([buyerId, createdAt])
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  action     String
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  entityType String
+  entityId   String
+  metadata   Json?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([action])
+  @@index([createdAt])
 }
 
 model Review {

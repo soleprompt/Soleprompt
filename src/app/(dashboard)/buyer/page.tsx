@@ -15,7 +15,7 @@ export default async function BuyerPurchasedPage() {
   return (
     <>
       <PageHeader
-        title="Purchased Prompts"
+        title="My Purchases"
         description="Access all the premium prompts you've purchased."
       />
       {role === "buyer" && (

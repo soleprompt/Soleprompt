@@ -1,7 +1,7 @@
 import type { DashboardNavItem, UserRole } from "@/types/user";
 
 export const BUYER_NAV: DashboardNavItem[] = [
-  { label: "Purchased Prompts", href: "/buyer", icon: "ShoppingBag" },
+  { label: "My Purchases", href: "/buyer", icon: "ShoppingBag" },
   { label: "Wishlist", href: "/buyer/wishlist", icon: "Heart" },
   { label: "Recently Viewed", href: "/buyer/recent", icon: "Clock" },
   { label: "Settings", href: "/buyer/settings", icon: "Settings" },
@@ -22,8 +22,9 @@ export const ADMIN_NAV: DashboardNavItem[] = [
   { label: "Overview", href: "/admin", icon: "LayoutDashboard" },
   { label: "Users", href: "/admin/users", icon: "Users" },
   { label: "Prompts", href: "/admin/prompts", icon: "FileText" },
-  { label: "Reports", href: "/admin/reports", icon: "Flag" },
+  { label: "Purchases", href: "/admin/purchases", icon: "ShoppingBag" },
   { label: "Sales", href: "/admin/sales", icon: "TrendingUp" },
+  { label: "Reports", href: "/admin/reports", icon: "Flag" },
   { label: "Categories", href: "/admin/categories", icon: "Tags" },
 ];
 

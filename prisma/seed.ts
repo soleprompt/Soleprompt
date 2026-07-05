@@ -72,6 +72,7 @@ type PromptDefinition = {
   categorySlug: CategorySlug;
   tags: string[];
   price: number;
+  exactPrice?: boolean;
   description: string;
   content: string;
   preview: string;
@@ -120,6 +121,7 @@ function prompt(
   price: number,
   role: string,
   deliverable: string,
+  exactPrice = false,
 ): PromptDefinition {
   const description = `${deliverable} with structured outputs, best-practice frameworks, and ready-to-use templates.`;
   const content = `You are a ${role}. The user will provide their product, audience, goals, and constraints. ${deliverable}. Return clear sections, actionable recommendations, and copy-ready assets the user can deploy immediately.`;
@@ -129,6 +131,7 @@ function prompt(
     categorySlug,
     tags,
     price,
+    exactPrice,
     description,
     content,
     preview: `${content.slice(0, 180)}${content.length > 180 ? "…" : ""}`,
@@ -247,6 +250,28 @@ const MARKETPLACE_PROMPTS: PromptDefinition[] = [
   prompt("Customer Support Response Writer", "writing", ["Support", "Customer Service", "Templates"], 15.99, "customer support lead", "Write empathetic support response templates for common issues and escalations"),
   prompt("Review Response Assistant", "writing", ["Reviews", "Reputation", "Support"], 12.99, "reputation manager", "Draft on-brand responses to customer reviews across positive and negative scenarios"),
   prompt("AI Prompt Engineer Pro", "writing", ["Prompt Engineering", "LLM", "AI"], 34.99, "senior prompt engineer", "Design advanced LLM prompts with system instructions, examples, constraints, and evaluation criteria"),
+
+  // Budget marketplace prompts (101–120)
+  prompt("Professional Email Rewriter", "writing", ["Email", "Professional", "Communication"], 1.99, "professional communications editor", "Rewrite emails for clarity, tone, and impact while preserving intent and key details", true),
+  prompt("AI Instagram Caption Generator", "marketing", ["Instagram", "Captions", "Social Media"], 1.99, "Instagram copywriter", "Generate engaging Instagram captions with hooks, body copy, CTAs, and hashtag suggestions", true),
+  prompt("LinkedIn Headline Generator", "marketing", ["LinkedIn", "Headline", "Personal Brand"], 1.99, "LinkedIn profile strategist", "Create compelling LinkedIn headlines that showcase expertise and attract the right opportunities", true),
+  prompt("Resume Bullet Improver", "writing", ["Resume", "Career", "ATS"], 1.99, "resume coach", "Transform weak resume bullets into achievement-driven statements with metrics and impact", true),
+  prompt("Cover Letter Generator", "writing", ["Cover Letter", "Job Search", "Applications"], 1.99, "career coach", "Draft tailored cover letters that connect your experience to the role and company", true),
+  prompt("YouTube Video Title Generator", "marketing", ["YouTube", "Titles", "CTR"], 1.99, "YouTube growth strategist", "Generate click-worthy YouTube video titles optimized for search and CTR", true),
+  prompt("TikTok Hook Generator", "marketing", ["TikTok", "Hooks", "Short Form"], 1.99, "TikTok content strategist", "Create scroll-stopping TikTok hooks that capture attention in the first three seconds", true),
+  prompt("AI Hashtag Generator", "marketing", ["Hashtags", "Social Media", "Discovery"], 1.99, "social media strategist", "Generate relevant hashtag sets grouped by reach, niche, and platform best practices", true),
+  prompt("Product Description Writer", "marketing", ["E-commerce", "Product Copy", "Sales"], 1.99, "e-commerce copywriter", "Write persuasive product descriptions with benefits, features, and conversion-focused copy", true),
+  prompt("Customer Apology Email Writer", "writing", ["Customer Service", "Apology", "Email"], 1.99, "customer experience specialist", "Draft sincere, professional apology emails that acknowledge issues and rebuild trust", true),
+  prompt("Cold Email Icebreaker Generator", "business", ["Cold Email", "Outreach", "B2B"], 2.99, "B2B outreach specialist", "Generate personalized cold email icebreakers based on prospect research and context", true),
+  prompt("Business Name Generator", "business", ["Branding", "Naming", "Startup"], 2.99, "brand naming consultant", "Brainstorm memorable business names with taglines, domain ideas, and naming rationale", true),
+  prompt("Startup Idea Generator", "business", ["Startup", "Ideas", "Innovation"], 2.99, "startup advisor", "Generate validated startup ideas with problem statements, target markets, and MVP concepts", true),
+  prompt("AI Meeting Summary Prompt", "business", ["Meetings", "Summary", "Productivity"], 2.99, "executive assistant", "Summarize meeting notes into decisions, action items, owners, and follow-up deadlines", true),
+  prompt("Daily Meal Planner", "business", ["Meal Planning", "Nutrition", "Health"], 2.99, "nutrition planner", "Create balanced daily meal plans with recipes, macros, and grocery lists for your goals", true),
+  prompt("Workout Plan Generator", "business", ["Fitness", "Workout", "Health"], 2.99, "fitness coach", "Build customized workout plans with exercises, sets, reps, and progressive overload schedules", true),
+  prompt("Budget Planner Prompt", "business", ["Budget", "Finance", "Personal Finance"], 2.99, "personal finance advisor", "Create monthly budgets with income allocation, savings targets, and spending categories", true),
+  prompt("Travel Itinerary Generator", "writing", ["Travel", "Itinerary", "Planning"], 2.99, "travel planner", "Build day-by-day travel itineraries with activities, timing, logistics, and local tips", true),
+  prompt("Interview Question Practice", "business", ["Interview", "Career", "Preparation"], 2.99, "interview coach", "Generate role-specific interview questions with model answers and feedback frameworks", true),
+  prompt("Blog Outline Generator", "writing", ["Blog", "Outline", "Content"], 2.99, "content strategist", "Create structured blog outlines with H2/H3 headings, key points, and SEO keyword placement", true),
 ];
 
 type PromptSeed = {
@@ -288,7 +313,9 @@ function buildMarketplacePrompts(): PromptSeed[] {
       compatibleModels: definition.compatibleModels,
       sampleOutput: definition.sampleOutput,
       categorySlug: definition.categorySlug,
-      price: Math.round((definition.price + priceOffset) * 100) / 100,
+      price: definition.exactPrice
+        ? definition.price
+        : Math.round((definition.price + priceOffset) * 100) / 100,
       featured: index < 4,
       tags: definition.tags,
       sellerIndex,

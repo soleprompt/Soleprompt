@@ -14,6 +14,7 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/api/webhooks(.*)",
+  "/api/stripe/webhook",
 ]);
 
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
@@ -40,8 +41,6 @@ export default clerkMiddleware(async (auth, req) => {
 
       if (isClerkUserAdminByEmail(user)) {
         requestHeaders.set("x-admin-access", "true");
-      } else {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
       }
     } catch {
       // Fall through to layout-level admin checks when Clerk is unavailable.

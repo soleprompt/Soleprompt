@@ -11,7 +11,6 @@ import { auth } from "@clerk/nextjs/server";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { fulfillPurchase } from "@/app/actions/purchase";
 import { PurchaseButton } from "@/components/marketplace/PurchaseButton";
 import {
   formatCurrency,
@@ -24,7 +23,7 @@ import { syncCurrentUser } from "@/lib/user";
 
 interface PromptDetailPageProps {
   params: Promise<{ id: string }>;
-  searchParams: Promise<{ checkout?: string; session_id?: string }>;
+  searchParams: Promise<{ checkout?: string }>;
 }
 
 export default async function PromptDetailPage({
@@ -32,7 +31,7 @@ export default async function PromptDetailPage({
   searchParams,
 }: PromptDetailPageProps) {
   const { id } = await params;
-  const { checkout, session_id: sessionId } = await searchParams;
+  const { checkout } = await searchParams;
   const prompt = await getPromptById(id);
 
   if (!prompt || prompt.status !== "published") {
@@ -50,10 +49,6 @@ export default async function PromptDetailPage({
   if (userId) {
     await syncCurrentUser();
     await recordPromptView(userId, id);
-  }
-
-  if (checkout === "success" && sessionId && userId) {
-    await fulfillPurchase(sessionId);
   }
 
   const purchaseState = await getPromptPurchaseState(
@@ -211,11 +206,6 @@ export default async function PromptDetailPage({
               <p className="mt-2 text-sm text-muted-foreground">
                 One-time purchase · Commercial license included
               </p>
-              {checkout === "success" && purchaseState.purchased && (
-                <p className="mt-4 rounded-lg border border-electric/30 bg-electric/10 px-3 py-2 text-sm text-electric">
-                  Purchase complete. This prompt is now in your library.
-                </p>
-              )}
               {checkout === "cancelled" && (
                 <p className="mt-4 rounded-lg border border-border bg-foreground/[0.02] px-3 py-2 text-sm text-muted-foreground">
                   Checkout was cancelled.

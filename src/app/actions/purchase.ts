@@ -1,10 +1,9 @@
 "use server";
 
 import { currentUser } from "@clerk/nextjs/server";
-import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { sendPurchaseReceipt } from "@/lib/email";
+import { completePurchase } from "@/lib/purchase-fulfillment";
 import { getAppUrl, getStripe, isStripeConfigured } from "@/lib/stripe";
 import { syncClerkUser } from "@/lib/user";
 
@@ -32,35 +31,6 @@ async function hasCompletedPurchase(buyerId: string, promptId: string) {
   });
 
   return Boolean(existing);
-}
-
-async function notifyPurchaseReceipt({
-  buyerEmail,
-  promptId,
-  promptTitle,
-  amount,
-  purchasedAt = new Date(),
-}: {
-  buyerEmail: string;
-  promptId: string;
-  promptTitle: string;
-  amount: number;
-  purchasedAt?: Date;
-}) {
-  const appUrl = getAppUrl();
-
-  try {
-    await sendPurchaseReceipt({
-      to: buyerEmail,
-      promptTitle,
-      amount,
-      purchasedAt,
-      promptUrl: `${appUrl}/prompts/${promptId}`,
-      purchasesUrl: `${appUrl}/buyer`,
-    });
-  } catch (error) {
-    console.error("[email] Failed to send purchase receipt:", error);
-  }
 }
 
 export async function startPurchase(
@@ -91,28 +61,12 @@ export async function startPurchase(
   }
 
   if (prompt.price <= 0) {
-    const purchasedAt = new Date();
-
-    await prisma.purchase.create({
-      data: {
-        promptId: prompt.id,
-        buyerId: buyer.id,
-        amount: 0,
-        status: "completed",
-        createdAt: purchasedAt,
-      },
-    });
-
-    await notifyPurchaseReceipt({
-      buyerEmail: buyer.email,
+    await completePurchase({
       promptId: prompt.id,
-      promptTitle: prompt.title,
+      buyerId: buyer.id,
       amount: 0,
-      purchasedAt,
+      actorId: buyer.id,
     });
-
-    revalidatePath(`/prompts/${prompt.id}`);
-    revalidatePath("/buyer");
 
     return { url: "/buyer" };
   }
@@ -146,7 +100,7 @@ export async function startPurchase(
       promptId: prompt.id,
       buyerId: buyer.id,
     },
-    success_url: `${appUrl}/prompts/${prompt.id}?checkout=success&session_id={CHECKOUT_SESSION_ID}`,
+    success_url: `${appUrl}/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
     cancel_url: `${appUrl}/prompts/${prompt.id}?checkout=cancelled`,
   });
 
@@ -157,50 +111,64 @@ export async function startPurchase(
   return { url: session.url };
 }
 
-export async function fulfillPurchase(sessionId: string): Promise<void> {
-  if (!sessionId || !isStripeConfigured()) return;
+export type FulfillPurchaseResult = {
+  success: boolean;
+  promptId?: string;
+  error?: string;
+};
+
+export async function fulfillPurchase(
+  sessionId: string,
+): Promise<FulfillPurchaseResult> {
+  if (!sessionId || !isStripeConfigured()) {
+    return { success: false, error: "Invalid checkout session." };
+  }
 
   const buyer = await getBuyerUser();
   const stripe = getStripe();
 
   const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-  if (session.payment_status !== "paid") return;
+  if (session.payment_status !== "paid") {
+    return { success: false, error: "Payment has not been completed." };
+  }
 
   const promptId = session.metadata?.promptId;
   const buyerId = session.metadata?.buyerId;
 
-  if (!promptId || !buyerId || buyerId !== buyer.id) return;
-
-  if (await hasCompletedPurchase(buyer.id, promptId)) return;
+  if (!promptId || !buyerId || buyerId !== buyer.id) {
+    return { success: false, error: "Checkout session does not match your account." };
+  }
 
   const prompt = await prisma.prompt.findFirst({
     where: { id: promptId, status: "published" },
-    select: { id: true, title: true, price: true },
+    select: { price: true },
   });
 
-  if (!prompt) return;
+  if (!prompt) {
+    return { success: false, error: "This prompt is no longer available." };
+  }
 
-  const purchasedAt = new Date();
+  const amount =
+    typeof session.amount_total === "number"
+      ? session.amount_total / 100
+      : prompt.price;
 
-  await prisma.purchase.create({
-    data: {
-      promptId: prompt.id,
+  try {
+    const result = await completePurchase({
+      promptId,
       buyerId: buyer.id,
-      amount: prompt.price,
-      status: "completed",
-      createdAt: purchasedAt,
-    },
-  });
+      amount,
+      stripeSessionId: sessionId,
+      actorId: buyer.id,
+    });
 
-  await notifyPurchaseReceipt({
-    buyerEmail: buyer.email,
-    promptId: prompt.id,
-    promptTitle: prompt.title,
-    amount: prompt.price,
-    purchasedAt,
-  });
-
-  revalidatePath(`/prompts/${prompt.id}`);
-  revalidatePath("/buyer");
+    return { success: true, promptId: result.promptId };
+  } catch (error) {
+    console.error("[purchase] fulfillPurchase failed:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "Unable to complete purchase.",
+    };
+  }
 }
