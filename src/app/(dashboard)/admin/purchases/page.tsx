@@ -1,12 +1,33 @@
+import { Suspense } from "react";
 import { ShoppingBag } from "lucide-react";
 import { AdminTableFilters } from "@/components/dashboard/AdminTableFilters";
+import { ClickableTableRow } from "@/components/dashboard/ClickableTableRow";
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { ExportPurchasesCsvButton } from "@/components/dashboard/ExportPurchasesCsvButton";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import { getAdminPurchases } from "@/lib/admin-data";
+import {
+  getAdminPurchases,
+  type PurchasePeriodFilter,
+  type PurchaseTypeFilter,
+} from "@/lib/admin-data";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { PurchaseStatus } from "@/generated/prisma/client";
+
+const TYPE_OPTIONS = [
+  { value: "all", label: "All types" },
+  { value: "paid", label: "Paid" },
+  { value: "free", label: "Free" },
+  { value: "refunded", label: "Refunded" },
+];
+
+const PERIOD_OPTIONS = [
+  { value: "all", label: "All time" },
+  { value: "today", label: "Today" },
+  { value: "7d", label: "Last 7 days" },
+  { value: "30d", label: "Last 30 days" },
+];
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -16,31 +37,51 @@ const STATUS_OPTIONS = [
 ];
 
 interface AdminPurchasesPageProps {
-  searchParams: Promise<{ search?: string; status?: string }>;
+  searchParams: Promise<{
+    search?: string;
+    status?: string;
+    type?: string;
+    period?: string;
+  }>;
 }
 
 export default async function AdminPurchasesPage({
   searchParams,
 }: AdminPurchasesPageProps) {
-  const { search, status } = await searchParams;
+  const { search, status, type, period } = await searchParams;
   const statusFilter =
     status && status !== "all" ? (status as PurchaseStatus) : "all";
+  const typeFilter =
+    type && type !== "all" ? (type as PurchaseTypeFilter) : "all";
+  const periodFilter =
+    period && period !== "all" ? (period as PurchasePeriodFilter) : "all";
 
   const purchases = await getAdminPurchases({
     search,
     status: statusFilter,
+    type: typeFilter,
+    period: periodFilter,
   });
 
   return (
     <>
       <PageHeader
         title="Purchases"
-        description="All buyer purchases across the marketplace."
+        description="Live buyer purchases from Stripe checkout and free downloads."
+        action={
+          <Suspense fallback={null}>
+            <ExportPurchasesCsvButton />
+          </Suspense>
+        }
       />
 
       <AdminTableFilters
         search={search}
-        searchPlaceholder="Search by prompt, buyer, or email…"
+        searchPlaceholder="Search by prompt, buyer, email, or Stripe ID…"
+        type={typeFilter}
+        typeOptions={TYPE_OPTIONS}
+        period={periodFilter}
+        periodOptions={PERIOD_OPTIONS}
         status={statusFilter}
         statusOptions={STATUS_OPTIONS}
       />
@@ -49,14 +90,15 @@ export default async function AdminPurchasesPage({
         <EmptyState
           icon={ShoppingBag}
           title="No purchases found"
-          description="Completed purchases will appear here after checkout."
+          description="Live purchases will appear here after checkout completes."
         />
       ) : (
         <Card>
           <CardHeader>
-            <h2 className="text-lg font-semibold">Purchase records</h2>
+            <h2 className="text-lg font-semibold">Live purchase records</h2>
             <p className="text-sm text-muted-foreground">
-              {purchases.length} purchase{purchases.length === 1 ? "" : "s"}
+              {purchases.length} purchase{purchases.length === 1 ? "" : "s"} ·
+              click a row for details
             </p>
           </CardHeader>
           <CardContent className="pt-0">
@@ -74,9 +116,9 @@ export default async function AdminPurchasesPage({
                 </thead>
                 <tbody>
                   {purchases.map((purchase) => (
-                    <tr
+                    <ClickableTableRow
                       key={purchase.id}
-                      className="border-b border-border/50 last:border-0"
+                      href={`/admin/purchases/${purchase.id}`}
                     >
                       <td className="py-4 pr-4 font-medium">{purchase.promptTitle}</td>
                       <td className="py-4 pr-4">
@@ -93,7 +135,11 @@ export default async function AdminPurchasesPage({
                       <td className="py-4 pr-4">
                         <Badge
                           variant={
-                            purchase.status === "completed" ? "electric" : "outline"
+                            purchase.status === "completed"
+                              ? "electric"
+                              : purchase.status === "refunded"
+                                ? "outline"
+                                : "outline"
                           }
                         >
                           {purchase.status}
@@ -105,7 +151,7 @@ export default async function AdminPurchasesPage({
                       <td className="py-4 text-muted-foreground">
                         {formatDate(purchase.createdAt)}
                       </td>
-                    </tr>
+                    </ClickableTableRow>
                   ))}
                 </tbody>
               </table>

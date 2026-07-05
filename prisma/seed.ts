@@ -277,37 +277,6 @@ async function main() {
       }
     }
 
-    const purchaseStatuses: Array<"completed" | "pending" | "refunded"> = [
-      "completed",
-      "completed",
-      "completed",
-      "completed",
-      "pending",
-      "refunded",
-      "completed",
-      "completed",
-    ];
-
-    let purchaseIndex = 0;
-    for (const { id, price, seed } of createdPrompts) {
-      for (let s = 0; s < seed.salesCount; s++) {
-        const buyer = buyerUsers[(purchaseIndex + s) % buyerUsers.length];
-        const status = purchaseStatuses[(purchaseIndex + s) % purchaseStatuses.length];
-        const daysAgo = (purchaseIndex + s) % 21;
-
-        await prisma.purchase.create({
-          data: {
-            promptId: id,
-            buyerId: buyer.id,
-            amount: price,
-            status,
-            createdAt: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
-          },
-        });
-      }
-      purchaseIndex += seed.salesCount;
-    }
-
     for (let i = 0; i < buyerUsers.length; i++) {
       const buyer = buyerUsers[i];
       const wishlistPrompts = createdPrompts.slice(i, i + 3);
@@ -335,10 +304,6 @@ async function main() {
 
     const starterCount = STARTER_PROMPTS.length;
     const bundleCount = BUNDLES.length;
-    const completedSales = createdPrompts.reduce((sum, p) => {
-      const completedRatio = 6 / purchaseStatuses.length;
-      return sum + Math.round(p.seed.salesCount * completedRatio);
-    }, 0);
 
     console.log(`Seeded ${categories.length} categories`);
     console.log(`Seeded ${sellerUsers.length} sellers`);
@@ -346,7 +311,7 @@ async function main() {
     console.log(
       `Seeded Welcome Pack + ${starterCount} starter prompts + ${bundleCount} bundles = ${createdPrompts.length} total listings`,
     );
-    console.log(`Seeded ~${completedSales} completed sales (of ${purchaseIndex} total purchases)`);
+    console.log("Skipped fake purchase records — live sales come from Stripe checkout");
 
     const publishedCount = await prisma.prompt.count({ where: { status: "published" } });
     const categoryCounts = await prisma.category.findMany({

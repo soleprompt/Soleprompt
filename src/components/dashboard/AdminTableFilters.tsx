@@ -4,7 +4,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useTransition } from "react";
 import { Input } from "@/components/ui/Input";
 
-type StatusOption = {
+type FilterOption = {
   value: string;
   label: string;
 };
@@ -13,9 +13,13 @@ interface AdminTableFiltersProps {
   search?: string;
   searchPlaceholder?: string;
   status?: string;
-  statusOptions?: StatusOption[];
+  statusOptions?: FilterOption[];
+  type?: string;
+  typeOptions?: FilterOption[];
+  period?: string;
+  periodOptions?: FilterOption[];
   role?: string;
-  roleOptions?: StatusOption[];
+  roleOptions?: FilterOption[];
 }
 
 export function AdminTableFilters({
@@ -23,6 +27,10 @@ export function AdminTableFilters({
   searchPlaceholder = "Search…",
   status = "all",
   statusOptions,
+  type = "all",
+  typeOptions,
+  period = "all",
+  periodOptions,
   role = "all",
   roleOptions,
 }: AdminTableFiltersProps) {
@@ -48,9 +56,12 @@ export function AdminTableFilters({
     });
   }
 
+  const selectClassName =
+    "h-10 rounded-lg border border-border bg-background px-3 text-sm";
+
   return (
     <form
-      className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center"
+      className="mb-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center"
       onSubmit={(event) => {
         event.preventDefault();
         const formData = new FormData(event.currentTarget);
@@ -64,11 +75,41 @@ export function AdminTableFilters({
         className="sm:max-w-xs"
         disabled={pending}
       />
+      {typeOptions && (
+        <select
+          name="type"
+          defaultValue={type}
+          className={selectClassName}
+          disabled={pending}
+          onChange={(event) => updateParams({ type: event.target.value })}
+        >
+          {typeOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      )}
+      {periodOptions && (
+        <select
+          name="period"
+          defaultValue={period}
+          className={selectClassName}
+          disabled={pending}
+          onChange={(event) => updateParams({ period: event.target.value })}
+        >
+          {periodOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+      )}
       {statusOptions && (
         <select
           name="status"
           defaultValue={status}
-          className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+          className={selectClassName}
           disabled={pending}
           onChange={(event) => updateParams({ status: event.target.value })}
         >
@@ -83,7 +124,7 @@ export function AdminTableFilters({
         <select
           name="role"
           defaultValue={role}
-          className="h-10 rounded-lg border border-border bg-background px-3 text-sm"
+          className={selectClassName}
           disabled={pending}
           onChange={(event) => updateParams({ role: event.target.value })}
         >
