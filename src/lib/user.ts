@@ -1,5 +1,6 @@
 import { currentUser, type User as ClerkUser } from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
+import { safeDbRead } from "@/lib/safe-db";
 import type { UserRole } from "@/types/user";
 
 function clerkUserFields(user: ClerkUser) {
@@ -18,17 +19,19 @@ export function toUserRole(role: string): UserRole {
 export async function syncClerkUser(user: ClerkUser) {
   const fields = clerkUserFields(user);
 
-  return prisma.user.upsert({
-    where: { clerkUserId: user.id },
-    create: {
-      ...fields,
-      role: "buyer",
-    },
-    update: {
-      username: fields.username,
-      email: fields.email,
-    },
-  });
+  return safeDbRead(null, () =>
+    prisma.user.upsert({
+      where: { clerkUserId: user.id },
+      create: {
+        ...fields,
+        role: "buyer",
+      },
+      update: {
+        username: fields.username,
+        email: fields.email,
+      },
+    }),
+  );
 }
 
 export async function syncCurrentUser() {
@@ -49,14 +52,16 @@ export async function createUserFromWebhook(data: {
 }) {
   const email = data.email_addresses[0]?.email_address ?? "";
 
-  return prisma.user.upsert({
-    where: { clerkUserId: data.id },
-    create: {
-      clerkUserId: data.id,
-      username: data.username ?? data.id.slice(0, 8),
-      email,
-      role: "buyer",
-    },
-    update: {},
-  });
+  return safeDbRead(null, () =>
+    prisma.user.upsert({
+      where: { clerkUserId: data.id },
+      create: {
+        clerkUserId: data.id,
+        username: data.username ?? data.id.slice(0, 8),
+        email,
+        role: "buyer",
+      },
+      update: {},
+    }),
+  );
 }

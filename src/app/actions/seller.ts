@@ -14,6 +14,10 @@ export async function becomeSeller(): Promise<void> {
 
   const dbUser = await syncClerkUser(user);
 
+  if (!dbUser) {
+    redirect("/buyer");
+  }
+
   if (dbUser.role === "admin") {
     redirect("/admin");
   }

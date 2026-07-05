@@ -12,6 +12,8 @@ import { getDashboardPath } from "@/lib/auth";
 import { getCurrentUserRole } from "@/lib/user";
 import { getRoleLabel } from "@/lib/navigation";
 
+export const dynamic = "force-dynamic";
+
 export default async function DashboardPage() {
   const user = await currentUser();
 

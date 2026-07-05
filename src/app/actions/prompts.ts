@@ -25,6 +25,7 @@ async function getSellerUser() {
   if (!user) redirect("/sign-in");
 
   const dbUser = await syncClerkUser(user);
+  if (!dbUser) redirect("/buyer");
   if (dbUser.role !== "seller" && dbUser.role !== "admin") {
     redirect("/buyer");
   }
