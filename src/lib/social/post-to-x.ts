@@ -85,7 +85,29 @@ function logXPostResponse(status: number, body: string): void {
 }
 
 export async function postToX(text: string): Promise<PostToXResult> {
-  const trimmed = text.trim();
+  return postTweetToX({ text });
+}
+
+export async function postReplyToX(
+  text: string,
+  inReplyToTweetId: string,
+): Promise<PostToXResult> {
+  const trimmedId = inReplyToTweetId.trim();
+  if (!isValidXTweetId(trimmedId)) {
+    return { ok: false, error: "Invalid target tweet ID for reply." };
+  }
+
+  return postTweetToX({
+    text,
+    reply: { in_reply_to_tweet_id: trimmedId },
+  });
+}
+
+async function postTweetToX(body: {
+  text: string;
+  reply?: { in_reply_to_tweet_id: string };
+}): Promise<PostToXResult> {
+  const trimmed = body.text.trim();
 
   if (!trimmed) {
     return { ok: false, error: "Tweet content cannot be empty." };
@@ -108,9 +130,17 @@ export async function postToX(text: string): Promise<PostToXResult> {
   }
 
   try {
+    const payload: { text: string; reply?: { in_reply_to_tweet_id: string } } =
+      { text: trimmed };
+    if (body.reply) {
+      payload.reply = body.reply;
+    }
+
     console.log("[X post] Publishing tweet", {
       endpoint: X_CREATE_TWEET_URL,
       charCount: trimmed.length,
+      isReply: Boolean(body.reply),
+      inReplyToTweetId: body.reply?.in_reply_to_tweet_id,
     });
 
     const response = await fetch(X_CREATE_TWEET_URL, {
@@ -124,16 +154,16 @@ export async function postToX(text: string): Promise<PostToXResult> {
         ),
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ text: trimmed }),
+      body: JSON.stringify(payload),
     });
 
     const responseText = await response.text();
     logXPostResponse(response.status, responseText);
 
-    let payload: XCreateTweetResponse = {};
+    let apiPayload: XCreateTweetResponse = {};
     if (responseText.trim()) {
       try {
-        payload = JSON.parse(responseText) as XCreateTweetResponse;
+        apiPayload = JSON.parse(responseText) as XCreateTweetResponse;
       } catch {
         return {
           ok: false,
@@ -144,7 +174,7 @@ export async function postToX(text: string): Promise<PostToXResult> {
       }
     }
 
-    const apiError = formatXApiErrors(payload);
+    const apiError = formatXApiErrors(apiPayload);
 
     if (!response.ok) {
       return {
@@ -163,7 +193,7 @@ export async function postToX(text: string): Promise<PostToXResult> {
       };
     }
 
-    const rawId = payload.data?.id;
+    const rawId = apiPayload.data?.id;
     if (!isValidXTweetId(rawId)) {
       return {
         ok: false,

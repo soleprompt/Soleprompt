@@ -251,3 +251,26 @@ model SocialPost {
 
   @@index([status, scheduledAt])
 }
+
+model SocialReply {
+  id             String           @id @default(cuid())
+  platform       SocialPlatform   @default(x)
+  targetTweetId  String
+  targetTweetUrl String?
+  targetAuthor   String?
+  targetSnippet  String?
+  content        String
+  status         SocialPostStatus @default(draft)
+  includesLink   Boolean          @default(false)
+  taglineKey     String?
+  scheduledAt    DateTime?
+  postedAt       DateTime?
+  xReplyId       String?
+  error          String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([targetTweetId])
+  @@index([taglineKey])
+}

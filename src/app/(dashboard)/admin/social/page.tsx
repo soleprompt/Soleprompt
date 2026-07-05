@@ -1,4 +1,5 @@
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { AdminSocialNav } from "@/components/dashboard/AdminSocialNav";
 import { AdminSocialPanel } from "@/components/dashboard/AdminSocialPanel";
 import { prisma } from "@/lib/db";
 import type { SocialPostStatus } from "@/generated/prisma/client";
@@ -24,9 +25,10 @@ export default async function AdminSocialPage({
   return (
     <>
       <PageHeader
-        title="Social"
+        title="Social — Posts"
         description="Generate, approve, and schedule promotional X posts for getsoleprompt.com. Approved posts only — no automation beyond scheduled publishing."
       />
+      <AdminSocialNav />
       <AdminSocialPanel initialPosts={posts} statusFilter={statusFilter} />
     </>
   );

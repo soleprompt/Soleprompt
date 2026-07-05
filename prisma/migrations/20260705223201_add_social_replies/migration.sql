@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Prompt" ALTER COLUMN "preview" DROP DEFAULT,
+ALTER COLUMN "compatibleModels" DROP DEFAULT,
+ALTER COLUMN "sampleOutput" DROP DEFAULT;
