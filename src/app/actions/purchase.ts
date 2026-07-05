@@ -4,6 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
+import { sendPurchaseReceipt } from "@/lib/email";
 import { getAppUrl, getStripe, isStripeConfigured } from "@/lib/stripe";
 import { syncClerkUser } from "@/lib/user";
 
@@ -31,6 +32,35 @@ async function hasCompletedPurchase(buyerId: string, promptId: string) {
   });
 
   return Boolean(existing);
+}
+
+async function notifyPurchaseReceipt({
+  buyerEmail,
+  promptId,
+  promptTitle,
+  amount,
+  purchasedAt = new Date(),
+}: {
+  buyerEmail: string;
+  promptId: string;
+  promptTitle: string;
+  amount: number;
+  purchasedAt?: Date;
+}) {
+  const appUrl = getAppUrl();
+
+  try {
+    await sendPurchaseReceipt({
+      to: buyerEmail,
+      promptTitle,
+      amount,
+      purchasedAt,
+      promptUrl: `${appUrl}/prompts/${promptId}`,
+      purchasesUrl: `${appUrl}/buyer`,
+    });
+  } catch (error) {
+    console.error("[email] Failed to send purchase receipt:", error);
+  }
 }
 
 export async function startPurchase(
@@ -61,13 +91,24 @@ export async function startPurchase(
   }
 
   if (prompt.price <= 0) {
+    const purchasedAt = new Date();
+
     await prisma.purchase.create({
       data: {
         promptId: prompt.id,
         buyerId: buyer.id,
         amount: 0,
         status: "completed",
+        createdAt: purchasedAt,
       },
+    });
+
+    await notifyPurchaseReceipt({
+      buyerEmail: buyer.email,
+      promptId: prompt.id,
+      promptTitle: prompt.title,
+      amount: 0,
+      purchasedAt,
     });
 
     revalidatePath(`/prompts/${prompt.id}`);
@@ -135,10 +176,12 @@ export async function fulfillPurchase(sessionId: string): Promise<void> {
 
   const prompt = await prisma.prompt.findFirst({
     where: { id: promptId, status: "published" },
-    select: { id: true, price: true },
+    select: { id: true, title: true, price: true },
   });
 
   if (!prompt) return;
+
+  const purchasedAt = new Date();
 
   await prisma.purchase.create({
     data: {
@@ -146,7 +189,16 @@ export async function fulfillPurchase(sessionId: string): Promise<void> {
       buyerId: buyer.id,
       amount: prompt.price,
       status: "completed",
+      createdAt: purchasedAt,
     },
+  });
+
+  await notifyPurchaseReceipt({
+    buyerEmail: buyer.email,
+    promptId: prompt.id,
+    promptTitle: prompt.title,
+    amount: prompt.price,
+    purchasedAt,
   });
 
   revalidatePath(`/prompts/${prompt.id}`);
