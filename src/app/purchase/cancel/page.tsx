@@ -25,7 +25,7 @@ export default function PurchaseCancelPage() {
             <Link href="/buyer">
               <Button variant="outline" className="w-full gap-2 sm:w-auto">
                 <ShoppingBag className="h-4 w-4" />
-                My Purchases
+                My Library
               </Button>
             </Link>
           </div>

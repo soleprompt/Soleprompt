@@ -1,19 +1,5 @@
-import type { Metadata } from "next";
-import { PageHeader } from "@/components/dashboard/PageHeader";
-import { ProfileSettings } from "@/components/dashboard/ProfileSettings";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: "Settings",
-};
-
-export default function BuyerSettingsPage() {
-  return (
-    <>
-      <PageHeader
-        title="Settings"
-        description="Manage your account and profile preferences."
-      />
-      <ProfileSettings />
-    </>
-  );
+export default function BuyerSettingsRedirectPage() {
+  redirect("/buyer/account");
 }

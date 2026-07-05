@@ -37,6 +37,7 @@ export async function updateProfile(formData: FormData): Promise<void> {
     },
   });
 
+  revalidatePath("/buyer/account");
   revalidatePath("/buyer/settings");
   revalidatePath("/seller/settings");
 }

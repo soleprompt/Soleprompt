@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   BarChart3,
+  BookOpen,
   Clock,
   DollarSign,
   FileText,
@@ -11,6 +12,7 @@ import {
   Heart,
   LayoutDashboard,
   Menu,
+  Receipt,
   Settings,
   ShoppingBag,
   Sparkles,
@@ -18,6 +20,7 @@ import {
   Tags,
   TrendingUp,
   Upload,
+  User,
   Users,
   X,
 } from "lucide-react";
@@ -30,8 +33,11 @@ import type { DashboardSection } from "@/types/dashboard";
 
 const ICON_MAP = {
   LayoutDashboard,
+  BookOpen,
   ShoppingBag,
   Heart,
+  Receipt,
+  User,
   Clock,
   Settings,
   Upload,

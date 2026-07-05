@@ -274,6 +274,41 @@ export async function getBuyerPurchases(clerkUserId: string) {
   });
 }
 
+export async function getBuyerPurchaseHistory(clerkUserId: string) {
+  return safeDbRead([], async () => {
+    const user = await prisma.user.findUnique({ where: { clerkUserId } });
+    if (!user) return [];
+
+    const purchases = await prisma.purchase.findMany({
+      where: { buyerId: user.id },
+      include: {
+        prompt: { select: { id: true, title: true } },
+        transaction: {
+          select: {
+            id: true,
+            stripeSessionId: true,
+            stripePaymentId: true,
+            currency: true,
+          },
+        },
+      },
+      orderBy: { createdAt: "desc" },
+    });
+
+    return purchases.map((p) => ({
+      id: p.id,
+      promptId: p.prompt.id,
+      promptTitle: p.prompt.title,
+      amount: p.amount,
+      isFree: p.amount <= 0,
+      status: p.status as PurchaseStatus,
+      date: p.createdAt.toISOString(),
+      transactionId: p.transaction?.id ?? null,
+      stripePaymentId: p.transaction?.stripePaymentId ?? null,
+    }));
+  });
+}
+
 export async function getBuyerWishlist(clerkUserId: string) {
   return safeDbRead([], async () => {
     const user = await prisma.user.findUnique({ where: { clerkUserId } });
