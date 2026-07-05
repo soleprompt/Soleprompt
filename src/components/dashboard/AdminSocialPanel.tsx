@@ -247,6 +247,17 @@ export function AdminSocialPanel({
   const scheduledCount = posts.filter((post) => post.status === "scheduled").length;
 
   function handleConnectX() {
+    setMessage(null);
+    setError(null);
+
+    if (xConnection && !xConnection.configured) {
+      setError(
+        "X app credentials not configured. Set X_API_KEY and X_API_SECRET, then try again.",
+      );
+      return;
+    }
+
+    setXBusy(true);
     window.location.href = "/api/admin/social/x/connect";
   }
 
@@ -337,20 +348,27 @@ export function AdminSocialPanel({
                     </Button>
                   )}
                 </>
-              ) : xConnection?.configured ? (
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="sm"
-                  className="gap-1.5"
-                  disabled={xBusy || pending}
-                  onClick={handleConnectX}
-                >
-                  <Link2 className="h-4 w-4" />
-                  Connect X account
-                </Button>
               ) : (
-                <Badge variant="outline">Not configured</Badge>
+                <>
+                  {!xConnection?.configured && (
+                    <Badge variant="outline">Not configured</Badge>
+                  )}
+                  <Button
+                    type="button"
+                    variant="primary"
+                    size="sm"
+                    className="gap-1.5"
+                    disabled={xBusy || pending}
+                    onClick={handleConnectX}
+                  >
+                    {xBusy ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Link2 className="h-4 w-4" />
+                    )}
+                    Connect X account
+                  </Button>
+                </>
               )}
             </div>
           </div>
