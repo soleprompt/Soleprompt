@@ -52,6 +52,9 @@ export function mapPromptToListItem(prompt: PromptWithRelations): Prompt {
     },
     tags: prompt.tags.map((t) => t.tag.name),
     compatibleModels: prompt.compatibleModels,
+    difficulty: prompt.difficulty,
+    estimatedTimeSaved: prompt.estimatedTimeSaved,
+    coverImageUrl: prompt.coverImageUrl,
   };
 }
 

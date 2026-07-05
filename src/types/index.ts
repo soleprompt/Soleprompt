@@ -20,6 +20,9 @@ export interface Prompt {
   seller: SellerProfile;
   tags: string[];
   compatibleModels: string[];
+  difficulty: "beginner" | "intermediate" | "advanced";
+  estimatedTimeSaved: string | null;
+  coverImageUrl: string | null;
 }
 
 export interface Category {

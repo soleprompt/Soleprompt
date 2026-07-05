@@ -20,6 +20,12 @@ enum PromptStatus {
   rejected
 }
 
+enum PromptDifficulty {
+  beginner
+  intermediate
+  advanced
+}
+
 enum PurchaseStatus {
   pending
   completed
@@ -87,10 +93,13 @@ model Prompt {
   description      String
   content          String
   preview          String
-  compatibleModels String[]
-  sampleOutput     String
-  price            Float
-  status           PromptStatus @default(draft)
+  compatibleModels   String[]
+  sampleOutput       String
+  difficulty         PromptDifficulty @default(beginner)
+  estimatedTimeSaved String?
+  coverImageUrl      String?
+  price              Float
+  status             PromptStatus @default(draft)
   featured    Boolean      @default(false)
   views       Int          @default(0)
   sellerId    String
