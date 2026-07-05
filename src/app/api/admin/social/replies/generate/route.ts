@@ -2,11 +2,14 @@ import { NextResponse } from "next/server";
 import { isAdminUser } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { parseTweetInput } from "@/lib/social/parse-tweet-url";
+import {
+  createBatchId,
+  generateFiveReplies,
+  summarizePost,
+} from "@/lib/social/reply-generator";
 import type { ReplyCategory } from "@/lib/social/reply-templates";
 import {
   detectCategoryFromText,
-  pickReplyTemplate,
-  renderReplyTemplate,
   REPLY_CATEGORIES,
 } from "@/lib/social/reply-templates";
 
@@ -34,23 +37,45 @@ export async function POST(request: Request) {
   const parsed = parseTweetInput(body.tweetUrl);
   if (!parsed) {
     return NextResponse.json(
-      { error: "Invalid tweet URL or ID. Use an x.com/twitter.com status link or numeric tweet ID." },
+      {
+        error:
+          "Invalid tweet URL or ID. Use an x.com/twitter.com status link or numeric tweet ID.",
+      },
       { status: 400 },
     );
   }
 
-  const existing = await prisma.socialReply.findFirst({
+  const activeReply = await prisma.socialReply.findFirst({
     where: {
       targetTweetId: parsed.tweetId,
-      status: { in: ["draft", "approved", "scheduled", "posted"] },
+      status: { in: ["approved", "scheduled", "posted"] },
     },
   });
 
-  if (existing) {
+  if (activeReply) {
     return NextResponse.json(
       {
-        error: "A reply draft already exists for this tweet.",
-        reply: existing,
+        error: "A reply is already approved, scheduled, or posted for this tweet.",
+        reply: activeReply,
+      },
+      { status: 409 },
+    );
+  }
+
+  const pendingBatch = await prisma.socialReply.findFirst({
+    where: {
+      targetTweetId: parsed.tweetId,
+      parentBatchId: { not: null },
+      status: "draft",
+    },
+  });
+
+  if (pendingBatch) {
+    return NextResponse.json(
+      {
+        error:
+          "Reply options already generated for this tweet. Pick one from the batch below or delete them first.",
+        batchId: pendingBatch.parentBatchId,
       },
       { status: 409 },
     );
@@ -58,9 +83,7 @@ export async function POST(request: Request) {
 
   const snippet = body.targetSnippet?.trim() || null;
   const author =
-    body.targetAuthor?.trim() ||
-    parsed.authorHandle ||
-    null;
+    body.targetAuthor?.trim() || parsed.authorHandle || null;
 
   let category: ReplyCategory = "ai-prompts";
   if (body.category && VALID_CATEGORIES.has(body.category)) {
@@ -83,38 +106,52 @@ export async function POST(request: Request) {
       .filter((key): key is string => Boolean(key)),
   );
 
-  const template = pickReplyTemplate(category, usedTaglineKeys);
-  if (!template) {
-    return NextResponse.json(
-      {
-        error:
-          "All reply templates for this category have been used recently. Try another category or edit an existing draft.",
-      },
-      { status: 422 },
-    );
-  }
+  const summary = summarizePost(snippet, author);
+  const options = generateFiveReplies(snippet ?? "", category, {
+    author,
+    usedTaglineKeys,
+  });
 
-  const content = renderReplyTemplate(template);
-
-  if (content.length > 280) {
+  const tooLong = options.find((o) => o.content.length > 280);
+  if (tooLong) {
     return NextResponse.json(
       { error: "Generated reply exceeds 280 characters." },
       { status: 422 },
     );
   }
 
-  const reply = await prisma.socialReply.create({
-    data: {
-      targetTweetId: parsed.tweetId,
-      targetTweetUrl: parsed.tweetUrl,
-      targetAuthor: author,
-      targetSnippet: snippet,
-      content,
-      status: "draft",
-      includesLink: template.includesLink,
-      taglineKey: template.taglineKey,
-    },
-  });
+  const parentBatchId = createBatchId();
 
-  return NextResponse.json({ reply, category });
+  const replies = await prisma.$transaction(
+    options.map((option) =>
+      prisma.socialReply.create({
+        data: {
+          targetTweetId: parsed.tweetId,
+          targetTweetUrl: parsed.tweetUrl,
+          targetAuthor: author,
+          targetSnippet: snippet,
+          postSummary: summary,
+          replyStyle: option.style,
+          parentBatchId,
+          content: option.content,
+          status: "draft",
+          includesLink: option.includesLink,
+          taglineKey: option.taglineKey,
+        },
+      }),
+    ),
+  );
+
+  return NextResponse.json({
+    summary,
+    category,
+    batchId: parentBatchId,
+    options: replies.map((reply) => ({
+      id: reply.id,
+      style: reply.replyStyle,
+      content: reply.content,
+      includesLink: reply.includesLink,
+    })),
+    replies,
+  });
 }

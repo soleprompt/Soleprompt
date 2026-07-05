@@ -1,5 +1,15 @@
 export const SOLEPROMPT_LINK = "https://getsoleprompt.com";
 
+export const REPLY_STYLES = [
+  { id: "educational", label: "Educational" },
+  { id: "question", label: "Question" },
+  { id: "founder", label: "Founder" },
+  { id: "helpful", label: "Helpful" },
+  { id: "less-promotional", label: "Less promotional" },
+] as const;
+
+export type ReplyStyle = (typeof REPLY_STYLES)[number]["id"];
+
 export type ReplyCategory =
   | "ai-prompts"
   | "chatgpt"

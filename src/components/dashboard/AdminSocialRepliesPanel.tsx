@@ -1,16 +1,21 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState, useTransition } from "react";
+import { useCallback, useEffect, useMemo, useState, useTransition } from "react";
 import {
+  BarChart3,
   Calendar,
   Check,
   ExternalLink,
+  Heart,
   Loader2,
   MessageSquare,
+  RefreshCw,
   Search,
   Send,
   Sparkles,
+  Users,
+  Eye,
 } from "lucide-react";
 import { AdminSocialNav } from "@/components/dashboard/AdminSocialNav";
 import { AdminTableFilters } from "@/components/dashboard/AdminTableFilters";
@@ -24,6 +29,11 @@ import {
   REPLY_CATEGORIES,
   type ReplyCategory,
 } from "@/lib/social/reply-templates";
+import {
+  IMPROVEMENT_OPTIONS,
+  type ImprovementType,
+} from "@/lib/social/reply-improvements";
+import { REPLY_STYLES } from "@/lib/social/reply-templates";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -33,6 +43,10 @@ const STATUS_OPTIONS = [
   { value: "posted", label: "Posted" },
   { value: "failed", label: "Failed" },
 ];
+
+const STYLE_LABELS = Object.fromEntries(
+  REPLY_STYLES.map((s) => [s.id, s.label]),
+) as Record<string, string>;
 
 function statusBadge(status: SocialPostStatus) {
   switch (status) {
@@ -81,6 +95,23 @@ type ReplyLimitsState = {
   nextAvailableAt: string | null;
 };
 
+type AnalyticsState = {
+  repliesSent: number;
+  likesReceived: number;
+  replyImpressions: number;
+  repliesOnPosts: number;
+  profileVisits: number;
+  followersGained: number;
+  metricsTracked: number;
+};
+
+type GeneratedBatch = {
+  summary: string;
+  batchId: string;
+  category: string;
+  options: SocialReply[];
+};
+
 export function AdminSocialRepliesPanel({
   initialReplies,
   statusFilter,
@@ -98,6 +129,39 @@ export function AdminSocialRepliesPanel({
   const [showDiscover, setShowDiscover] = useState(false);
   const [replyLimits, setReplyLimits] = useState<ReplyLimitsState | null>(null);
   const [limitsLoading, setLimitsLoading] = useState(true);
+  const [analytics, setAnalytics] = useState<AnalyticsState | null>(null);
+  const [analyticsLoading, setAnalyticsLoading] = useState(true);
+  const [metricsRefreshing, setMetricsRefreshing] = useState(false);
+  const [generatedBatch, setGeneratedBatch] = useState<GeneratedBatch | null>(
+    null,
+  );
+
+  const batchOptions = useMemo(
+    () => replies.filter((r) => r.parentBatchId),
+    [replies],
+  );
+
+  const committedReplies = useMemo(
+    () => replies.filter((r) => !r.parentBatchId),
+    [replies],
+  );
+
+  const pendingBatches = useMemo(() => {
+    const byBatch = new Map<string, SocialReply[]>();
+    for (const reply of batchOptions) {
+      const id = reply.parentBatchId!;
+      const list = byBatch.get(id) ?? [];
+      list.push(reply);
+      byBatch.set(id, list);
+    }
+    return [...byBatch.entries()].map(([batchId, options]) => ({
+      batchId,
+      summary: options[0]?.postSummary ?? "",
+      options: options.sort((a, b) =>
+        (a.replyStyle ?? "").localeCompare(b.replyStyle ?? ""),
+      ),
+    }));
+  }, [batchOptions]);
 
   const loadReplyLimits = useCallback(async () => {
     setLimitsLoading(true);
@@ -112,9 +176,23 @@ export function AdminSocialRepliesPanel({
     }
   }, []);
 
+  const loadAnalytics = useCallback(async () => {
+    setAnalyticsLoading(true);
+    try {
+      const response = await fetch("/api/admin/social/replies/analytics");
+      if (response.ok) {
+        const data = (await response.json()) as AnalyticsState;
+        setAnalytics(data);
+      }
+    } finally {
+      setAnalyticsLoading(false);
+    }
+  }, []);
+
   useEffect(() => {
     void loadReplyLimits();
-  }, [loadReplyLimits]);
+    void loadAnalytics();
+  }, [loadReplyLimits, loadAnalytics]);
 
   async function refreshReplies() {
     const query =
@@ -126,6 +204,7 @@ export function AdminSocialRepliesPanel({
     }
     router.refresh();
     await loadReplyLimits();
+    await loadAnalytics();
   }
 
   function runAction(id: string, action: () => Promise<void>) {
@@ -153,6 +232,7 @@ export function AdminSocialRepliesPanel({
     startTransition(async () => {
       setMessage(null);
       setError(null);
+      setGeneratedBatch(null);
       try {
         const response = await fetch("/api/admin/social/replies/generate", {
           method: "POST",
@@ -165,15 +245,23 @@ export function AdminSocialRepliesPanel({
           }),
         });
         const data = (await response.json()) as {
-          reply?: SocialReply;
+          summary?: string;
+          batchId?: string;
           category?: string;
+          replies?: SocialReply[];
           error?: string;
         };
         if (!response.ok) {
-          throw new Error(data.error ?? "Failed to generate reply draft.");
+          throw new Error(data.error ?? "Failed to generate reply options.");
         }
+        setGeneratedBatch({
+          summary: data.summary ?? "",
+          batchId: data.batchId ?? "",
+          category: data.category ?? "",
+          options: data.replies ?? [],
+        });
         setMessage(
-          `Reply draft created${data.category ? ` (${data.category})` : ""}. Review and approve before posting.`,
+          `Generated 5 reply options${data.category ? ` (${data.category})` : ""}. Pick one to continue.`,
         );
         setTweetUrl("");
         setTargetSnippet("");
@@ -182,6 +270,77 @@ export function AdminSocialRepliesPanel({
         await refreshReplies();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong.");
+      }
+    });
+  }
+
+  function handleSelectOption(replyId: string) {
+    runAction(replyId, async () => {
+      const response = await fetch(
+        `/api/admin/social/replies/${replyId}/select`,
+        { method: "POST" },
+      );
+      const data = (await response.json()) as {
+        error?: string;
+        reply?: SocialReply;
+      };
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to select reply option.");
+      }
+      setGeneratedBatch(null);
+      setMessage(
+        `Selected ${STYLE_LABELS[data.reply?.replyStyle ?? ""] ?? "reply"} style. Review and approve before posting.`,
+      );
+    });
+  }
+
+  function handleImprove(replyId: string, improvement: ImprovementType) {
+    runAction(`${replyId}-${improvement}`, async () => {
+      const response = await fetch(
+        `/api/admin/social/replies/${replyId}/improve`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ improvement }),
+        },
+      );
+      const data = (await response.json()) as { error?: string };
+      if (!response.ok) {
+        throw new Error(data.error ?? "Failed to apply improvement.");
+      }
+      setMessage(
+        `Applied "${IMPROVEMENT_OPTIONS.find((o) => o.id === improvement)?.label ?? improvement}".`,
+      );
+    });
+  }
+
+  function handleRefreshMetrics() {
+    setMetricsRefreshing(true);
+    setError(null);
+    startTransition(async () => {
+      try {
+        const response = await fetch(
+          "/api/admin/social/replies/refresh-metrics",
+          { method: "POST" },
+        );
+        const data = (await response.json()) as {
+          updated?: number;
+          failed?: number;
+          error?: string;
+          message?: string;
+        };
+        if (!response.ok) {
+          throw new Error(data.error ?? "Failed to refresh metrics.");
+        }
+        setMessage(
+          data.message ??
+            `Refreshed metrics for ${data.updated ?? 0} repl${data.updated === 1 ? "y" : "ies"}${data.failed ? ` (${data.failed} failed)` : ""}.`,
+        );
+        await refreshReplies();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong.");
+      } finally {
+        setMetricsRefreshing(false);
       }
     });
   }
@@ -270,8 +429,22 @@ export function AdminSocialRepliesPanel({
     });
   }
 
-  const draftCount = replies.filter((r) => r.status === "draft").length;
-  const scheduledCount = replies.filter((r) => r.status === "scheduled").length;
+  const draftCount = committedReplies.filter((r) => r.status === "draft").length;
+  const scheduledCount = committedReplies.filter(
+    (r) => r.status === "scheduled",
+  ).length;
+
+  const displayBatches =
+    generatedBatch && generatedBatch.options.length > 0
+      ? [
+          {
+            batchId: generatedBatch.batchId,
+            summary: generatedBatch.summary,
+            options: generatedBatch.options,
+          },
+          ...pendingBatches.filter((b) => b.batchId !== generatedBatch.batchId),
+        ]
+      : pendingBatches;
 
   return (
     <>
@@ -289,6 +462,80 @@ export function AdminSocialRepliesPanel({
           {error ?? message}
         </div>
       )}
+
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="flex items-center gap-2 text-lg font-semibold">
+                <BarChart3 className="h-5 w-5 text-electric" />
+                Reply analytics
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Track posted replies and public metrics from X when available.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="gap-1.5 shrink-0"
+              disabled={metricsRefreshing || pending}
+              onClick={handleRefreshMetrics}
+            >
+              {metricsRefreshing ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4" />
+              )}
+              Refresh metrics
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="pt-0">
+          {analyticsLoading ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Loading analytics…
+            </div>
+          ) : analytics ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+              <AnalyticsStat
+                icon={Send}
+                label="Replies sent"
+                value={analytics.repliesSent}
+              />
+              <AnalyticsStat
+                icon={Heart}
+                label="Likes received"
+                value={analytics.likesReceived}
+              />
+              <AnalyticsStat
+                icon={Eye}
+                label="Impressions"
+                value={analytics.replyImpressions}
+              />
+              <AnalyticsStat
+                icon={MessageSquare}
+                label="Replies on posts"
+                value={analytics.repliesOnPosts}
+              />
+              <AnalyticsStat
+                icon={Users}
+                label="Profile visits"
+                value={analytics.profileVisits}
+                hint="Placeholder"
+              />
+              <AnalyticsStat
+                icon={Users}
+                label="Followers gained"
+                value={analytics.followersGained}
+                hint="Placeholder"
+              />
+            </div>
+          ) : null}
+        </CardContent>
+      </Card>
 
       <Card className="mb-6">
         <CardHeader>
@@ -333,8 +580,8 @@ export function AdminSocialRepliesPanel({
               <div>
                 <h2 className="text-lg font-semibold">Add tweet to reply to</h2>
                 <p className="text-sm text-muted-foreground">
-                  Paste an X status URL or tweet ID. Template-based drafts only —
-                  no OpenAI, no auto-posting.
+                  Paste an X status URL or tweet ID. Generates a summary plus 5
+                  styled reply options — template-based, no OpenAI.
                 </p>
               </div>
               <Button
@@ -414,7 +661,7 @@ export function AdminSocialRepliesPanel({
               </div>
               <div className="sm:col-span-2">
                 <label className="mb-1 block text-xs font-medium text-muted-foreground">
-                  Original tweet text (optional — improves category matching)
+                  Original tweet text (optional — improves summary & matching)
                 </label>
                 <textarea
                   value={targetSnippet}
@@ -440,19 +687,88 @@ export function AdminSocialRepliesPanel({
                 ) : (
                   <Sparkles className="h-4 w-4" />
                 )}
-                Generate reply draft
+                Generate 5 reply options
               </Button>
             </div>
           </div>
         </CardHeader>
       </Card>
 
+      {displayBatches.length > 0 && (
+        <Card className="mb-6">
+          <CardHeader>
+            <h2 className="text-lg font-semibold">Pick a reply style</h2>
+            <p className="text-sm text-muted-foreground">
+              Choose one option to save as your draft. The other four are discarded.
+            </p>
+          </CardHeader>
+          <CardContent className="space-y-6 pt-0">
+            {displayBatches.map((batch) => (
+              <div key={batch.batchId} className="space-y-4">
+                {batch.summary && (
+                  <div className="rounded-lg border border-electric/30 bg-electric/5 px-4 py-3 text-sm">
+                    <p className="font-medium text-foreground">Post summary</p>
+                    <p className="mt-1 text-muted-foreground">{batch.summary}</p>
+                  </div>
+                )}
+                <div className="grid gap-3 lg:grid-cols-2">
+                  {batch.options.map((option) => {
+                    const isBusy =
+                      pending && actionId === option.id;
+                    return (
+                      <article
+                        key={option.id}
+                        className="rounded-xl border border-border/60 p-4"
+                      >
+                        <div className="mb-2 flex flex-wrap items-center gap-2">
+                          <Badge variant="purple">
+                            {STYLE_LABELS[option.replyStyle ?? ""] ??
+                              option.replyStyle}
+                          </Badge>
+                          {option.includesLink && (
+                            <Badge variant="outline">Includes link</Badge>
+                          )}
+                          <span className="text-xs text-muted-foreground">
+                            {option.content.length}/280 chars
+                          </span>
+                        </div>
+                        <p className="whitespace-pre-wrap text-sm">
+                          {option.content}
+                        </p>
+                        <div className="mt-3">
+                          <Button
+                            type="button"
+                            variant="primary"
+                            size="sm"
+                            className="gap-1.5"
+                            disabled={isBusy}
+                            onClick={() => handleSelectOption(option.id)}
+                          >
+                            {isBusy ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Check className="h-4 w-4" />
+                            )}
+                            Use this reply
+                          </Button>
+                        </div>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <div>
             <h2 className="text-lg font-semibold">Reply drafts</h2>
             <p className="text-sm text-muted-foreground">
-              {replies.length} repl{replies.length === 1 ? "y" : "ies"}
+              {committedReplies.length} repl
+              {committedReplies.length === 1 ? "y" : "ies"}
               {draftCount > 0 ? ` · ${draftCount} draft${draftCount === 1 ? "" : "s"}` : ""}
               {scheduledCount > 0
                 ? ` · ${scheduledCount} scheduled`
@@ -461,12 +777,12 @@ export function AdminSocialRepliesPanel({
           </div>
         </CardHeader>
         <CardContent className="space-y-6 pt-0">
-          {replies.length === 0 ? (
+          {committedReplies.length === 0 ? (
             <p className="text-sm text-muted-foreground">
-              No reply drafts yet. Add a tweet URL above to generate a draft.
+              No reply drafts yet. Add a tweet URL above to generate options.
             </p>
           ) : (
-            replies.map((reply) => {
+            committedReplies.map((reply) => {
               const badge = statusBadge(reply.status);
               const isBusy = pending && actionId === reply.id;
               const canEdit = reply.status !== "posted";
@@ -480,6 +796,11 @@ export function AdminSocialRepliesPanel({
                 >
                   <div className="mb-3 flex flex-wrap items-center gap-2">
                     <Badge variant={badge.variant}>{badge.label}</Badge>
+                    {reply.replyStyle && (
+                      <Badge variant="outline">
+                        {STYLE_LABELS[reply.replyStyle] ?? reply.replyStyle}
+                      </Badge>
+                    )}
                     {reply.includesLink && (
                       <Badge variant="outline">Includes link</Badge>
                     )}
@@ -526,6 +847,17 @@ export function AdminSocialRepliesPanel({
                     )}
                   </div>
 
+                  {reply.postSummary && (
+                    <div className="mb-3 rounded-lg border border-border/40 bg-muted/20 px-3 py-2 text-sm">
+                      <p className="font-medium text-muted-foreground">
+                        Post summary
+                      </p>
+                      <p className="mt-1 text-muted-foreground">
+                        {reply.postSummary}
+                      </p>
+                    </div>
+                  )}
+
                   {(reply.targetAuthor || reply.targetSnippet) && (
                     <div className="mb-3 rounded-lg border border-border/40 bg-muted/20 px-3 py-2 text-sm">
                       {reply.targetAuthor && (
@@ -543,6 +875,7 @@ export function AdminSocialRepliesPanel({
 
                   {canEdit ? (
                     <ReplyEditor
+                      key={`${reply.id}-${reply.content}`}
                       defaultContent={reply.content}
                       disabled={isBusy}
                       onSave={(content) => handleContentSave(reply.id, content)}
@@ -550,6 +883,48 @@ export function AdminSocialRepliesPanel({
                   ) : (
                     <p className="whitespace-pre-wrap text-sm">{reply.content}</p>
                   )}
+
+                  {canEdit && (
+                    <ImprovementButtons
+                      disabled={isBusy}
+                      onImprove={(type) => handleImprove(reply.id, type)}
+                      pendingType={
+                        pending && actionId?.startsWith(`${reply.id}-`)
+                          ? (actionId.replace(`${reply.id}-`, "") as ImprovementType)
+                          : null
+                      }
+                    />
+                  )}
+
+                  {reply.status === "posted" &&
+                    (reply.likeCount != null ||
+                      reply.impressionCount != null) && (
+                      <div className="mt-3 flex flex-wrap gap-3 text-xs text-muted-foreground">
+                        {reply.likeCount != null && (
+                          <span className="inline-flex items-center gap-1">
+                            <Heart className="h-3.5 w-3.5" />
+                            {reply.likeCount} likes
+                          </span>
+                        )}
+                        {reply.impressionCount != null && (
+                          <span className="inline-flex items-center gap-1">
+                            <Eye className="h-3.5 w-3.5" />
+                            {reply.impressionCount} impressions
+                          </span>
+                        )}
+                        {reply.replyCount != null && (
+                          <span className="inline-flex items-center gap-1">
+                            <MessageSquare className="h-3.5 w-3.5" />
+                            {reply.replyCount} replies
+                          </span>
+                        )}
+                        {reply.metricsFetchedAt && (
+                          <span>
+                            Metrics updated {formatDateTime(reply.metricsFetchedAt)}
+                          </span>
+                        )}
+                      </div>
+                    )}
 
                   {reply.status === "failed" && reply.error && (
                     <div
@@ -640,6 +1015,66 @@ export function AdminSocialRepliesPanel({
   );
 }
 
+function AnalyticsStat({
+  icon: Icon,
+  label,
+  value,
+  hint,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  value: number;
+  hint?: string;
+}) {
+  return (
+    <div className="rounded-lg border border-border/60 bg-muted/10 px-4 py-3">
+      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+        <Icon className="h-3.5 w-3.5" />
+        {label}
+        {hint && (
+          <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] uppercase tracking-wide">
+            {hint}
+          </span>
+        )}
+      </div>
+      <p className="mt-1 text-2xl font-semibold tabular-nums">{value}</p>
+    </div>
+  );
+}
+
+function ImprovementButtons({
+  disabled,
+  onImprove,
+  pendingType,
+}: {
+  disabled: boolean;
+  onImprove: (type: ImprovementType) => void;
+  pendingType: ImprovementType | null;
+}) {
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      {IMPROVEMENT_OPTIONS.map((option) => {
+        const isPending = pendingType === option.id;
+        return (
+          <Button
+            key={option.id}
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={disabled}
+            onClick={() => onImprove(option.id)}
+          >
+            {isPending ? (
+              <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+            ) : null}
+            {option.label}
+          </Button>
+        );
+      })}
+    </div>
+  );
+}
+
 function ReplyEditor({
   defaultContent,
   disabled,
@@ -650,6 +1085,10 @@ function ReplyEditor({
   onSave: (content: string) => void;
 }) {
   const [content, setContent] = useState(defaultContent);
+
+  useEffect(() => {
+    setContent(defaultContent);
+  }, [defaultContent]);
 
   return (
     <div className="space-y-2">

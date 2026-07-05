@@ -253,24 +253,34 @@ model SocialPost {
 }
 
 model SocialReply {
-  id             String           @id @default(cuid())
-  platform       SocialPlatform   @default(x)
-  targetTweetId  String
-  targetTweetUrl String?
-  targetAuthor   String?
-  targetSnippet  String?
-  content        String
-  status         SocialPostStatus @default(draft)
-  includesLink   Boolean          @default(false)
-  taglineKey     String?
-  scheduledAt    DateTime?
-  postedAt       DateTime?
-  xReplyId       String?
-  error          String?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
+  id                String           @id @default(cuid())
+  platform          SocialPlatform   @default(x)
+  targetTweetId     String
+  targetTweetUrl    String?
+  targetAuthor      String?
+  targetSnippet     String?
+  postSummary       String?
+  replyStyle        String?
+  parentBatchId     String?
+  content           String
+  status            SocialPostStatus @default(draft)
+  includesLink      Boolean          @default(false)
+  taglineKey        String?
+  scheduledAt       DateTime?
+  postedAt          DateTime?
+  xReplyId          String?
+  likeCount         Int?
+  impressionCount   Int?
+  replyCount        Int?
+  profileVisitCount Int?
+  followerGain      Int?
+  metricsFetchedAt  DateTime?
+  error             String?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   @@index([status, scheduledAt])
   @@index([targetTweetId])
   @@index([taglineKey])
+  @@index([parentBatchId])
 }
