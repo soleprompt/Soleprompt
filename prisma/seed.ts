@@ -1,18 +1,30 @@
-import "dotenv/config";
-import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
+import dotenv from "dotenv";
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 
-const adapter = new PrismaBetterSqlite3({
-  url: process.env.DATABASE_URL ?? "file:./dev.db",
-});
+dotenv.config({ path: ".env.local" });
+dotenv.config();
+
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+  throw new Error("DATABASE_URL environment variable is not set");
+}
+
+const adapter = new PrismaPg({ connectionString });
 const prisma = new PrismaClient({ adapter });
 
 const CATEGORIES = [
   {
     slug: "marketing",
     name: "Marketing",
-    description: "Ads, SEO, and growth campaigns",
+    description: "Ads, campaigns, and growth strategies",
     icon: "Megaphone",
+  },
+  {
+    slug: "seo",
+    name: "SEO",
+    description: "Search optimization, rankings, and organic traffic",
+    icon: "Search",
   },
   {
     slug: "development",
@@ -21,28 +33,16 @@ const CATEGORIES = [
     icon: "Code2",
   },
   {
-    slug: "writing",
-    name: "Writing",
-    description: "Copy, blogs, and storytelling",
-    icon: "PenLine",
-  },
-  {
-    slug: "design",
-    name: "Design",
-    description: "UI prompts and creative direction",
-    icon: "Palette",
-  },
-  {
     slug: "business",
     name: "Business",
     description: "Strategy, ops, and productivity",
     icon: "Briefcase",
   },
   {
-    slug: "education",
-    name: "Education",
-    description: "Courses, tutoring, and learning",
-    icon: "GraduationCap",
+    slug: "writing",
+    name: "Writing",
+    description: "Copy, blogs, and storytelling",
+    icon: "PenLine",
   },
 ] as const;
 
@@ -60,285 +60,197 @@ const BUYERS = [
   { clerkUserId: "seed_buyer_3", username: "sam_t", email: "sam.t@example.com" },
   { clerkUserId: "seed_buyer_4", username: "riley_p", email: "riley.p@example.com" },
   { clerkUserId: "seed_buyer_5", username: "casey_w", email: "casey.w@example.com" },
+  { clerkUserId: "seed_buyer_6", username: "taylor_n", email: "taylor.n@example.com" },
+  { clerkUserId: "seed_buyer_7", username: "morgan_l", email: "morgan.l@example.com" },
+  { clerkUserId: "seed_buyer_8", username: "drew_h", email: "drew.h@example.com" },
 ] as const;
 
-const PROMPTS = [
-  {
-    title: "SEO Content Engine",
-    description: "Generate rank-ready blog posts, meta descriptions, and keyword clusters in seconds.",
-    content: "You are an SEO expert. Given a topic and target keywords, produce a complete blog post outline with meta description and internal linking suggestions.",
-    categorySlug: "marketing",
-    price: 24.99,
-    featured: true,
-    tags: ["SEO", "Content", "Blog"],
-    sellerIndex: 0,
-    views: 1240,
-  },
-  {
-    title: "Full-Stack Code Architect",
-    description: "Production-grade code scaffolds with tests, docs, and best practices built in.",
-    content: "You are a senior full-stack engineer. Scaffold a production-ready application with tests, documentation, and deployment instructions.",
-    categorySlug: "development",
-    price: 39.99,
-    featured: true,
-    tags: ["React", "Node.js", "TypeScript"],
-    sellerIndex: 1,
-    views: 890,
-  },
-  {
-    title: "Brand Voice Studio",
-    description: "Craft consistent brand messaging across ads, emails, and social campaigns.",
-    content: "You are a brand strategist. Define a brand voice guide and produce sample copy for ads, emails, and social posts.",
-    categorySlug: "writing",
-    price: 19.99,
-    featured: true,
-    tags: ["Copywriting", "Brand", "Ads"],
-    sellerIndex: 2,
-    views: 756,
-  },
-  {
-    title: "Data Analysis Pro",
-    description: "Transform raw datasets into insights, visualizations, and executive summaries.",
-    content: "You are a data analyst. Analyze the provided dataset and produce insights, chart recommendations, and an executive summary.",
-    categorySlug: "business",
-    price: 29.99,
-    featured: true,
-    tags: ["Python", "Excel", "Reports"],
-    sellerIndex: 3,
-    views: 680,
-  },
-  {
-    title: "Code Review Assistant",
-    description: "Thorough code reviews with security, performance, and style feedback.",
-    content: "You are a senior code reviewer. Review the provided code for bugs, security issues, performance problems, and style improvements.",
-    categorySlug: "development",
-    price: 19.99,
-    featured: false,
-    tags: ["Code Review", "Security", "Best Practices"],
-    sellerIndex: 1,
-    views: 890,
-  },
-  {
-    title: "Social Media Calendar",
-    description: "Plan a month of engaging social content across platforms.",
-    content: "You are a social media strategist. Create a 30-day content calendar with post ideas, captions, and hashtags.",
-    categorySlug: "marketing",
-    price: 14.99,
-    featured: false,
-    tags: ["Social Media", "Content", "Planning"],
-    sellerIndex: 0,
-    views: 540,
-  },
-  {
-    title: "Legal Document Summarizer",
-    description: "Plain-language summaries of contracts and legal documents.",
-    content: "You are a legal analyst. Summarize the provided legal document in plain language, highlighting key obligations and risks.",
-    categorySlug: "business",
-    price: 34.99,
-    featured: false,
-    tags: ["Legal", "Contracts", "Summary"],
-    sellerIndex: 3,
-    views: 320,
-  },
-  {
-    title: "UI Design Brief Generator",
-    description: "Create detailed design briefs from product requirements.",
-    content: "You are a UX designer. Generate a comprehensive design brief including user personas, wireframe suggestions, and design system recommendations.",
-    categorySlug: "design",
-    price: 22.99,
-    featured: false,
-    tags: ["UI", "UX", "Design"],
-    sellerIndex: 2,
-    views: 445,
-  },
-  {
-    title: "Email Sequence Builder",
-    description: "High-converting email drip campaigns for any niche.",
-    content: "You are an email marketing expert. Create a 5-email nurture sequence with subject lines, body copy, and CTAs.",
-    categorySlug: "marketing",
-    price: 18.99,
-    featured: false,
-    tags: ["Email", "Conversion", "Copywriting"],
-    sellerIndex: 0,
-    views: 612,
-  },
-  {
-    title: "API Documentation Writer",
-    description: "Generate clear, developer-friendly API docs from endpoints.",
-    content: "You are a technical writer. Generate comprehensive API documentation with examples, error codes, and authentication guides.",
-    categorySlug: "development",
-    price: 27.99,
-    featured: false,
-    tags: ["API", "Documentation", "Developer"],
-    sellerIndex: 1,
-    views: 378,
-  },
-  {
-    title: "Course Curriculum Designer",
-    description: "Structure complete online courses with modules and assessments.",
-    content: "You are an instructional designer. Create a full course curriculum with modules, lessons, quizzes, and learning outcomes.",
-    categorySlug: "education",
-    price: 31.99,
-    featured: false,
-    tags: ["Courses", "Education", "Curriculum"],
-    sellerIndex: 4,
-    views: 290,
-  },
-  {
-    title: "Product Launch Playbook",
-    description: "Step-by-step launch plans for SaaS and digital products.",
-    content: "You are a product launch strategist. Create a 90-day launch plan with milestones, channels, and success metrics.",
-    categorySlug: "business",
-    price: 44.99,
-    featured: false,
-    tags: ["Launch", "SaaS", "Strategy"],
-    sellerIndex: 3,
-    views: 510,
-  },
-  {
-    title: "Storytelling Framework",
-    description: "Narrative structures for blogs, videos, and presentations.",
-    content: "You are a storytelling coach. Apply proven narrative frameworks to craft compelling stories for any medium.",
-    categorySlug: "writing",
-    price: 16.99,
-    featured: false,
-    tags: ["Storytelling", "Narrative", "Content"],
-    sellerIndex: 2,
-    views: 425,
-  },
-  {
-    title: "Color Palette Generator",
-    description: "Brand-aligned color systems with accessibility checks.",
-    content: "You are a color theory expert. Generate a cohesive color palette with hex codes, usage guidelines, and WCAG compliance notes.",
-    categorySlug: "design",
-    price: 12.99,
-    featured: false,
-    tags: ["Color", "Branding", "Accessibility"],
-    sellerIndex: 2,
-    views: 380,
-  },
-  {
-    title: "Meeting Notes Summarizer",
-    description: "Turn meeting transcripts into action items and decisions.",
-    content: "You are an executive assistant. Summarize meeting notes into key decisions, action items with owners, and follow-up dates.",
-    categorySlug: "business",
-    price: 9.99,
-    featured: false,
-    tags: ["Productivity", "Meetings", "Notes"],
-    sellerIndex: 4,
-    views: 720,
-  },
-  {
-    title: "Quiz Generator Pro",
-    description: "Create engaging quizzes for education and lead generation.",
-    content: "You are an assessment designer. Generate quiz questions with multiple choice answers, explanations, and difficulty levels.",
-    categorySlug: "education",
-    price: 15.99,
-    featured: false,
-    tags: ["Quiz", "Assessment", "Learning"],
-    sellerIndex: 4,
-    views: 340,
-  },
-  {
-    title: "Ad Copy Variations",
-    description: "Generate dozens of ad copy variants for A/B testing.",
-    content: "You are a performance marketer. Generate 10 ad copy variations for different platforms with headlines, body text, and CTAs.",
-    categorySlug: "marketing",
-    price: 21.99,
-    featured: false,
-    tags: ["Ads", "A/B Testing", "Copywriting"],
-    sellerIndex: 0,
-    views: 890,
-  },
-  {
-    title: "Database Schema Designer",
-    description: "Design normalized database schemas from requirements.",
-    content: "You are a database architect. Design a normalized schema with tables, relationships, indexes, and migration notes.",
-    categorySlug: "development",
-    price: 32.99,
-    featured: false,
-    tags: ["Database", "SQL", "Architecture"],
-    sellerIndex: 1,
-    views: 410,
-  },
-  {
-    title: "Pitch Deck Narrative",
-    description: "Investor-ready pitch deck content and speaker notes.",
-    content: "You are a startup advisor. Create pitch deck slide content with speaker notes for a seed-stage startup.",
-    categorySlug: "business",
-    price: 49.99,
-    featured: false,
-    tags: ["Pitch Deck", "Startup", "Fundraising"],
-    sellerIndex: 3,
-    views: 560,
-  },
-  {
-    title: "Blog Post Outliner",
-    description: "SEO-optimized blog outlines with headings and keywords.",
-    content: "You are a content strategist. Create a detailed blog post outline with H2/H3 headings, keyword placement, and word count targets.",
-    categorySlug: "writing",
-    price: 11.99,
-    featured: false,
-    tags: ["Blog", "SEO", "Outline"],
-    sellerIndex: 2,
-    views: 650,
-  },
-  {
-    title: "Icon Set Brief",
-    description: "Detailed briefs for custom icon set design projects.",
-    content: "You are an icon designer. Create a comprehensive brief for a custom icon set including style, grid, and usage guidelines.",
-    categorySlug: "design",
-    price: 17.99,
-    featured: false,
-    tags: ["Icons", "Design", "Brief"],
-    sellerIndex: 2,
-    views: 280,
-  },
-  {
-    title: "Study Guide Creator",
-    description: "Comprehensive study guides from textbooks and lectures.",
-    content: "You are an academic tutor. Create a structured study guide with key concepts, practice questions, and memory aids.",
-    categorySlug: "education",
-    price: 13.99,
-    featured: false,
-    tags: ["Study", "Learning", "Education"],
-    sellerIndex: 4,
-    views: 490,
-  },
-  {
-    title: "Customer Persona Builder",
-    description: "Detailed buyer personas from market research data.",
-    content: "You are a market researcher. Build detailed customer personas with demographics, pain points, goals, and buying triggers.",
-    categorySlug: "marketing",
-    price: 23.99,
-    featured: false,
-    tags: ["Persona", "Research", "Marketing"],
-    sellerIndex: 0,
-    views: 530,
-  },
-  {
-    title: "Bug Report Analyzer",
-    description: "Triage and prioritize bug reports with fix suggestions.",
-    content: "You are a QA lead. Analyze bug reports, assign severity, suggest root causes, and recommend fixes.",
-    categorySlug: "development",
-    price: 26.99,
-    featured: false,
-    tags: ["QA", "Debugging", "Triage"],
-    sellerIndex: 1,
-    views: 360,
-  },
-  {
-    title: "Weekly Report Generator",
-    description: "Professional weekly status reports for teams and clients.",
-    content: "You are a project manager. Generate a weekly status report with accomplishments, blockers, and next steps.",
-    categorySlug: "business",
-    price: 8.99,
-    featured: false,
-    tags: ["Reports", "Productivity", "PM"],
-    sellerIndex: 4,
-    views: 810,
-  },
-] as const;
+type CategorySlug = (typeof CATEGORIES)[number]["slug"];
+
+type PromptDefinition = {
+  title: string;
+  categorySlug: CategorySlug;
+  tags: string[];
+  price: number;
+  description: string;
+  content: string;
+};
+
+function prompt(
+  title: string,
+  categorySlug: CategorySlug,
+  tags: string[],
+  price: number,
+  role: string,
+  deliverable: string,
+): PromptDefinition {
+  return {
+    title,
+    categorySlug,
+    tags,
+    price,
+    description: `${deliverable} with structured outputs, best-practice frameworks, and ready-to-use templates.`,
+    content: `You are a ${role}. The user will provide their product, audience, goals, and constraints. ${deliverable}. Return clear sections, actionable recommendations, and copy-ready assets the user can deploy immediately.`,
+  };
+}
+
+const MARKETPLACE_PROMPTS: PromptDefinition[] = [
+  // Marketing (1–20)
+  prompt("Facebook Ads Master Prompt", "marketing", ["Facebook", "Paid Ads", "Conversion"], 24.99, "senior performance marketer", "Build complete Facebook ad campaigns with audience targeting, creative angles, primary text, headlines, and CTA variants"),
+  prompt("Google Ads Campaign Builder", "marketing", ["Google Ads", "PPC", "Search"], 27.99, "Google Ads specialist", "Design search and display campaigns with keyword groups, ad copy, extensions, and budget allocation"),
+  prompt("TikTok Ad Generator", "marketing", ["TikTok", "Video Ads", "UGC"], 19.99, "TikTok growth marketer", "Create scroll-stopping TikTok ad scripts, hooks, and creative briefs optimized for short-form video"),
+  prompt("Instagram Carousel Creator", "marketing", ["Instagram", "Carousel", "Social"], 16.99, "Instagram content strategist", "Write multi-slide carousel copy with hook slides, educational beats, and a strong closing CTA"),
+  prompt("Viral X Thread Writer", "marketing", ["X", "Threads", "Social"], 14.99, "social media copywriter", "Draft viral X threads with a compelling hook, numbered insights, and engagement-driving close"),
+  prompt("LinkedIn Authority Posts", "marketing", ["LinkedIn", "B2B", "Thought Leadership"], 18.99, "LinkedIn ghostwriter", "Produce authority-building LinkedIn posts with story hooks, lessons, and professional CTAs"),
+  prompt("Email Marketing Campaign Generator", "marketing", ["Email", "Campaigns", "Automation"], 22.99, "email marketing strategist", "Generate full email campaigns including welcome, nurture, promo, and re-engagement sequences"),
+  prompt("Landing Page Copywriter", "marketing", ["Landing Page", "Conversion", "Copy"], 21.99, "conversion copywriter", "Write hero, benefits, social proof, FAQ, and CTA sections for high-converting landing pages"),
+  prompt("Product Launch Marketing Plan", "marketing", ["Launch", "Go-to-Market", "Strategy"], 34.99, "product launch marketer", "Create a multi-channel launch plan with timelines, messaging pillars, and channel tactics"),
+  prompt("Black Friday Campaign Builder", "marketing", ["Black Friday", "Promotions", "E-commerce"], 26.99, "e-commerce campaign manager", "Build Black Friday offer stacks, email flows, ad angles, and urgency-driven copy"),
+  prompt("Holiday Marketing Planner", "marketing", ["Holiday", "Seasonal", "Campaigns"], 23.99, "seasonal marketing planner", "Plan holiday campaigns across email, social, and paid with themed messaging calendars"),
+  prompt("Marketing Funnel Generator", "marketing", ["Funnel", "TOFU", "MOFU"], 29.99, "funnel strategist", "Map awareness-to-conversion funnels with stage-specific content, offers, and KPIs"),
+  prompt("Customer Avatar Builder", "marketing", ["Persona", "ICP", "Research"], 17.99, "market researcher", "Build detailed customer avatars with demographics, pain points, goals, and buying triggers"),
+  prompt("Marketing SWOT Analysis", "marketing", ["SWOT", "Strategy", "Analysis"], 15.99, "marketing strategist", "Run a marketing SWOT with strengths, weaknesses, opportunities, threats, and action priorities"),
+  prompt("Viral Hook Generator", "marketing", ["Hooks", "Viral", "Content"], 12.99, "content hook specialist", "Generate dozens of scroll-stopping hooks for ads, reels, and social posts"),
+  prompt("Ad Headline Generator", "marketing", ["Headlines", "Ads", "A/B Testing"], 11.99, "direct response copywriter", "Produce high-converting ad headline variants for search, social, and display"),
+  prompt("YouTube Thumbnail Title Generator", "marketing", ["YouTube", "Titles", "CTR"], 13.99, "YouTube growth strategist", "Create click-worthy thumbnail title pairs optimized for CTR and search"),
+  prompt("Conversion Rate Optimization Advisor", "marketing", ["CRO", "Testing", "UX"], 31.99, "CRO consultant", "Audit pages and recommend CRO experiments with hypotheses, variants, and success metrics"),
+  prompt("Sales Funnel Copy Generator", "marketing", ["Sales Funnel", "Copy", "Conversion"], 25.99, "sales funnel copywriter", "Write funnel copy for opt-in, tripwire, core offer, upsell, and thank-you pages"),
+  prompt("Local Business Marketing Planner", "marketing", ["Local", "SMB", "Growth"], 20.99, "local marketing consultant", "Create local marketing plans with GBP, reviews, geo-targeted ads, and community tactics"),
+
+  // SEO (21–40)
+  prompt("Complete SEO Blog Writer", "seo", ["Blog", "Content", "SEO"], 26.99, "SEO content writer", "Write full SEO blog posts with optimized headings, internal links, and meta suggestions"),
+  prompt("Keyword Research Assistant", "seo", ["Keywords", "Research", "Intent"], 22.99, "SEO researcher", "Generate keyword lists grouped by intent, difficulty, and content opportunity"),
+  prompt("SEO Content Cluster Generator", "seo", ["Clusters", "Pillar Pages", "Topical Authority"], 28.99, "SEO strategist", "Build topical content clusters with pillar pages and supporting article outlines"),
+  prompt("Meta Title Generator", "seo", ["Meta Title", "SERP", "On-Page"], 11.99, "SEO copywriter", "Generate optimized title tags within character limits for target keywords"),
+  prompt("Meta Description Generator", "seo", ["Meta Description", "SERP", "CTR"], 10.99, "SEO copywriter", "Write compelling meta descriptions that improve CTR while matching search intent"),
+  prompt("Internal Linking Planner", "seo", ["Internal Links", "Site Architecture", "On-Page"], 19.99, "technical SEO specialist", "Plan internal linking maps with anchor text, hub pages, and orphan page fixes"),
+  prompt("Technical SEO Auditor", "seo", ["Technical SEO", "Audit", "Crawl"], 34.99, "technical SEO consultant", "Audit crawlability, indexation, Core Web Vitals, and schema with prioritized fixes"),
+  prompt("Local SEO Optimizer", "seo", ["Local SEO", "GBP", "Maps"], 21.99, "local SEO expert", "Optimize local rankings with GBP, citations, local pages, and review strategies"),
+  prompt("Backlink Outreach Writer", "seo", ["Link Building", "Outreach", "Backlinks"], 24.99, "link building specialist", "Write personalized backlink outreach emails and content pitch angles"),
+  prompt("Competitor SEO Analyzer", "seo", ["Competitor", "Gap Analysis", "Research"], 27.99, "SEO analyst", "Analyze competitor keywords, content gaps, and backlink opportunities"),
+  prompt("FAQ Schema Generator", "seo", ["FAQ Schema", "Structured Data", "Rich Results"], 16.99, "SEO schema specialist", "Generate FAQ content and JSON-LD schema markup for rich results"),
+  prompt("Featured Snippet Optimizer", "seo", ["Featured Snippets", "SERP", "Formatting"], 20.99, "SERP optimization expert", "Rewrite content blocks to target featured snippets and People Also Ask"),
+  prompt("Ecommerce SEO Optimizer", "seo", ["E-commerce", "Product SEO", "Category Pages"], 29.99, "e-commerce SEO consultant", "Optimize product, category, and faceted navigation pages for organic search"),
+  prompt("SEO Content Calendar", "seo", ["Content Calendar", "Planning", "Publishing"], 18.99, "SEO content planner", "Build a 90-day SEO content calendar with topics, keywords, and publish dates"),
+  prompt("Search Intent Analyzer", "seo", ["Search Intent", "SERP Analysis", "Keywords"], 17.99, "search intent analyst", "Classify keywords by intent and recommend content formats for each cluster"),
+  prompt("Long-Tail Keyword Finder", "seo", ["Long-Tail", "Keywords", "Low Competition"], 15.99, "keyword researcher", "Discover long-tail keyword opportunities with content angle suggestions"),
+  prompt("Programmatic SEO Planner", "seo", ["Programmatic SEO", "Templates", "Scale"], 32.99, "programmatic SEO architect", "Design programmatic page templates, data sources, and indexation rules"),
+  prompt("Content Refresh Optimizer", "seo", ["Content Refresh", "Updates", "Rankings"], 23.99, "SEO editor", "Audit declining pages and recommend refresh updates to recover rankings"),
+  prompt("YouTube SEO Assistant", "seo", ["YouTube", "Video SEO", "Discovery"], 19.99, "YouTube SEO specialist", "Optimize titles, descriptions, tags, chapters, and playlists for video discovery"),
+  prompt("Pinterest SEO Writer", "seo", ["Pinterest", "Visual Search", "Pins"], 14.99, "Pinterest SEO strategist", "Write pin titles, descriptions, and board strategies for Pinterest search traffic"),
+
+  // Programming → Development (41–60)
+  prompt("Full Stack React Architect", "development", ["React", "Full Stack", "Architecture"], 39.99, "senior full-stack architect", "Design and scaffold production-ready React applications with routing, state, API layer, and deployment plan"),
+  prompt("Next.js SaaS Generator", "development", ["Next.js", "SaaS", "TypeScript"], 44.99, "Next.js SaaS engineer", "Generate Next.js SaaS scaffolds with auth, billing hooks, dashboard routes, and database schema"),
+  prompt("Python Automation Builder", "development", ["Python", "Automation", "Scripts"], 24.99, "Python automation engineer", "Build Python scripts for data processing, API integration, and workflow automation"),
+  prompt("SQL Query Generator", "development", ["SQL", "Queries", "Database"], 18.99, "database engineer", "Write optimized SQL queries, joins, aggregations, and explain execution considerations"),
+  prompt("API Documentation Writer", "development", ["API", "Documentation", "OpenAPI"], 27.99, "technical writer", "Generate developer-friendly API docs with endpoints, examples, errors, and auth guides"),
+  prompt("Debugging Assistant", "development", ["Debugging", "Troubleshooting", "Errors"], 21.99, "senior software debugger", "Diagnose bugs from stack traces and code snippets with root cause analysis and fixes"),
+  prompt("JavaScript Performance Optimizer", "development", ["JavaScript", "Performance", "Optimization"], 26.99, "frontend performance engineer", "Profile and optimize JavaScript for bundle size, runtime speed, and rendering efficiency"),
+  prompt("CSS Animation Generator", "development", ["CSS", "Animation", "UI"], 16.99, "UI motion designer", "Create CSS animations and keyframe transitions with accessible fallbacks"),
+  prompt("Mobile App Architecture Planner", "development", ["Mobile", "Architecture", "React Native"], 33.99, "mobile architect", "Plan mobile app architecture with navigation, state, offline strategy, and API design"),
+  prompt("AI Chatbot Builder", "development", ["AI", "Chatbot", "LLM"], 36.99, "AI application engineer", "Design chatbot flows, system prompts, tool use, and guardrails for production assistants"),
+  prompt("Chrome Extension Generator", "development", ["Chrome Extension", "JavaScript", "Manifest"], 22.99, "browser extension developer", "Scaffold Chrome extensions with manifest, background scripts, and popup UI"),
+  prompt("GitHub README Creator", "development", ["README", "GitHub", "Documentation"], 12.99, "open source maintainer", "Write polished README files with setup, usage, contributing, and badge sections"),
+  prompt("Code Review Assistant", "development", ["Code Review", "Quality", "Security"], 19.99, "staff engineer", "Review code for bugs, security issues, performance problems, and style improvements"),
+  prompt("Unit Test Generator", "development", ["Testing", "Unit Tests", "TDD"], 18.99, "test engineer", "Write comprehensive unit tests with edge cases, mocks, and clear assertions"),
+  prompt("DevOps Deployment Guide", "development", ["DevOps", "Deployment", "CI/CD"], 28.99, "DevOps engineer", "Create deployment guides with CI/CD pipelines, environments, and rollback procedures"),
+  prompt("Docker Assistant", "development", ["Docker", "Containers", "DevOps"], 23.99, "containerization specialist", "Write Dockerfiles, compose stacks, and container best practices for the target app"),
+  prompt("Prisma Database Designer", "development", ["Prisma", "Database", "Schema"], 29.99, "database architect", "Design Prisma schemas with models, relations, indexes, and migration notes"),
+  prompt("Authentication Setup Assistant", "development", ["Auth", "Security", "OAuth"], 31.99, "security-focused backend engineer", "Implement authentication flows with session/JWT/OAuth patterns and security checklist"),
+  prompt("API Error Troubleshooter", "development", ["API", "Errors", "Debugging"], 20.99, "backend engineer", "Troubleshoot API errors with status codes, payload validation, and fix recommendations"),
+  prompt("Refactoring Expert", "development", ["Refactoring", "Clean Code", "Legacy"], 27.99, "software refactoring specialist", "Produce phased refactoring plans with risk assessment and test coverage goals"),
+
+  // Business (61–80)
+  prompt("Business Plan Generator", "business", ["Business Plan", "Startup", "Strategy"], 42.99, "business plan consultant", "Generate complete business plans with market analysis, financials, and go-to-market strategy"),
+  prompt("Startup Pitch Deck Creator", "business", ["Pitch Deck", "Startup", "Fundraising"], 49.99, "startup advisor", "Create investor pitch deck slide content with speaker notes and narrative flow"),
+  prompt("Executive Summary Writer", "business", ["Executive Summary", "Reports", "Leadership"], 24.99, "executive communications writer", "Write concise executive summaries for proposals, reports, and board updates"),
+  prompt("Investor Pitch Coach", "business", ["Investor", "Pitch", "Fundraising"], 38.99, "venture pitch coach", "Coach founder pitches with storyline, objection handling, and Q&A preparation"),
+  prompt("Pricing Strategy Planner", "business", ["Pricing", "Strategy", "Revenue"], 29.99, "pricing strategist", "Design pricing tiers, packaging, and value metrics aligned to customer segments"),
+  prompt("Business Model Canvas Builder", "business", ["Business Model", "Canvas", "Startup"], 22.99, "business strategist", "Complete a Business Model Canvas with channels, revenue streams, and key metrics"),
+  prompt("Competitive Analysis Assistant", "business", ["Competitive Analysis", "Market", "Strategy"], 26.99, "competitive intelligence analyst", "Compare competitors on features, pricing, positioning, and strategic recommendations"),
+  prompt("Sales Script Generator", "business", ["Sales", "Scripts", "Closing"], 21.99, "sales enablement lead", "Write sales call scripts with discovery questions, objection handlers, and closes"),
+  prompt("Cold Outreach Email Writer", "business", ["Cold Email", "Outreach", "B2B"], 17.99, "B2B outreach specialist", "Draft personalized cold outreach sequences with follow-ups and CTAs"),
+  prompt("Proposal Generator", "business", ["Proposals", "Clients", "Sales"], 27.99, "proposal writer", "Generate client proposals with scope, timeline, deliverables, and pricing sections"),
+  prompt("Client Onboarding Kit", "business", ["Onboarding", "Clients", "Operations"], 23.99, "client success manager", "Build onboarding kits with welcome emails, checklists, and kickoff agendas"),
+  prompt("Meeting Agenda Creator", "business", ["Meetings", "Agenda", "Productivity"], 9.99, "executive assistant", "Create structured meeting agendas with objectives, topics, and action item templates"),
+  prompt("SOP Generator", "business", ["SOP", "Process", "Operations"], 19.99, "operations consultant", "Write standard operating procedures with steps, owners, and quality checkpoints"),
+  prompt("Hiring Interview Questions", "business", ["Hiring", "Interviews", "HR"], 16.99, "talent acquisition lead", "Generate role-specific interview questions with scoring rubrics"),
+  prompt("Performance Review Writer", "business", ["Performance Review", "HR", "Feedback"], 18.99, "HR business partner", "Draft balanced performance reviews with strengths, growth areas, and goals"),
+  prompt("Business KPI Dashboard Planner", "business", ["KPIs", "Dashboard", "Analytics"], 25.99, "business analyst", "Define KPI dashboards with metrics, targets, data sources, and reporting cadence"),
+  prompt("SWOT Generator", "business", ["SWOT", "Strategy", "Planning"], 14.99, "strategy consultant", "Produce SWOT analyses with actionable recommendations for each quadrant"),
+  prompt("Profit Margin Optimizer", "business", ["Profit Margin", "Finance", "Pricing"], 28.99, "financial analyst", "Analyze margins and recommend cost, pricing, and mix improvements"),
+  prompt("Strategic Planning Assistant", "business", ["Strategy", "Planning", "Roadmap"], 32.99, "strategy facilitator", "Build strategic plans with vision, priorities, initiatives, and quarterly milestones"),
+  prompt("Customer Retention Planner", "business", ["Retention", "Churn", "Customer Success"], 24.99, "customer retention strategist", "Design retention programs with lifecycle triggers, offers, and success metrics"),
+
+  // Content & Writing → Writing (81–100)
+  prompt("Book Outline Creator", "writing", ["Books", "Outline", "Publishing"], 29.99, "book development editor", "Create detailed book outlines with chapter summaries, arcs, and reader takeaways"),
+  prompt("Fiction Story Generator", "writing", ["Fiction", "Story", "Creative"], 22.99, "fiction writing coach", "Generate fiction story premises, character arcs, and scene beats in the chosen genre"),
+  prompt("YouTube Script Writer", "writing", ["YouTube", "Script", "Video"], 19.99, "YouTube scriptwriter", "Write video scripts with hooks, retention beats, B-roll cues, and CTAs"),
+  prompt("Podcast Episode Planner", "writing", ["Podcast", "Episodes", "Audio"], 18.99, "podcast producer", "Plan podcast episodes with segment outlines, guest questions, and show notes"),
+  prompt("Newsletter Writer", "writing", ["Newsletter", "Email", "Content"], 16.99, "newsletter editor", "Write engaging newsletter editions with intro hooks, curated sections, and CTAs"),
+  prompt("Blog Outline Generator", "writing", ["Blog", "Outline", "Content"], 12.99, "content strategist", "Create SEO-friendly blog outlines with H2/H3 structure and keyword placement"),
+  prompt("Viral Reel Script Generator", "writing", ["Reels", "Short Form", "Social"], 15.99, "short-form scriptwriter", "Write viral reel scripts with pattern interrupts, pacing, and on-screen text cues"),
+  prompt("AI Image Prompt Generator", "writing", ["AI Art", "Midjourney", "Prompts"], 13.99, "AI art prompt engineer", "Generate detailed image prompts with style, composition, lighting, and negative prompts"),
+  prompt("Resume Writer", "writing", ["Resume", "Career", "Job Search"], 21.99, "professional resume writer", "Write ATS-optimized resumes with achievement bullets and role-tailored summaries"),
+  prompt("Cover Letter Generator", "writing", ["Cover Letter", "Career", "Applications"], 14.99, "career coach", "Draft tailored cover letters connecting candidate strengths to role requirements"),
+  prompt("Professional Bio Creator", "writing", ["Bio", "Personal Brand", "LinkedIn"], 11.99, "personal branding writer", "Write professional bios for websites, speaker pages, and social profiles"),
+  prompt("Speech Writer", "writing", ["Speech", "Public Speaking", "Events"], 26.99, "speechwriter", "Craft speeches with opening hooks, narrative structure, and memorable closings"),
+  prompt("Press Release Generator", "writing", ["Press Release", "PR", "Media"], 23.99, "PR writer", "Draft newsworthy press releases with quotes, boilerplate, and AP-style formatting"),
+  prompt("Brand Voice Creator", "writing", ["Brand Voice", "Tone", "Guidelines"], 24.99, "brand voice strategist", "Define brand voice guidelines with tone pillars, do/don't examples, and sample copy"),
+  prompt("Ebook Generator", "writing", ["Ebook", "Lead Magnet", "Publishing"], 31.99, "ebook author", "Outline and draft ebook chapters with lead magnet positioning and CTAs"),
+  prompt("Course Outline Builder", "writing", ["Courses", "Curriculum", "Education"], 28.99, "instructional designer", "Build course outlines with modules, lessons, assessments, and learning outcomes"),
+  prompt("FAQ Creator", "writing", ["FAQ", "Support", "Documentation"], 10.99, "technical content writer", "Generate comprehensive FAQ pages organized by topic with clear answers"),
+  prompt("Customer Support Response Writer", "writing", ["Support", "Customer Service", "Templates"], 15.99, "customer support lead", "Write empathetic support response templates for common issues and escalations"),
+  prompt("Review Response Assistant", "writing", ["Reviews", "Reputation", "Support"], 12.99, "reputation manager", "Draft on-brand responses to customer reviews across positive and negative scenarios"),
+  prompt("AI Prompt Engineer Pro", "writing", ["Prompt Engineering", "LLM", "AI"], 34.99, "senior prompt engineer", "Design advanced LLM prompts with system instructions, examples, constraints, and evaluation criteria"),
+];
+
+type PromptSeed = {
+  title: string;
+  description: string;
+  content: string;
+  categorySlug: CategorySlug;
+  price: number;
+  featured: boolean;
+  tags: string[];
+  sellerIndex: number;
+  views: number;
+  salesCount: number;
+  ratings: number[];
+};
+
+function buildMarketplacePrompts(): PromptSeed[] {
+  const ratingPool = [5, 5, 4, 5, 4, 4, 5, 3, 5, 4];
+
+  return MARKETPLACE_PROMPTS.map((definition, index) => {
+    const sellerIndex = index % SELLERS.length;
+    const priceOffset = (index % 5) * 0.5;
+    const views = 220 + index * 37;
+    const salesCount = 4 + (index * 7) % 48;
+    const ratings = [
+      ratingPool[index % ratingPool.length],
+      ratingPool[(index + 2) % ratingPool.length],
+      ratingPool[(index + 5) % ratingPool.length],
+    ];
+
+    return {
+      title: definition.title,
+      description: definition.description,
+      content: definition.content,
+      categorySlug: definition.categorySlug,
+      price: Math.round((definition.price + priceOffset) * 100) / 100,
+      featured: index < 4,
+      tags: definition.tags,
+      sellerIndex,
+      views,
+      salesCount,
+      ratings,
+    };
+  });
+}
+
+const PROMPTS = buildMarketplacePrompts();
 
 const REVIEW_COMMENTS = [
   "Exactly what I needed. Saved hours of work.",
@@ -351,37 +263,36 @@ const REVIEW_COMMENTS = [
   "Perfect for my workflow.",
 ];
 
-function randomRating() {
-  const ratings = [5, 5, 5, 4, 4, 4, 5, 4, 3, 5];
-  return ratings[Math.floor(Math.random() * ratings.length)];
+async function clearDatabase() {
+  await prisma.$transaction([
+    prisma.promptView.deleteMany(),
+    prisma.wishlist.deleteMany(),
+    prisma.review.deleteMany(),
+    prisma.purchase.deleteMany(),
+    prisma.promptTag.deleteMany(),
+    prisma.prompt.deleteMany(),
+    prisma.tag.deleteMany(),
+    prisma.sellerProfile.deleteMany(),
+    prisma.user.deleteMany(),
+    prisma.category.deleteMany(),
+  ]);
 }
 
 async function main() {
   console.log("Seeding marketplace database...");
 
-  await prisma.promptView.deleteMany();
-  await prisma.wishlist.deleteMany();
-  await prisma.review.deleteMany();
-  await prisma.purchase.deleteMany();
-  await prisma.promptTag.deleteMany();
-  await prisma.prompt.deleteMany();
-  await prisma.tag.deleteMany();
-  await prisma.category.deleteMany();
-  await prisma.sellerProfile.deleteMany();
-  await prisma.user.deleteMany();
+  await clearDatabase();
 
-  const categories = await Promise.all(
-    CATEGORIES.map((cat) =>
-      prisma.category.create({
-        data: cat,
-      }),
-    ),
-  );
+  const categories = [];
+  for (const cat of CATEGORIES) {
+    categories.push(await prisma.category.create({ data: cat }));
+  }
   const categoryBySlug = Object.fromEntries(categories.map((c) => [c.slug, c]));
 
-  const sellerUsers = await Promise.all(
-    SELLERS.map((seller) =>
-      prisma.user.create({
+  const sellerUsers = [];
+  for (const seller of SELLERS) {
+    sellerUsers.push(
+      await prisma.user.create({
         data: {
           clerkUserId: seller.clerkUserId,
           username: seller.username,
@@ -395,12 +306,13 @@ async function main() {
           },
         },
       }),
-    ),
-  );
+    );
+  }
 
-  const buyerUsers = await Promise.all(
-    BUYERS.map((buyer) =>
-      prisma.user.create({
+  const buyerUsers = [];
+  for (const buyer of BUYERS) {
+    buyerUsers.push(
+      await prisma.user.create({
         data: {
           clerkUserId: buyer.clerkUserId,
           username: buyer.username,
@@ -408,31 +320,22 @@ async function main() {
           role: "buyer",
         },
       }),
-    ),
-  );
-
-  const tagCache = new Map<string, string>();
-
-  async function getOrCreateTag(name: string) {
-    const cached = tagCache.get(name);
-    if (cached) return cached;
-
-    const tag = await prisma.tag.upsert({
-      where: { name },
-      create: { name },
-      update: {},
-    });
-    tagCache.set(name, tag.id);
-    return tag.id;
+    );
   }
 
-  const createdPrompts = [];
+  const createdPrompts: Array<{ id: string; price: number; seed: PromptSeed }> = [];
 
   for (const promptData of PROMPTS) {
     const seller = sellerUsers[promptData.sellerIndex];
     const category = categoryBySlug[promptData.categorySlug];
 
-    const prompt = await prisma.prompt.create({
+    if (!seller || !category) {
+      throw new Error(
+        `Missing seed relation for "${promptData.title}" (seller=${Boolean(seller)}, category=${promptData.categorySlug})`,
+      );
+    }
+
+    const promptRecord = await prisma.prompt.create({
       data: {
         title: promptData.title,
         description: promptData.description,
@@ -444,30 +347,32 @@ async function main() {
         sellerId: seller.id,
         categoryId: category.id,
         tags: {
-          create: await Promise.all(
-            promptData.tags.map(async (tagName) => ({
-              tag: { connect: { id: await getOrCreateTag(tagName) } },
-            })),
-          ),
+          create: promptData.tags.map((tagName) => ({
+            tag: {
+              connectOrCreate: {
+                where: { name: tagName },
+                create: { name: tagName },
+              },
+            },
+          })),
         },
       },
     });
 
-    createdPrompts.push(prompt);
+    createdPrompts.push({ id: promptRecord.id, price: promptRecord.price, seed: promptData });
   }
 
   for (let i = 0; i < createdPrompts.length; i++) {
-    const prompt = createdPrompts[i];
-    const reviewCount = Math.min(3 + (i % 3), buyerUsers.length);
+    const { id, seed } = createdPrompts[i];
 
-    for (let r = 0; r < reviewCount; r++) {
+    for (let r = 0; r < seed.ratings.length; r++) {
       const buyer = buyerUsers[r % buyerUsers.length];
 
       await prisma.review.create({
         data: {
-          promptId: prompt.id,
+          promptId: id,
           userId: buyer.id,
-          rating: randomRating(),
+          rating: seed.ratings[r],
           comment: REVIEW_COMMENTS[r % REVIEW_COMMENTS.length],
         },
       });
@@ -485,32 +390,35 @@ async function main() {
     "completed",
   ];
 
-  for (let i = 0; i < 30; i++) {
-    const prompt = createdPrompts[i % createdPrompts.length];
-    const buyer = buyerUsers[i % buyerUsers.length];
-    const status = purchaseStatuses[i % purchaseStatuses.length];
-    const daysAgo = i % 14;
+  let purchaseIndex = 0;
+  for (const { id, price, seed } of createdPrompts) {
+    for (let s = 0; s < seed.salesCount; s++) {
+      const buyer = buyerUsers[(purchaseIndex + s) % buyerUsers.length];
+      const status = purchaseStatuses[(purchaseIndex + s) % purchaseStatuses.length];
+      const daysAgo = (purchaseIndex + s) % 21;
 
-    await prisma.purchase.create({
-      data: {
-        promptId: prompt.id,
-        buyerId: buyer.id,
-        amount: prompt.price,
-        status,
-        createdAt: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
-      },
-    });
+      await prisma.purchase.create({
+        data: {
+          promptId: id,
+          buyerId: buyer.id,
+          amount: price,
+          status,
+          createdAt: new Date(Date.now() - daysAgo * 24 * 60 * 60 * 1000),
+        },
+      });
+    }
+    purchaseIndex += seed.salesCount;
   }
 
   for (let i = 0; i < buyerUsers.length; i++) {
     const buyer = buyerUsers[i];
     const wishlistPrompts = createdPrompts.slice(i, i + 3);
 
-    for (const prompt of wishlistPrompts) {
+    for (const promptEntry of wishlistPrompts) {
       await prisma.wishlist.create({
         data: {
           userId: buyer.id,
-          promptId: prompt.id,
+          promptId: promptEntry.id,
         },
       });
     }
@@ -527,10 +435,16 @@ async function main() {
     }
   }
 
+  const completedSales = createdPrompts.reduce((sum, p) => {
+    const completedRatio = 6 / purchaseStatuses.length;
+    return sum + Math.round(p.seed.salesCount * completedRatio);
+  }, 0);
+
   console.log(`Seeded ${categories.length} categories`);
   console.log(`Seeded ${sellerUsers.length} sellers`);
   console.log(`Seeded ${buyerUsers.length} buyers`);
   console.log(`Seeded ${createdPrompts.length} prompts`);
+  console.log(`Seeded ~${completedSales} completed sales (of ${purchaseIndex} total purchases)`);
 }
 
 main()

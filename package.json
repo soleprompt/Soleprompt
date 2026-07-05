@@ -20,9 +20,9 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^7.5.12",
-    "@prisma/adapter-better-sqlite3": "^7.8.0",
+    "@prisma/adapter-pg": "^7.8.0",
     "@prisma/client": "^7.8.0",
-    "better-sqlite3": "^12.11.1",
+    "pg": "^8.16.0",
     "clsx": "^2.1.1",
     "dotenv": "^17.4.2",
     "framer-motion": "^12.42.2",
@@ -36,7 +36,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
     "@tailwindcss/postcss": "^4",
-    "@types/better-sqlite3": "^7.6.13",
+    "@types/pg": "^8.15.4",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
