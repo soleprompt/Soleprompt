@@ -7,6 +7,12 @@ export const BUYER_NAV: DashboardNavItem[] = [
   { label: "Account", href: "/buyer/account", icon: "User" },
 ];
 
+export const BUYER_SCRUBBER_NAV: DashboardNavItem = {
+  label: "X Scrubber",
+  href: "/buyer/scrubber",
+  icon: "Share2",
+};
+
 export const SELLER_NAV: DashboardNavItem[] = [
   { label: "Overview", href: "/seller", icon: "LayoutDashboard" },
   { label: "Upload Prompt", href: "/seller/upload", icon: "Upload" },
@@ -36,14 +42,17 @@ export const ADMIN_NAV: DashboardNavItem[] = [
   { label: "Social", href: "/admin/social", icon: "Share2" },
 ];
 
-export function getNavForRole(role: UserRole): DashboardNavItem[] {
+export function getNavForRole(
+  role: UserRole,
+  extraItems: DashboardNavItem[] = [],
+): DashboardNavItem[] {
   switch (role) {
     case "admin":
       return ADMIN_NAV;
     case "seller":
       return SELLER_NAV;
     default:
-      return BUYER_NAV;
+      return [...BUYER_NAV.slice(0, 1), ...extraItems, ...BUYER_NAV.slice(1)];
   }
 }
 

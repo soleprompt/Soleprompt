@@ -31,6 +31,7 @@ import { ThemeToggle } from "@/components/layout/ThemeToggle";
 import { getNavForRole, getRoleLabel } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import type { DashboardSection } from "@/types/dashboard";
+import type { DashboardNavItem } from "@/types/user";
 
 const ICON_MAP = {
   LayoutDashboard,
@@ -57,16 +58,18 @@ interface DashboardShellProps {
   children: React.ReactNode;
   section: DashboardSection;
   userName: string;
+  extraNavItems?: DashboardNavItem[];
 }
 
 export function DashboardShell({
   children,
   section,
   userName,
+  extraNavItems = [],
 }: DashboardShellProps) {
   const pathname = usePathname();
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const navItems = getNavForRole(section);
+  const navItems = getNavForRole(section, extraNavItems);
 
   return (
     <div className="flex min-h-screen bg-background">

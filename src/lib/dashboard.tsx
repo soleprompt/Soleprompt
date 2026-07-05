@@ -3,13 +3,15 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { getDashboardPath } from "@/lib/auth";
+import { BUYER_SCRUBBER_NAV } from "@/lib/navigation";
+import { hasScrubberAccess } from "@/lib/scrubber/access";
 import {
   getCurrentUserRole,
   isClerkUserAdmin,
   resolveAdminAccess,
 } from "@/lib/user";
 import type { DashboardSection } from "@/types/dashboard";
-import type { UserRole } from "@/types/user";
+import type { UserRole, DashboardNavItem } from "@/types/user";
 
 async function hasAdminBypass(): Promise<boolean> {
   try {
@@ -24,7 +26,10 @@ export async function createDashboardLayout(
   section: DashboardSection,
   allowedRoles: UserRole[],
   children: React.ReactNode,
-  options?: { hasAccess?: () => Promise<boolean> },
+  options?: {
+    hasAccess?: () => Promise<boolean>;
+    extraNavItems?: DashboardNavItem[];
+  },
 ) {
   const user = await currentUser();
 
@@ -58,6 +63,15 @@ export async function createDashboardLayout(
     );
   }
 
+  const extraNavItems: DashboardNavItem[] = [...(options?.extraNavItems ?? [])];
+
+  if (section === "buyer") {
+    const showScrubber = await hasScrubberAccess(user.id);
+    if (showScrubber) {
+      extraNavItems.push(BUYER_SCRUBBER_NAV);
+    }
+  }
+
   const isAdminByEmail =
     adminBypass || isClerkUserAdmin(user) || (await resolveAdminAccess());
   const role = isAdminByEmail ? "admin" : await getCurrentUserRole();
@@ -76,7 +90,11 @@ export async function createDashboardLayout(
     "User";
 
   return (
-    <DashboardShell section={section} userName={userName}>
+    <DashboardShell
+      section={section}
+      userName={userName}
+      extraNavItems={extraNavItems}
+    >
       {children}
     </DashboardShell>
   );

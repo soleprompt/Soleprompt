@@ -6,6 +6,7 @@ const FOOTER_LINKS = {
   Product: [
     { label: "Explore Prompts", href: "/explore" },
     { label: "Categories", href: "/categories" },
+    { label: "Free X Checker", href: "/tools/x-checker" },
     { label: "Become a Seller", href: "#sell" },
     { label: "Pricing", href: "#" },
   ],

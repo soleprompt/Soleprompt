@@ -84,6 +84,39 @@ export function getXCallbackUrl(): string {
   return `${appUrl}/api/admin/social/x/callback`;
 }
 
+export function getBuyerXCallbackUrl(): string {
+  const explicit = process.env.X_BUYER_CALLBACK_URL?.trim();
+  if (explicit) {
+    return explicit;
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+  if (!appUrl) {
+    throw new Error(
+      "Set X_BUYER_CALLBACK_URL or NEXT_PUBLIC_APP_URL for the buyer X OAuth callback.",
+    );
+  }
+
+  return `${appUrl}/api/buyer/scrubber/x/callback`;
+}
+
+/** Callback for the free X Checker tool (public /tools/x-checker). */
+export function getBuyerSocialXCallbackUrl(): string {
+  const explicit = process.env.X_SOCIAL_CALLBACK_URL?.trim();
+  if (explicit) {
+    return explicit;
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+  if (!appUrl) {
+    throw new Error(
+      "Set X_SOCIAL_CALLBACK_URL or NEXT_PUBLIC_APP_URL for the buyer social X OAuth callback.",
+    );
+  }
+
+  return `${appUrl}/api/buyer/social/x/callback`;
+}
+
 export function percentEncode(value: string): string {
   return encodeURIComponent(value).replace(
     /[!'()*]/g,

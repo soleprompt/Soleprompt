@@ -534,6 +534,78 @@ Hypothesis, variants, sample size guidance, success metrics, and test calendar.`
   ),
 
   bundlePrompt(
+    "Social Media Scrubbing Pack",
+    "marketing",
+    ["Bundle", "Scrubbing", "Twitter", "Reputation", "Cleanup"],
+    12.99,
+    "intermediate",
+    "4+ hours",
+    "Ten prompts to audit, clean, and protect your social presence across Twitter/X, LinkedIn, Instagram, and Facebook — plus crisis response and brand-safe rewrites.",
+    `# Social Media Scrubbing Pack — 10 Prompts
+
+---
+
+## 1. Twitter/X Tweet Scrubbing Audit
+
+Audit timeline for brand risk. Return risk tiers, category breakdown, top 10 risky tweets, cleanup priorities.
+
+---
+
+## 2. Delete Risky Old Tweets Checklist
+
+Prioritized deletion checklist with backup steps, search queries, batch workflow, verification.
+
+---
+
+## 3. LinkedIn Profile Cleanup
+
+Headline rewrites, about section, experience bullets, content audit, photo recommendations.
+
+---
+
+## 4. Instagram Brand Risk Review
+
+Bio optimization, grid assessment, highlights flags, caption rewrites, hashtag cleanup.
+
+---
+
+## 5. Facebook Post Audit
+
+Privacy checklist, post categories to review, timeline cleanup, tagging guardrails.
+
+---
+
+## 6. Social Media Reputation Cleanup
+
+Cross-platform audit, unified timeline, delete/archive plan, monitoring routine.
+
+---
+
+## 7. Pre-Job-Interview Social Scrub
+
+Recruiter audit, red-flag checklist, 48-hour cleanup, Google simulation, safe topics.
+
+---
+
+## 8. Controversial Tweet Finder
+
+Keyword lists, topic categories, severity scoring, search workflow, decision matrix.
+
+---
+
+## 9. Brand-Safe Tweet Rewriter
+
+Rewrite flagged tweets preserving voice. Original vs. rewritten, tone options, guidelines.
+
+---
+
+## 10. Social Media Crisis Response Planner
+
+Severity assessment, 24-hour playbook, statement templates, stakeholder order, recovery steps.`,
+    1,
+  ),
+
+  bundlePrompt(
     "Complete AI Starter Mega Pack",
     "productivity",
     ["Bundle", "Mega Pack", "All-in-One", "Starter"],

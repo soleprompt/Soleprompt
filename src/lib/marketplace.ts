@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { safeDbRead } from "@/lib/safe-db";
+import { X_SCRUBBER_PRODUCT_TITLE } from "@/lib/scrubber/constants";
 import type { Category, Prompt } from "@/types";
 import type { PromptStatus, PurchaseStatus } from "@/generated/prisma/client";
 
@@ -272,6 +273,12 @@ export async function getBuyerPurchases(clerkUserId: string) {
       prompt: mapPromptToListItem(p.prompt),
     }));
   });
+}
+
+export function buyerOwnsScrubberTool(
+  purchases: Awaited<ReturnType<typeof getBuyerPurchases>>,
+): boolean {
+  return purchases.some((p) => p.prompt.title === X_SCRUBBER_PRODUCT_TITLE);
 }
 
 export async function getBuyerPurchaseHistory(clerkUserId: string) {
