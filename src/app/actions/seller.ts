@@ -3,13 +3,17 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
-import { syncClerkUser } from "@/lib/user";
+import { isClerkUserAdmin, syncClerkUser } from "@/lib/user";
 
 export async function becomeSeller(): Promise<void> {
   const user = await currentUser();
 
   if (!user) {
     redirect("/sign-in");
+  }
+
+  if (isClerkUserAdmin(user)) {
+    redirect("/admin");
   }
 
   const dbUser = await syncClerkUser(user);

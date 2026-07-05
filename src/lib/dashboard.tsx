@@ -2,7 +2,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { getDashboardPath } from "@/lib/auth";
-import { getCurrentUserRole } from "@/lib/user";
+import { getCurrentUserRole, isClerkUserAdmin } from "@/lib/user";
 import type { DashboardSection } from "@/types/dashboard";
 import type { UserRole } from "@/types/user";
 
@@ -18,10 +18,12 @@ export async function createDashboardLayout(
     redirect("/sign-in");
   }
 
-  const role = await getCurrentUserRole();
+  const isAdminByEmail = isClerkUserAdmin(user);
+  const role = isAdminByEmail ? "admin" : await getCurrentUserRole();
   const roleAllowed = allowedRoles.includes(role);
   const customAllowed = options?.hasAccess ? await options.hasAccess() : false;
-  const allowed = roleAllowed || customAllowed;
+  const adminRouteBypass = section === "admin" && isAdminByEmail;
+  const allowed = roleAllowed || customAllowed || adminRouteBypass;
 
   if (!allowed) {
     redirect(getDashboardPath(role));

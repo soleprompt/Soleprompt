@@ -12,18 +12,21 @@ export function isAdminEmail(email: string | null | undefined): boolean {
   const adminEmail = getAdminEmail();
   const normalizedAdminEmail = adminEmail?.trim().toLowerCase() ?? "";
   const normalizedUserEmail = email?.trim().toLowerCase() ?? "";
-  const isAdmin =
+
+  return (
     normalizedAdminEmail.length > 0 &&
     normalizedUserEmail.length > 0 &&
-    normalizedUserEmail === normalizedAdminEmail;
+    normalizedUserEmail === normalizedAdminEmail
+  );
+}
 
-  console.log("[admin] email check", {
-    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
-    primaryEmail: email ?? null,
-    isAdmin,
-  });
+export function isClerkUserAdmin(user: ClerkUser): boolean {
+  const emails = [
+    user.primaryEmailAddress?.emailAddress,
+    ...user.emailAddresses.map((address) => address.emailAddress),
+  ];
 
-  return isAdmin;
+  return emails.some((email) => isAdminEmail(email));
 }
 
 function clerkUserFields(user: ClerkUser) {
@@ -65,7 +68,7 @@ export async function syncCurrentUser() {
 
 export async function getCurrentUserRole(): Promise<UserRole> {
   const user = await currentUser();
-  if (user && isAdminEmail(user.primaryEmailAddress?.emailAddress)) {
+  if (user && isClerkUserAdmin(user)) {
     return "admin";
   }
 
