@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
 import { isAdminUser } from "@/lib/admin";
-import { prisma } from "@/lib/db";
-import type { SocialPostStatus } from "@/generated/prisma/client";
+import { getAdminSocialReplies } from "@/lib/social/reply-data";
 
 export async function GET(request: Request) {
   if (!(await isAdminUser())) {
@@ -10,16 +9,14 @@ export async function GET(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const statusParam = searchParams.get("status");
+  const statusFilter =
+    statusParam && statusParam !== "all" ? statusParam : "all";
 
-  const status =
-    statusParam && statusParam !== "all"
-      ? (statusParam as SocialPostStatus)
-      : undefined;
+  const { data: replies, error } = await getAdminSocialReplies(statusFilter);
 
-  const replies = await prisma.socialReply.findMany({
-    where: status ? { status } : undefined,
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-  });
+  if (error) {
+    return NextResponse.json({ error, replies: [] }, { status: 503 });
+  }
 
   return NextResponse.json({ replies });
 }

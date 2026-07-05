@@ -1,8 +1,7 @@
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { AdminSocialRepliesPanel } from "@/components/dashboard/AdminSocialRepliesPanel";
-import { prisma } from "@/lib/db";
 import { REPLY_ASSISTANT_LABEL } from "@/lib/navigation";
-import type { SocialPostStatus } from "@/generated/prisma/client";
+import { getAdminSocialReplies } from "@/lib/social/reply-data";
 
 interface AdminSocialRepliesPageProps {
   searchParams: Promise<{ status?: string }>;
@@ -14,13 +13,8 @@ export default async function AdminSocialRepliesPage({
   const { status } = await searchParams;
   const statusFilter = status && status !== "all" ? status : "all";
 
-  const replies = await prisma.socialReply.findMany({
-    where:
-      statusFilter !== "all"
-        ? { status: statusFilter as SocialPostStatus }
-        : undefined,
-    orderBy: [{ status: "asc" }, { createdAt: "desc" }],
-  });
+  const { data: replies, error: loadError } =
+    await getAdminSocialReplies(statusFilter);
 
   return (
     <>
@@ -31,6 +25,7 @@ export default async function AdminSocialRepliesPage({
       <AdminSocialRepliesPanel
         initialReplies={replies}
         statusFilter={statusFilter}
+        loadError={loadError}
       />
     </>
   );

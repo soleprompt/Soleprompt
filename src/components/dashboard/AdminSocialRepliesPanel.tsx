@@ -85,6 +85,7 @@ function toDatetimeLocalValue(value: string | Date | null | undefined) {
 interface AdminSocialRepliesPanelProps {
   initialReplies: SocialReply[];
   statusFilter: string;
+  loadError?: string;
 }
 
 type ReplyLimitsState = {
@@ -115,6 +116,7 @@ type GeneratedBatch = {
 export function AdminSocialRepliesPanel({
   initialReplies,
   statusFilter,
+  loadError,
 }: AdminSocialRepliesPanelProps) {
   const router = useRouter();
   const [replies, setReplies] = useState(initialReplies);
@@ -201,6 +203,11 @@ export function AdminSocialRepliesPanel({
     if (response.ok) {
       const data = (await response.json()) as { replies: SocialReply[] };
       setReplies(data.replies);
+    } else {
+      const data = (await response.json()) as { error?: string };
+      if (data.error) {
+        setError(data.error);
+      }
     }
     router.refresh();
     await loadReplyLimits();
@@ -450,6 +457,15 @@ export function AdminSocialRepliesPanel({
     <>
       <AdminSocialNav />
       <AdminTableFilters status={statusFilter} statusOptions={STATUS_OPTIONS} />
+
+      {loadError && (
+        <div
+          className="mb-6 rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+          role="alert"
+        >
+          {loadError}
+        </div>
+      )}
 
       {(message || error) && (
         <div
