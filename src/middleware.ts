@@ -1,5 +1,13 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import {
+  clerkClient,
+  clerkMiddleware,
+  createRouteMatcher,
+} from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import {
+  getAdminEmail,
+  isClerkUserAdminByEmail,
+} from "@/lib/admin-email";
 
 const isPublicRoute = createRouteMatcher([
   "/",
@@ -9,6 +17,7 @@ const isPublicRoute = createRouteMatcher([
 ]);
 
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
+const isAdminRoute = createRouteMatcher(["/admin(.*)"]);
 
 export default clerkMiddleware(async (auth, req) => {
   const { userId, redirectToSignIn } = await auth();
@@ -23,6 +32,21 @@ export default clerkMiddleware(async (auth, req) => {
 
   const requestHeaders = new Headers(req.headers);
   requestHeaders.set("x-pathname", req.nextUrl.pathname);
+
+  if (isAdminRoute(req) && userId && getAdminEmail()) {
+    try {
+      const client = await clerkClient();
+      const user = await client.users.getUser(userId);
+
+      if (isClerkUserAdminByEmail(user)) {
+        requestHeaders.set("x-admin-access", "true");
+      } else {
+        return NextResponse.redirect(new URL("/dashboard", req.url));
+      }
+    } catch {
+      // Fall through to layout-level admin checks when Clerk is unavailable.
+    }
+  }
 
   return NextResponse.next({
     request: { headers: requestHeaders },

@@ -2,7 +2,11 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { getDashboardPath } from "@/lib/auth";
-import { getCurrentUserRole, isClerkUserAdmin } from "@/lib/user";
+import {
+  getCurrentUserRole,
+  isClerkUserAdmin,
+  resolveAdminAccess,
+} from "@/lib/user";
 import type { DashboardSection } from "@/types/dashboard";
 import type { UserRole } from "@/types/user";
 
@@ -18,12 +22,34 @@ export async function createDashboardLayout(
     redirect("/sign-in");
   }
 
-  const isAdminByEmail = isClerkUserAdmin(user);
+  if (section === "admin") {
+    const hasAdminAccess =
+      isClerkUserAdmin(user) ||
+      (options?.hasAccess ? await options.hasAccess() : await resolveAdminAccess());
+
+    if (!hasAdminAccess) {
+      const role = await getCurrentUserRole();
+      redirect(getDashboardPath(role));
+    }
+
+    const userName =
+      user.fullName ||
+      user.username ||
+      user.primaryEmailAddress?.emailAddress ||
+      "User";
+
+    return (
+      <DashboardShell section="admin" userName={userName}>
+        {children}
+      </DashboardShell>
+    );
+  }
+
+  const isAdminByEmail = isClerkUserAdmin(user) || (await resolveAdminAccess());
   const role = isAdminByEmail ? "admin" : await getCurrentUserRole();
   const roleAllowed = allowedRoles.includes(role);
   const customAllowed = options?.hasAccess ? await options.hasAccess() : false;
-  const adminRouteBypass = section === "admin" && isAdminByEmail;
-  const allowed = roleAllowed || customAllowed || adminRouteBypass;
+  const allowed = roleAllowed || customAllowed;
 
   if (!allowed) {
     redirect(getDashboardPath(role));

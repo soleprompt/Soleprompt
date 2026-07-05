@@ -1,32 +1,53 @@
-import { currentUser, type User as ClerkUser } from "@clerk/nextjs/server";
+import {
+  auth,
+  clerkClient,
+  currentUser,
+  type User as ClerkUser,
+} from "@clerk/nextjs/server";
 import { prisma } from "@/lib/db";
+import {
+  isAdminEmail,
+  isClerkUserAdminByEmail,
+} from "@/lib/admin-email";
 import { safeDbRead } from "@/lib/safe-db";
 import type { UserRole } from "@/types/user";
 
-export function getAdminEmail(): string | undefined {
-  const email = process.env.ADMIN_EMAIL?.trim();
-  return email || undefined;
-}
-
-export function isAdminEmail(email: string | null | undefined): boolean {
-  const adminEmail = getAdminEmail();
-  const normalizedAdminEmail = adminEmail?.trim().toLowerCase() ?? "";
-  const normalizedUserEmail = email?.trim().toLowerCase() ?? "";
-
-  return (
-    normalizedAdminEmail.length > 0 &&
-    normalizedUserEmail.length > 0 &&
-    normalizedUserEmail === normalizedAdminEmail
-  );
-}
+export { getAdminEmail, isAdminEmail } from "@/lib/admin-email";
 
 export function isClerkUserAdmin(user: ClerkUser): boolean {
-  const emails = [
-    user.primaryEmailAddress?.emailAddress,
-    ...user.emailAddresses.map((address) => address.emailAddress),
-  ];
+  return isClerkUserAdminByEmail(user);
+}
 
-  return emails.some((email) => isAdminEmail(email));
+async function isClerkUserAdminFromApi(userId: string): Promise<boolean> {
+  try {
+    const client = await clerkClient();
+    const user = await client.users.getUser(userId);
+    return isClerkUserAdminByEmail(user);
+  } catch {
+    return false;
+  }
+}
+
+/** Admin email is checked before any DB seller/buyer role. */
+export async function resolveAdminAccess(): Promise<boolean> {
+  const { userId } = await auth();
+  if (!userId) return false;
+
+  const user = await currentUser();
+  if (user && isClerkUserAdmin(user)) {
+    return true;
+  }
+
+  if (await isClerkUserAdminFromApi(userId)) {
+    return true;
+  }
+
+  const dbUser = await syncCurrentUser();
+  if (dbUser && isAdminEmail(dbUser.email)) {
+    return true;
+  }
+
+  return dbUser?.role === "admin";
 }
 
 function clerkUserFields(user: ClerkUser) {
@@ -67,8 +88,7 @@ export async function syncCurrentUser() {
 }
 
 export async function getCurrentUserRole(): Promise<UserRole> {
-  const user = await currentUser();
-  if (user && isClerkUserAdmin(user)) {
+  if (await resolveAdminAccess()) {
     return "admin";
   }
 
