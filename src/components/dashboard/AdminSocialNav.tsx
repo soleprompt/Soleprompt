@@ -2,18 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-
-const TABS = [
-  { href: "/admin/social", label: "Posts" },
-  { href: "/admin/social/replies", label: "Replies" },
-] as const;
+import { ADMIN_SOCIAL_TABS } from "@/lib/navigation";
 
 export function AdminSocialNav() {
   const pathname = usePathname();
 
   return (
     <nav className="mb-6 flex gap-1 rounded-lg border border-border/60 bg-muted/30 p-1">
-      {TABS.map((tab) => {
+      {ADMIN_SOCIAL_TABS.map((tab) => {
         const active =
           tab.href === "/admin/social"
             ? pathname === "/admin/social"

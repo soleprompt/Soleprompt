@@ -1,6 +1,7 @@
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { AdminSocialRepliesPanel } from "@/components/dashboard/AdminSocialRepliesPanel";
 import { prisma } from "@/lib/db";
+import { REPLY_ASSISTANT_LABEL } from "@/lib/navigation";
 import type { SocialPostStatus } from "@/generated/prisma/client";
 
 interface AdminSocialRepliesPageProps {
@@ -24,7 +25,7 @@ export default async function AdminSocialRepliesPage({
   return (
     <>
       <PageHeader
-        title="Social — Replies"
+        title={`Social — ${REPLY_ASSISTANT_LABEL}`}
         description="Find relevant X posts, generate helpful reply drafts, and post only after admin approval. No auto-reply."
       />
       <AdminSocialRepliesPanel
