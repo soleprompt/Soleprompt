@@ -16,6 +16,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import type { TweetRiskResult } from "@/lib/social/risk-scorer";
+import { apiErrorMessage, parseApiError } from "@/lib/api-error";
 
 type XConnectionState = {
   connected: boolean;
@@ -93,20 +94,35 @@ export function XCheckerPanel({
   }, [searchParams]);
 
   useEffect(() => {
-    if (oauthNotice) {
+    if (!oauthNotice) return;
+
+    const x = searchParams.get("x");
+    if (x === "error") {
+      setError(oauthNotice);
+    } else {
       setMessage(oauthNotice);
-      router.replace("/tools/x-checker", { scroll: false });
     }
-  }, [oauthNotice, router]);
+    router.replace("/tools/x-checker", { scroll: false });
+  }, [oauthNotice, router, searchParams]);
 
   const loadConnection = useCallback(async () => {
     setConnectionLoading(true);
+    setError(null);
     try {
       const response = await fetch("/api/buyer/social/x/status");
+      const payload = (await response.json()) as XConnectionState & {
+        error?: string;
+      };
       if (!response.ok) {
-        throw new Error("Could not load X connection status.");
+        throw new Error(
+          apiErrorMessage(
+            response,
+            payload,
+            "Could not load X connection status.",
+          ),
+        );
       }
-      setConnection((await response.json()) as XConnectionState);
+      setConnection(payload);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to load connection status.",
@@ -133,7 +149,9 @@ export function XCheckerPanel({
         breakdown?: ScanSummary["breakdown"];
       };
       if (!response.ok) {
-        throw new Error(payload.error ?? "Failed to fetch tweets.");
+        throw new Error(
+          apiErrorMessage(response, payload, "Failed to fetch tweets."),
+        );
       }
       setTweets(payload.tweets ?? []);
       setSummary({
@@ -164,7 +182,7 @@ export function XCheckerPanel({
         method: "POST",
       });
       if (!response.ok) {
-        throw new Error("Failed to disconnect X account.");
+        throw new Error(await parseApiError(response, "Failed to disconnect X account."));
       }
       setTweets([]);
       setSummary(null);
@@ -267,8 +285,10 @@ export function XCheckerPanel({
             </>
           )}
           {!connection?.configured && !connectionLoading && (
-            <p className="w-full text-sm text-muted-foreground">
-              X API credentials are not configured on this server.
+            <p className="w-full text-sm text-amber-600 dark:text-amber-400">
+              X API credentials (X_API_KEY / X_API_SECRET) are not configured on
+              this server. Connect will not work until they are set in Vercel env
+              vars.
             </p>
           )}
         </CardContent>

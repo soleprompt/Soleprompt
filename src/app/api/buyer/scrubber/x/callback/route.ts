@@ -1,25 +1,33 @@
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { auth } from "@clerk/nextjs/server";
 import { hasScrubberAccess } from "@/lib/scrubber/access";
 import { saveXConnection } from "@/lib/social/x-connection";
 import { fetchXAccessToken } from "@/lib/social/x-oauth";
+import {
+  redirectToScrubber,
+  redirectXOAuthError,
+} from "@/lib/social/x-oauth-redirect";
 import { syncCurrentUser } from "@/lib/user";
 
 const OAUTH_TOKEN_COOKIE = "x_buyer_oauth_token";
 const OAUTH_TOKEN_SECRET_COOKIE = "x_buyer_oauth_token_secret";
 
-function redirectToScrubber(request: Request, params: Record<string, string>) {
-  const search = new URLSearchParams(params);
-  return NextResponse.redirect(
-    new URL(`/buyer/scrubber?${search.toString()}`, request.url),
-  );
-}
-
 export async function GET(request: Request) {
   const { userId: clerkUserId } = await auth();
-  if (!clerkUserId || !(await hasScrubberAccess(clerkUserId))) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  if (!clerkUserId) {
+    return redirectXOAuthError(
+      request,
+      "scrubber",
+      "Your session expired during X authorization. Sign in and try connecting again.",
+    );
+  }
+
+  if (!(await hasScrubberAccess(clerkUserId))) {
+    return redirectXOAuthError(
+      request,
+      "scrubber",
+      "Purchase the X Scrubbing Tool ($20) to connect and delete tweets.",
+    );
   }
 
   const { searchParams } = new URL(request.url);
@@ -32,10 +40,11 @@ export async function GET(request: Request) {
   }
 
   if (!oauthToken || !oauthVerifier) {
-    return redirectToScrubber(request, {
-      x: "error",
-      message: "Missing OAuth parameters.",
-    });
+    return redirectXOAuthError(
+      request,
+      "scrubber",
+      "Missing OAuth parameters from X. Try connecting again.",
+    );
   }
 
   const cookieStore = await cookies();
@@ -46,10 +55,11 @@ export async function GET(request: Request) {
   cookieStore.delete(OAUTH_TOKEN_SECRET_COOKIE);
 
   if (!storedToken || !storedSecret || storedToken !== oauthToken) {
-    return redirectToScrubber(request, {
-      x: "error",
-      message: "OAuth session expired. Try connecting again.",
-    });
+    return redirectXOAuthError(
+      request,
+      "scrubber",
+      "OAuth session expired. Click Connect X and complete authorization within a few minutes.",
+    );
   }
 
   try {
@@ -61,10 +71,11 @@ export async function GET(request: Request) {
 
     const dbUser = await syncCurrentUser();
     if (!dbUser) {
-      return redirectToScrubber(request, {
-        x: "error",
-        message: "Could not resolve user record.",
-      });
+      return redirectXOAuthError(
+        request,
+        "scrubber",
+        "Could not resolve your SolePrompt account. Try signing in again.",
+      );
     }
 
     await saveXConnection({
@@ -79,6 +90,6 @@ export async function GET(request: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to connect X account.";
-    return redirectToScrubber(request, { x: "error", message });
+    return redirectXOAuthError(request, "scrubber", message);
   }
 }

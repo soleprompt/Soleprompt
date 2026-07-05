@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
+import { auth } from "@clerk/nextjs/server";
+import { hasScrubberAccess } from "@/lib/scrubber/access";
 import { requireScrubberUser } from "@/lib/scrubber/api-auth";
 import {
   fetchXRequestToken,
@@ -7,6 +9,7 @@ import {
   getXConsumerCredentials,
   logXOAuthEnvDebug,
 } from "@/lib/social/x-oauth";
+import { redirectXOAuthError } from "@/lib/social/x-oauth-redirect";
 
 const OAUTH_TOKEN_COOKIE = "x_buyer_oauth_token";
 const OAUTH_TOKEN_SECRET_COOKIE = "x_buyer_oauth_token_secret";
@@ -22,19 +25,38 @@ function oauthCookieOptions() {
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { userId: clerkUserId } = await auth();
+  if (!clerkUserId) {
+    return redirectXOAuthError(
+      request,
+      "scrubber",
+      "Please sign in before connecting X.",
+    );
+  }
+
+  if (!(await hasScrubberAccess(clerkUserId))) {
+    return redirectXOAuthError(
+      request,
+      "scrubber",
+      "Purchase the X Scrubbing Tool ($20) to connect and delete tweets.",
+    );
+  }
+
   const user = await requireScrubberUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return redirectXOAuthError(
+      request,
+      "scrubber",
+      "Could not load your account. Try signing in again.",
+    );
   }
 
   if (!getXConsumerCredentials()) {
-    return NextResponse.json(
-      {
-        error:
-          "X app credentials not configured. Set X_API_KEY and X_API_SECRET.",
-      },
-      { status: 503 },
+    return redirectXOAuthError(
+      request,
+      "scrubber",
+      "X app credentials not configured. Set X_API_KEY and X_API_SECRET on the server.",
     );
   }
 
@@ -57,6 +79,6 @@ export async function GET() {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to start X OAuth flow.";
-    return NextResponse.json({ error: message }, { status: 502 });
+    return redirectXOAuthError(request, "scrubber", message);
   }
 }

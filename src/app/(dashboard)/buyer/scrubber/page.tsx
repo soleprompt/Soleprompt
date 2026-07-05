@@ -33,7 +33,7 @@ export default async function BuyerScrubberPage() {
           </p>
           <Link
             href={
-              productId ? `/prompt/${productId}` : "/explore?search=scrubbing"
+              productId ? `/prompts/${productId}` : "/explore?search=scrubbing"
             }
           >
             <Button className="mt-6">View product</Button>

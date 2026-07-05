@@ -32,6 +32,8 @@ export function logXOAuthEnvDebug(context: string): void {
       X_API_KEY: Boolean(process.env.X_API_KEY),
       X_API_SECRET: Boolean(process.env.X_API_SECRET),
       X_CALLBACK_URL: Boolean(process.env.X_CALLBACK_URL),
+      X_BUYER_CALLBACK_URL: Boolean(process.env.X_BUYER_CALLBACK_URL),
+      X_SOCIAL_CALLBACK_URL: Boolean(process.env.X_SOCIAL_CALLBACK_URL),
       NEXT_PUBLIC_APP_URL: Boolean(process.env.NEXT_PUBLIC_APP_URL),
       X_ACCESS_TOKEN: Boolean(process.env.X_ACCESS_TOKEN),
       X_ACCESS_SECRET: Boolean(process.env.X_ACCESS_SECRET),

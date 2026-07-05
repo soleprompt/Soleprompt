@@ -7,6 +7,7 @@ import {
   getXConsumerCredentials,
   logXOAuthEnvDebug,
 } from "@/lib/social/x-oauth";
+import { redirectXOAuthError } from "@/lib/social/x-oauth-redirect";
 
 const OAUTH_TOKEN_COOKIE = "x_social_oauth_token";
 const OAUTH_TOKEN_SECRET_COOKIE = "x_social_oauth_token_secret";
@@ -22,19 +23,21 @@ function oauthCookieOptions() {
   };
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const user = await requireSignedInUser();
   if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return redirectXOAuthError(
+      request,
+      "checker",
+      "Please sign in before connecting X.",
+    );
   }
 
   if (!getXConsumerCredentials()) {
-    return NextResponse.json(
-      {
-        error:
-          "X app credentials not configured. Set X_API_KEY and X_API_SECRET.",
-      },
-      { status: 503 },
+    return redirectXOAuthError(
+      request,
+      "checker",
+      "X app credentials not configured. Set X_API_KEY and X_API_SECRET on the server.",
     );
   }
 
@@ -57,6 +60,6 @@ export async function GET() {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to start X OAuth flow.";
-    return NextResponse.json({ error: message }, { status: 502 });
+    return redirectXOAuthError(request, "checker", message);
   }
 }

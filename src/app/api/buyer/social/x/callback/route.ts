@@ -1,24 +1,24 @@
-import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { auth } from "@clerk/nextjs/server";
 import { saveXConnection } from "@/lib/social/x-connection";
 import { fetchXAccessToken } from "@/lib/social/x-oauth";
+import {
+  redirectToXChecker,
+  redirectXOAuthError,
+} from "@/lib/social/x-oauth-redirect";
 import { syncCurrentUser } from "@/lib/user";
 
 const OAUTH_TOKEN_COOKIE = "x_social_oauth_token";
 const OAUTH_TOKEN_SECRET_COOKIE = "x_social_oauth_token_secret";
 
-function redirectToChecker(request: Request, params: Record<string, string>) {
-  const search = new URLSearchParams(params);
-  return NextResponse.redirect(
-    new URL(`/tools/x-checker?${search.toString()}`, request.url),
-  );
-}
-
 export async function GET(request: Request) {
   const { userId: clerkUserId } = await auth();
   if (!clerkUserId) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    return redirectXOAuthError(
+      request,
+      "checker",
+      "Your session expired during X authorization. Sign in and try connecting again.",
+    );
   }
 
   const { searchParams } = new URL(request.url);
@@ -27,14 +27,15 @@ export async function GET(request: Request) {
   const oauthToken = searchParams.get("oauth_token");
 
   if (denied) {
-    return redirectToChecker(request, { x: "denied" });
+    return redirectToXChecker(request, { x: "denied" });
   }
 
   if (!oauthToken || !oauthVerifier) {
-    return redirectToChecker(request, {
-      x: "error",
-      message: "Missing OAuth parameters.",
-    });
+    return redirectXOAuthError(
+      request,
+      "checker",
+      "Missing OAuth parameters from X. Try connecting again.",
+    );
   }
 
   const cookieStore = await cookies();
@@ -45,10 +46,11 @@ export async function GET(request: Request) {
   cookieStore.delete(OAUTH_TOKEN_SECRET_COOKIE);
 
   if (!storedToken || !storedSecret || storedToken !== oauthToken) {
-    return redirectToChecker(request, {
-      x: "error",
-      message: "OAuth session expired. Try connecting again.",
-    });
+    return redirectXOAuthError(
+      request,
+      "checker",
+      "OAuth session expired. Click Connect X and complete authorization within a few minutes.",
+    );
   }
 
   try {
@@ -60,10 +62,11 @@ export async function GET(request: Request) {
 
     const dbUser = await syncCurrentUser();
     if (!dbUser) {
-      return redirectToChecker(request, {
-        x: "error",
-        message: "Could not resolve user record.",
-      });
+      return redirectXOAuthError(
+        request,
+        "checker",
+        "Could not resolve your SolePrompt account. Try signing in again.",
+      );
     }
 
     await saveXConnection({
@@ -74,10 +77,10 @@ export async function GET(request: Request) {
       xUserId: access.userId,
     });
 
-    return redirectToChecker(request, { x: "connected" });
+    return redirectToXChecker(request, { x: "connected" });
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to connect X account.";
-    return redirectToChecker(request, { x: "error", message });
+    return redirectXOAuthError(request, "checker", message);
   }
 }
