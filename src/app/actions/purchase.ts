@@ -4,7 +4,14 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { completePurchase } from "@/lib/purchase-fulfillment";
-import { getAppUrl, getStripe, isStripeConfigured } from "@/lib/stripe";
+import {
+  getAppUrl,
+  getCheckoutSessionAmount,
+  getCheckoutSessionCurrency,
+  getStripe,
+  getStripePaymentId,
+  isStripeConfigured,
+} from "@/lib/stripe";
 import { syncClerkUser } from "@/lib/user";
 
 export type PurchaseActionResult = {
@@ -149,17 +156,17 @@ export async function fulfillPurchase(
     return { success: false, error: "This prompt is no longer available." };
   }
 
-  const amount =
-    typeof session.amount_total === "number"
-      ? session.amount_total / 100
-      : prompt.price;
+  const amount = getCheckoutSessionAmount(session, prompt.price);
 
   try {
     const result = await completePurchase({
       promptId,
       buyerId: buyer.id,
       amount,
+      currency: getCheckoutSessionCurrency(session),
       stripeSessionId: sessionId,
+      stripePaymentId: getStripePaymentId(session),
+      purchasedAt: new Date(session.created * 1000),
       actorId: buyer.id,
     });
 

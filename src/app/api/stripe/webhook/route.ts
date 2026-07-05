@@ -1,8 +1,15 @@
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
 import type Stripe from "stripe";
+import { prisma } from "@/lib/db";
 import { completePurchase } from "@/lib/purchase-fulfillment";
-import { getStripe, isStripeConfigured } from "@/lib/stripe";
+import {
+  getCheckoutSessionAmount,
+  getCheckoutSessionCurrency,
+  getStripe,
+  getStripePaymentId,
+  isStripeConfigured,
+} from "@/lib/stripe";
 
 export const runtime = "nodejs";
 
@@ -22,14 +29,21 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     return;
   }
 
-  const amount =
-    typeof session.amount_total === "number" ? session.amount_total / 100 : 0;
+  const prompt = await prisma.prompt.findFirst({
+    where: { id: promptId },
+    select: { price: true },
+  });
+
+  const amount = getCheckoutSessionAmount(session, prompt?.price ?? 0);
 
   await completePurchase({
     promptId,
     buyerId,
     amount,
+    currency: getCheckoutSessionCurrency(session),
     stripeSessionId: session.id,
+    stripePaymentId: getStripePaymentId(session),
+    purchasedAt: new Date(session.created * 1000),
     actorId: null,
   });
 }

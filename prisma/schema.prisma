@@ -142,6 +142,8 @@ model Transaction {
   purchaseId      String            @unique
   purchase        Purchase          @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
   stripeSessionId String?           @unique
+  stripePaymentId String?           @unique
+  currency        String            @default("usd")
   amount          Float
   status          TransactionStatus @default(completed)
   buyerId         String

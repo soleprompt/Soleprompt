@@ -19,27 +19,42 @@ export async function getAdminOverviewStats() {
         pendingPrompts,
         totalPurchases,
         revenueResult,
+        purchaseRevenue,
         stripePayments,
       ] = await Promise.all([
         prisma.user.count(),
         prisma.prompt.count({ where: { status: "published" } }),
         prisma.prompt.count({ where: { status: "review" } }),
         prisma.purchase.count({ where: { status: "completed" } }),
+        prisma.transaction.aggregate({
+          where: { status: "completed" },
+          _sum: { amount: true },
+        }),
         prisma.purchase.aggregate({
           where: { status: "completed" },
           _sum: { amount: true },
         }),
         prisma.transaction.count({
-          where: { stripeSessionId: { not: null }, status: "completed" },
+          where: {
+            status: "completed",
+            OR: [
+              { stripeSessionId: { not: null } },
+              { stripePaymentId: { not: null } },
+            ],
+          },
         }),
       ]);
+
+      const transactionRevenue = revenueResult._sum.amount ?? 0;
+      const purchaseOnlyRevenue = purchaseRevenue._sum.amount ?? 0;
 
       return {
         totalUsers,
         activePrompts,
         pendingPrompts,
         totalPurchases,
-        totalRevenue: revenueResult._sum.amount ?? 0,
+        totalRevenue:
+          transactionRevenue > 0 ? transactionRevenue : purchaseOnlyRevenue,
         stripePayments,
       };
     },
@@ -185,18 +200,20 @@ export async function getAdminSales(options?: {
 }) {
   return safeDbRead([], async () => {
     const search = options?.search?.trim();
+    const searchFilter = search
+      ? {
+          OR: [
+            { prompt: { title: { contains: search, mode: "insensitive" as const } } },
+            { seller: { email: { contains: search, mode: "insensitive" as const } } },
+            { buyer: { email: { contains: search, mode: "insensitive" as const } } },
+            { stripeSessionId: { contains: search, mode: "insensitive" as const } },
+            { stripePaymentId: { contains: search, mode: "insensitive" as const } },
+          ],
+        }
+      : undefined;
 
     const transactions = await prisma.transaction.findMany({
-      where: search
-        ? {
-            OR: [
-              { prompt: { title: { contains: search, mode: "insensitive" } } },
-              { seller: { email: { contains: search, mode: "insensitive" } } },
-              { buyer: { email: { contains: search, mode: "insensitive" } } },
-              { stripeSessionId: { contains: search, mode: "insensitive" } },
-            ],
-          }
-        : undefined,
+      where: searchFilter,
       include: {
         prompt: { select: { title: true } },
         seller: { select: { username: true, email: true } },
@@ -206,17 +223,42 @@ export async function getAdminSales(options?: {
       take: 100,
     });
 
-    return transactions.map((tx) => ({
-      id: tx.id,
-      promptTitle: tx.prompt.title,
-      seller: tx.seller.username,
-      sellerEmail: tx.seller.email,
-      buyer: tx.buyer.username,
-      buyerEmail: tx.buyer.email,
-      amount: tx.amount,
-      status: tx.status,
-      stripeSessionId: tx.stripeSessionId,
-      createdAt: tx.createdAt.toISOString(),
+    if (transactions.length > 0 || search) {
+      return transactions.map((tx) => ({
+        id: tx.id,
+        promptTitle: tx.prompt.title,
+        seller: tx.seller.username,
+        sellerEmail: tx.seller.email,
+        buyer: tx.buyer.username,
+        buyerEmail: tx.buyer.email,
+        amount: tx.amount,
+        status: tx.status,
+        stripeSessionId: tx.stripeSessionId,
+        createdAt: tx.createdAt.toISOString(),
+      }));
+    }
+
+    const purchases = await prisma.purchase.findMany({
+      where: { status: "completed" },
+      include: {
+        prompt: { select: { title: true, seller: { select: { username: true, email: true } } } },
+        buyer: { select: { username: true, email: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 100,
+    });
+
+    return purchases.map((purchase) => ({
+      id: purchase.id,
+      promptTitle: purchase.prompt.title,
+      seller: purchase.prompt.seller.username,
+      sellerEmail: purchase.prompt.seller.email,
+      buyer: purchase.buyer.username,
+      buyerEmail: purchase.buyer.email,
+      amount: purchase.amount,
+      status: purchase.status,
+      stripeSessionId: null,
+      createdAt: purchase.createdAt.toISOString(),
     }));
   });
 }
