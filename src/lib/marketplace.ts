@@ -14,6 +14,21 @@ type PromptWithRelations = Awaited<
   ReturnType<typeof prisma.prompt.findMany<{ include: typeof promptInclude }>>
 >[number];
 
+async function safeDbRead<T>(fallback: T, query: () => Promise<T>): Promise<T> {
+  try {
+    return await query();
+  } catch {
+    return fallback;
+  }
+}
+
+const EMPTY_MARKETPLACE_STATS = [
+  { id: "1", label: "Premium Prompts", value: "0", suffix: "" },
+  { id: "2", label: "Active Creators", value: "0", suffix: "" },
+  { id: "3", label: "Happy Buyers", value: "0", suffix: "" },
+  { id: "4", label: "Avg. Rating", value: "0", suffix: "/5" },
+] as const;
+
 export function mapPromptToListItem(prompt: PromptWithRelations): Prompt {
   const ratings = prompt.reviews.map((r) => r.rating);
   const avgRating =
@@ -36,29 +51,31 @@ export function mapPromptToListItem(prompt: PromptWithRelations): Prompt {
 }
 
 export async function getFeaturedPrompts(limit = 4): Promise<Prompt[]> {
-  const prompts = await prisma.prompt.findMany({
-    where: { status: "published", featured: true },
-    include: promptInclude,
-    orderBy: [{ reviews: { _count: "desc" } }, { createdAt: "desc" }],
-    take: limit,
+  return safeDbRead([], async () => {
+    const prompts = await prisma.prompt.findMany({
+      where: { status: "published", featured: true },
+      include: promptInclude,
+      orderBy: [{ reviews: { _count: "desc" } }, { createdAt: "desc" }],
+      take: limit,
+    });
+
+    if (prompts.length >= limit) {
+      return prompts.map(mapPromptToListItem);
+    }
+
+    const remaining = limit - prompts.length;
+    const additional = await prisma.prompt.findMany({
+      where: {
+        status: "published",
+        id: { notIn: prompts.map((p) => p.id) },
+      },
+      include: promptInclude,
+      orderBy: { createdAt: "desc" },
+      take: remaining,
+    });
+
+    return [...prompts, ...additional].map(mapPromptToListItem);
   });
-
-  if (prompts.length >= limit) {
-    return prompts.map(mapPromptToListItem);
-  }
-
-  const remaining = limit - prompts.length;
-  const additional = await prisma.prompt.findMany({
-    where: {
-      status: "published",
-      id: { notIn: prompts.map((p) => p.id) },
-    },
-    include: promptInclude,
-    orderBy: { createdAt: "desc" },
-    take: remaining,
-  });
-
-  return [...prompts, ...additional].map(mapPromptToListItem);
 }
 
 export async function getPublishedPrompts(options?: {
@@ -66,30 +83,32 @@ export async function getPublishedPrompts(options?: {
   search?: string;
   limit?: number;
 }): Promise<Prompt[]> {
-  const search = options?.search?.trim();
+  return safeDbRead([], async () => {
+    const search = options?.search?.trim();
 
-  const prompts = await prisma.prompt.findMany({
-    where: {
-      status: "published",
-      ...(options?.categorySlug
-        ? { category: { slug: options.categorySlug } }
-        : {}),
-      ...(search
-        ? {
-            OR: [
-              { title: { contains: search } },
-              { description: { contains: search } },
-              { tags: { some: { tag: { name: { contains: search } } } } },
-            ],
-          }
-        : {}),
-    },
-    include: promptInclude,
-    orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
-    take: options?.limit,
+    const prompts = await prisma.prompt.findMany({
+      where: {
+        status: "published",
+        ...(options?.categorySlug
+          ? { category: { slug: options.categorySlug } }
+          : {}),
+        ...(search
+          ? {
+              OR: [
+                { title: { contains: search } },
+                { description: { contains: search } },
+                { tags: { some: { tag: { name: { contains: search } } } } },
+              ],
+            }
+          : {}),
+      },
+      include: promptInclude,
+      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
+      take: options?.limit,
+    });
+
+    return prompts.map(mapPromptToListItem);
   });
-
-  return prompts.map(mapPromptToListItem);
 }
 
 export async function getPromptById(id: string) {
@@ -106,73 +125,82 @@ export async function getPromptById(id: string) {
 }
 
 export async function getCategoriesWithCounts(): Promise<Category[]> {
-  const categories = await prisma.category.findMany({
-    include: {
-      _count: { select: { prompts: { where: { status: "published" } } } },
-    },
-    orderBy: { name: "asc" },
-  });
+  return safeDbRead([], async () => {
+    const categories = await prisma.category.findMany({
+      include: {
+        _count: { select: { prompts: { where: { status: "published" } } } },
+      },
+      orderBy: { name: "asc" },
+    });
 
-  return categories.map((cat) => ({
-    id: cat.slug,
-    name: cat.name,
-    description: cat.description,
-    icon: cat.icon,
-    count: cat._count.prompts,
-  }));
+    return categories.map((cat) => ({
+      id: cat.slug,
+      name: cat.name,
+      description: cat.description,
+      icon: cat.icon,
+      count: cat._count.prompts,
+    }));
+  });
 }
 
 export async function getMarketplaceStats() {
-  const [promptCount, sellerCount, buyerCount, avgRatingResult] =
-    await Promise.all([
-      prisma.prompt.count({ where: { status: "published" } }),
-      prisma.user.count({ where: { role: "seller" } }),
-      prisma.purchase.count({ where: { status: "completed" } }),
-      prisma.review.aggregate({ _avg: { rating: true } }),
-    ]);
+  return safeDbRead([...EMPTY_MARKETPLACE_STATS], async () => {
+    const [promptCount, sellerCount, buyerCount, avgRatingResult] =
+      await Promise.all([
+        prisma.prompt.count({ where: { status: "published" } }),
+        prisma.user.count({ where: { role: "seller" } }),
+        prisma.purchase.count({ where: { status: "completed" } }),
+        prisma.review.aggregate({ _avg: { rating: true } }),
+      ]);
 
-  const avgRating = avgRatingResult._avg.rating ?? 0;
+    const avgRating = avgRatingResult._avg.rating ?? 0;
 
-  return [
-    {
-      id: "1",
-      label: "Premium Prompts",
-      value: String(promptCount),
-      suffix: promptCount >= 1000 ? "+" : "",
-    },
-    {
-      id: "2",
-      label: "Active Creators",
-      value: String(sellerCount),
-      suffix: sellerCount >= 100 ? "+" : "",
-    },
-    {
-      id: "3",
-      label: "Happy Buyers",
-      value: String(buyerCount),
-      suffix: buyerCount >= 100 ? "+" : "",
-    },
-    {
-      id: "4",
-      label: "Avg. Rating",
-      value: avgRating > 0 ? avgRating.toFixed(1) : "0",
-      suffix: "/5",
-    },
-  ];
+    return [
+      {
+        id: "1",
+        label: "Premium Prompts",
+        value: String(promptCount),
+        suffix: promptCount >= 1000 ? "+" : "",
+      },
+      {
+        id: "2",
+        label: "Active Creators",
+        value: String(sellerCount),
+        suffix: sellerCount >= 100 ? "+" : "",
+      },
+      {
+        id: "3",
+        label: "Happy Buyers",
+        value: String(buyerCount),
+        suffix: buyerCount >= 100 ? "+" : "",
+      },
+      {
+        id: "4",
+        label: "Avg. Rating",
+        value: avgRating > 0 ? avgRating.toFixed(1) : "0",
+        suffix: "/5",
+      },
+    ];
+  });
 }
 
 export async function getPopularSearchTerms(limit = 4): Promise<string[]> {
-  const tags = await prisma.tag.findMany({
-    include: { _count: { select: { prompts: true } } },
-    orderBy: { prompts: { _count: "desc" } },
-    take: limit,
-  });
+  return safeDbRead(
+    ["SEO prompts", "Code generation", "Marketing copy", "Data analysis"],
+    async () => {
+      const tags = await prisma.tag.findMany({
+        include: { _count: { select: { prompts: true } } },
+        orderBy: { prompts: { _count: "desc" } },
+        take: limit,
+      });
 
-  if (tags.length > 0) {
-    return tags.map((t) => t.name);
-  }
+      if (tags.length > 0) {
+        return tags.map((t) => t.name);
+      }
 
-  return ["SEO prompts", "Code generation", "Marketing copy", "Data analysis"];
+      return ["SEO prompts", "Code generation", "Marketing copy", "Data analysis"];
+    },
+  );
 }
 
 export async function getBuyerPurchases(clerkUserId: string) {
@@ -467,7 +495,9 @@ export async function getSellerEarnings(clerkUserId: string) {
 }
 
 export async function getCategoriesFromDb() {
-  return prisma.category.findMany({ orderBy: { name: "asc" } });
+  return safeDbRead([], () =>
+    prisma.category.findMany({ orderBy: { name: "asc" } }),
+  );
 }
 
 export function formatCurrency(amount: number) {
