@@ -1,13 +1,25 @@
+export interface SellerProfile {
+  displayName: string;
+  username: string;
+  bio: string | null;
+}
+
 export interface Prompt {
   id: string;
   title: string;
   description: string;
+  content: string;
+  preview: string;
+  sampleOutput: string;
   category: string;
   price: number;
   rating: number;
   reviews: number;
+  salesCount: number;
   author: string;
+  seller: SellerProfile;
   tags: string[];
+  compatibleModels: string[];
 }
 
 export interface Category {

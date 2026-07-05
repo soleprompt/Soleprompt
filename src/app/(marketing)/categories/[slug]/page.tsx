@@ -33,7 +33,7 @@ export default async function CategoryDetailPage({
       {prompts.length === 0 ? (
         <p className="text-muted-foreground">No prompts in this category yet.</p>
       ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {prompts.map((prompt) => (
             <PromptCard key={prompt.id} prompt={prompt} />
           ))}

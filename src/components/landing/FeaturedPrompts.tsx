@@ -19,7 +19,7 @@ export function FeaturedPrompts({ prompts }: FeaturedPromptsProps) {
           description="Hand-picked by our team. Every prompt is tested, refined, and ready to deliver results."
         />
 
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {prompts.map((prompt, index) => (
             <motion.div
               key={prompt.id}

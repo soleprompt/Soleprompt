@@ -75,11 +75,19 @@ export async function createPrompt(
 
   const tagIds = await getOrCreateTags(tags);
 
+  const preview =
+    content.length > 180 ? `${content.slice(0, 177)}…` : content;
+  const compatibleModels = ["GPT-4o", "Claude 3.5 Sonnet", "Gemini 2.0"];
+  const sampleOutput = `Sample output for "${title}": structured results based on your inputs, ready to copy and deploy.`;
+
   await prisma.prompt.create({
     data: {
       title,
       description,
       content,
+      preview,
+      compatibleModels,
+      sampleOutput,
       price,
       status: status === "draft" ? "draft" : "review",
       sellerId: dbUser.id,
@@ -138,6 +146,8 @@ export async function updatePrompt(
       title,
       description,
       content,
+      preview: content.length > 180 ? `${content.slice(0, 177)}…` : content,
+      sampleOutput: existing.sampleOutput || `Sample output for "${title}".`,
       price,
       status: status || existing.status,
       categoryId,

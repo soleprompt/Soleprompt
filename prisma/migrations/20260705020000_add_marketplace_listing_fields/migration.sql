@@ -1,0 +1,4 @@
+-- AlterTable
+ALTER TABLE "Prompt" ADD COLUMN "preview" TEXT NOT NULL DEFAULT '';
+ALTER TABLE "Prompt" ADD COLUMN "compatibleModels" TEXT[] DEFAULT ARRAY[]::TEXT[];
+ALTER TABLE "Prompt" ADD COLUMN "sampleOutput" TEXT NOT NULL DEFAULT '';

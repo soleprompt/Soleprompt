@@ -74,7 +74,44 @@ type PromptDefinition = {
   price: number;
   description: string;
   content: string;
+  preview: string;
+  compatibleModels: string[];
+  sampleOutput: string;
 };
+
+const COMPATIBLE_MODELS = [
+  "GPT-4o",
+  "GPT-4",
+  "Claude 3.5 Sonnet",
+  "Claude 3 Opus",
+  "Gemini 2.0",
+  "Llama 3.1",
+  "Mistral Large",
+] as const;
+
+function pickCompatibleModels(title: string): string[] {
+  const hash = title.split("").reduce((sum, char) => sum + char.charCodeAt(0), 0);
+  const start = hash % (COMPATIBLE_MODELS.length - 2);
+  return COMPATIBLE_MODELS.slice(start, start + 3);
+}
+
+function buildSampleOutput(title: string, deliverable: string): string {
+  return `# ${title} — Sample Output
+
+## Summary
+${deliverable} tailored to your product, audience, and goals.
+
+## Deliverables
+1. Primary strategy with step-by-step implementation
+2. Alternative approaches for testing and optimization
+3. Ready-to-use copy and assets
+
+## Example Section
+Based on your inputs, here are prioritized recommendations with clear rationale and next actions you can deploy immediately.
+
+---
+*Actual output adapts to your specific context and constraints.*`;
+}
 
 function prompt(
   title: string,
@@ -84,13 +121,19 @@ function prompt(
   role: string,
   deliverable: string,
 ): PromptDefinition {
+  const description = `${deliverable} with structured outputs, best-practice frameworks, and ready-to-use templates.`;
+  const content = `You are a ${role}. The user will provide their product, audience, goals, and constraints. ${deliverable}. Return clear sections, actionable recommendations, and copy-ready assets the user can deploy immediately.`;
+
   return {
     title,
     categorySlug,
     tags,
     price,
-    description: `${deliverable} with structured outputs, best-practice frameworks, and ready-to-use templates.`,
-    content: `You are a ${role}. The user will provide their product, audience, goals, and constraints. ${deliverable}. Return clear sections, actionable recommendations, and copy-ready assets the user can deploy immediately.`,
+    description,
+    content,
+    preview: `${content.slice(0, 180)}${content.length > 180 ? "…" : ""}`,
+    compatibleModels: pickCompatibleModels(title),
+    sampleOutput: buildSampleOutput(title, deliverable),
   };
 }
 
@@ -210,6 +253,9 @@ type PromptSeed = {
   title: string;
   description: string;
   content: string;
+  preview: string;
+  compatibleModels: string[];
+  sampleOutput: string;
   categorySlug: CategorySlug;
   price: number;
   featured: boolean;
@@ -238,6 +284,9 @@ function buildMarketplacePrompts(): PromptSeed[] {
       title: definition.title,
       description: definition.description,
       content: definition.content,
+      preview: definition.preview,
+      compatibleModels: definition.compatibleModels,
+      sampleOutput: definition.sampleOutput,
       categorySlug: definition.categorySlug,
       price: Math.round((definition.price + priceOffset) * 100) / 100,
       featured: index < 4,
@@ -365,6 +414,9 @@ async function main() {
         title: promptData.title,
         description: promptData.description,
         content: promptData.content,
+        preview: promptData.preview,
+        compatibleModels: promptData.compatibleModels,
+        sampleOutput: promptData.sampleOutput,
         price: promptData.price,
         status: "published",
         featured: promptData.featured,

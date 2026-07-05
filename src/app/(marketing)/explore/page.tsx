@@ -11,7 +11,7 @@ export default async function ExplorePage() {
         title="Explore Prompts"
         description="Browse all premium prompts in the marketplace."
       />
-      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {prompts.map((prompt) => (
           <PromptCard key={prompt.id} prompt={prompt} />
         ))}

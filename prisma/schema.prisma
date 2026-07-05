@@ -69,12 +69,15 @@ model Tag {
 }
 
 model Prompt {
-  id          String       @id @default(cuid())
-  title       String
-  description String
-  content     String
-  price       Float
-  status      PromptStatus @default(draft)
+  id               String       @id @default(cuid())
+  title            String
+  description      String
+  content          String
+  preview          String
+  compatibleModels String[]
+  sampleOutput     String
+  price            Float
+  status           PromptStatus @default(draft)
   featured    Boolean      @default(false)
   views       Int          @default(0)
   sellerId    String

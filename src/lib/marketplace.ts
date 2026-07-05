@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { safeDbRead } from "@/lib/safe-db";
+import { formatCurrency, formatDate } from "@/lib/format";
 import type { Category, Prompt } from "@/types";
 import type { PromptStatus, PurchaseStatus } from "@/generated/prisma/client";
 
@@ -29,17 +30,28 @@ export function mapPromptToListItem(prompt: PromptWithRelations): Prompt {
       ? ratings.reduce((sum, r) => sum + r, 0) / ratings.length
       : 0;
 
+  const sellerProfile = prompt.seller.sellerProfile;
+
   return {
     id: prompt.id,
     title: prompt.title,
     description: prompt.description,
+    content: prompt.content,
+    preview: prompt.preview,
+    sampleOutput: prompt.sampleOutput,
     category: prompt.category.name,
     price: prompt.price,
     rating: Math.round(avgRating * 10) / 10,
     reviews: prompt._count.reviews,
-    author:
-      prompt.seller.sellerProfile?.displayName ?? prompt.seller.username,
+    salesCount: prompt._count.purchases,
+    author: sellerProfile?.displayName ?? prompt.seller.username,
+    seller: {
+      displayName: sellerProfile?.displayName ?? prompt.seller.username,
+      username: prompt.seller.username,
+      bio: sellerProfile?.bio ?? null,
+    },
     tags: prompt.tags.map((t) => t.tag.name),
+    compatibleModels: prompt.compatibleModels,
   };
 }
 
@@ -526,17 +538,4 @@ export async function getCategoriesFromDb() {
   );
 }
 
-export function formatCurrency(amount: number) {
-  return new Intl.NumberFormat("en-US", {
-    style: "currency",
-    currency: "USD",
-  }).format(amount);
-}
-
-export function formatDate(date: string | Date) {
-  return new Date(date).toLocaleDateString("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  });
-}
+export { formatCurrency, formatDate };
