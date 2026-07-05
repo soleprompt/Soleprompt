@@ -1,4 +1,8 @@
-import crypto from "node:crypto";
+import { getStoredXCredentials } from "@/lib/social/x-connection";
+import {
+  buildOAuthAuthorizationHeader,
+  type XUserCredentials,
+} from "@/lib/social/x-oauth";
 
 const TWEET_URL = "https://api.twitter.com/2/tweets";
 const MAX_TWEET_LENGTH = 280;
@@ -6,80 +10,6 @@ const MAX_TWEET_LENGTH = 280;
 export type PostToXResult =
   | { ok: true; postId: string }
   | { ok: false; error: string };
-
-type XCredentials = {
-  apiKey: string;
-  apiSecret: string;
-  accessToken: string;
-  accessSecret: string;
-};
-
-function getXCredentials(): XCredentials | null {
-  const apiKey = process.env.X_API_KEY;
-  const apiSecret = process.env.X_API_SECRET;
-  const accessToken = process.env.X_ACCESS_TOKEN;
-  const accessSecret = process.env.X_ACCESS_SECRET;
-
-  if (!apiKey || !apiSecret || !accessToken || !accessSecret) {
-    return null;
-  }
-
-  return { apiKey, apiSecret, accessToken, accessSecret };
-}
-
-function percentEncode(value: string): string {
-  return encodeURIComponent(value).replace(
-    /[!'()*]/g,
-    (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
-  );
-}
-
-function buildOAuthHeader(
-  method: string,
-  url: string,
-  creds: XCredentials,
-): string {
-  const oauthParams: Record<string, string> = {
-    oauth_consumer_key: creds.apiKey,
-    oauth_nonce: crypto.randomBytes(16).toString("hex"),
-    oauth_signature_method: "HMAC-SHA1",
-    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
-    oauth_token: creds.accessToken,
-    oauth_version: "1.0",
-  };
-
-  const signatureBase = [
-    method.toUpperCase(),
-    percentEncode(url),
-    percentEncode(
-      Object.keys(oauthParams)
-        .sort()
-        .map((key) => `${percentEncode(key)}=${percentEncode(oauthParams[key]!)}`)
-        .join("&"),
-    ),
-  ].join("&");
-
-  const signingKey = `${percentEncode(creds.apiSecret)}&${percentEncode(creds.accessSecret)}`;
-  const signature = crypto
-    .createHmac("sha1", signingKey)
-    .update(signatureBase)
-    .digest("base64");
-
-  const headerParams = {
-    ...oauthParams,
-    oauth_signature: signature,
-  };
-
-  const headerValue = Object.keys(headerParams)
-    .sort()
-    .map(
-      (key) =>
-        `${percentEncode(key)}="${percentEncode(headerParams[key as keyof typeof headerParams]!)}"`,
-    )
-    .join(", ");
-
-  return `OAuth ${headerValue}`;
-}
 
 export async function postToX(text: string): Promise<PostToXResult> {
   const trimmed = text.trim();
@@ -95,12 +25,12 @@ export async function postToX(text: string): Promise<PostToXResult> {
     };
   }
 
-  const creds = getXCredentials();
+  const creds = await getStoredXCredentials();
   if (!creds) {
     return {
       ok: false,
       error:
-        "X API credentials not configured. Set X_API_KEY, X_API_SECRET, X_ACCESS_TOKEN, and X_ACCESS_SECRET.",
+        "X is not connected. Connect an account in Admin → Social or set X_ACCESS_TOKEN and X_ACCESS_SECRET.",
     };
   }
 
@@ -108,7 +38,12 @@ export async function postToX(text: string): Promise<PostToXResult> {
     const response = await fetch(TWEET_URL, {
       method: "POST",
       headers: {
-        Authorization: buildOAuthHeader("POST", TWEET_URL, creds),
+        Authorization: buildOAuthAuthorizationHeader(
+          "POST",
+          TWEET_URL,
+          creds,
+          { key: creds.accessToken, secret: creds.accessSecret },
+        ),
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ text: trimmed }),
@@ -142,3 +77,5 @@ export async function postToX(text: string): Promise<PostToXResult> {
     return { ok: false, error: message };
   }
 }
+
+export type { XUserCredentials };

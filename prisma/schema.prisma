@@ -70,6 +70,21 @@ model User {
   reviews             Review[]
   wishlist            Wishlist[]
   promptViews         PromptView[]
+  xConnections        XConnection[]
+}
+
+model XConnection {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken  String
+  accessSecret String
+  screenName   String
+  xUserId      String
+  connectedAt  DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([connectedAt])
 }
 
 model SellerProfile {

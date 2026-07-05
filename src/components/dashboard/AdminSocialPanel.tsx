@@ -1,13 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useState, useTransition } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import {
   Calendar,
   Check,
+  Link2,
   Loader2,
   Send,
   Sparkles,
+  Unlink,
 } from "lucide-react";
 import { AdminTableFilters } from "@/components/dashboard/AdminTableFilters";
 import { Badge } from "@/components/ui/Badge";
@@ -64,16 +66,63 @@ interface AdminSocialPanelProps {
   statusFilter: string;
 }
 
+type XConnectionState = {
+  connected: boolean;
+  configured: boolean;
+  screenName?: string;
+  xUserId?: string;
+  connectedAt?: string;
+  source?: "database" | "env";
+};
+
 export function AdminSocialPanel({
   initialPosts,
   statusFilter,
 }: AdminSocialPanelProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [posts, setPosts] = useState(initialPosts);
   const [pending, startTransition] = useTransition();
   const [actionId, setActionId] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [xConnection, setXConnection] = useState<XConnectionState | null>(null);
+  const [xLoading, setXLoading] = useState(true);
+  const [xBusy, setXBusy] = useState(false);
+
+  const loadXStatus = useCallback(async () => {
+    setXLoading(true);
+    try {
+      const response = await fetch("/api/admin/social/x/status");
+      if (response.ok) {
+        const data = (await response.json()) as XConnectionState;
+        setXConnection(data);
+      }
+    } finally {
+      setXLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void loadXStatus();
+  }, [loadXStatus]);
+
+  useEffect(() => {
+    const xParam = searchParams.get("x");
+    const xMessage = searchParams.get("message");
+
+    if (xParam === "connected") {
+      setMessage("X account connected successfully.");
+      void loadXStatus();
+      router.replace("/admin/social");
+    } else if (xParam === "denied") {
+      setError("X authorization was cancelled.");
+      router.replace("/admin/social");
+    } else if (xParam === "error") {
+      setError(xMessage ?? "Failed to connect X account.");
+      router.replace("/admin/social");
+    }
+  }, [loadXStatus, router, searchParams]);
 
   async function refreshPosts() {
     const query =
@@ -197,6 +246,37 @@ export function AdminSocialPanel({
   const draftCount = posts.filter((post) => post.status === "draft").length;
   const scheduledCount = posts.filter((post) => post.status === "scheduled").length;
 
+  function handleConnectX() {
+    window.location.href = "/api/admin/social/x/connect";
+  }
+
+  function handleDisconnectX() {
+    if (!confirm("Disconnect the linked X account? Posts will fall back to env tokens if configured.")) {
+      return;
+    }
+
+    setXBusy(true);
+    setMessage(null);
+    setError(null);
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/admin/social/x/disconnect", {
+          method: "POST",
+        });
+        const data = (await response.json()) as { error?: string };
+        if (!response.ok) {
+          throw new Error(data.error ?? "Failed to disconnect X account.");
+        }
+        setMessage("X account disconnected.");
+        await loadXStatus();
+      } catch (err) {
+        setError(err instanceof Error ? err.message : "Something went wrong.");
+      } finally {
+        setXBusy(false);
+      }
+    });
+  }
+
   return (
     <>
       <AdminTableFilters status={statusFilter} statusOptions={STATUS_OPTIONS} />
@@ -212,6 +292,70 @@ export function AdminSocialPanel({
           {error ?? message}
         </div>
       )}
+
+      <Card className="mb-6">
+        <CardHeader>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">X account</h2>
+              <p className="text-sm text-muted-foreground">
+                Connect the account used to publish approved posts. Tokens are stored server-side only.
+              </p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              {xLoading ? (
+                <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Checking connection…
+                </span>
+              ) : xConnection?.connected ? (
+                <>
+                  <Badge variant="electric">
+                    Connected
+                    {xConnection.screenName ? ` · @${xConnection.screenName}` : ""}
+                  </Badge>
+                  {xConnection.source === "env" && (
+                    <span className="text-xs text-muted-foreground">
+                      via env vars
+                    </span>
+                  )}
+                  {xConnection.source === "database" && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5"
+                      disabled={xBusy || pending}
+                      onClick={handleDisconnectX}
+                    >
+                      {xBusy ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <Unlink className="h-4 w-4" />
+                      )}
+                      Disconnect
+                    </Button>
+                  )}
+                </>
+              ) : xConnection?.configured ? (
+                <Button
+                  type="button"
+                  variant="primary"
+                  size="sm"
+                  className="gap-1.5"
+                  disabled={xBusy || pending}
+                  onClick={handleConnectX}
+                >
+                  <Link2 className="h-4 w-4" />
+                  Connect X account
+                </Button>
+              ) : (
+                <Badge variant="outline">Not configured</Badge>
+              )}
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
 
       <Card className="mb-6">
         <CardHeader>

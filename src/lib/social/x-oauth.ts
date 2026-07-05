@@ -1,0 +1,201 @@
+import crypto from "node:crypto";
+
+const REQUEST_TOKEN_URL = "https://api.twitter.com/oauth/request_token";
+const ACCESS_TOKEN_URL = "https://api.twitter.com/oauth/access_token";
+const AUTHORIZE_URL = "https://api.twitter.com/oauth/authorize";
+
+export type XConsumerCredentials = {
+  apiKey: string;
+  apiSecret: string;
+};
+
+export type XUserCredentials = XConsumerCredentials & {
+  accessToken: string;
+  accessSecret: string;
+};
+
+export function getXConsumerCredentials(): XConsumerCredentials | null {
+  const apiKey = process.env.X_API_KEY;
+  const apiSecret = process.env.X_API_SECRET;
+
+  if (!apiKey || !apiSecret) {
+    return null;
+  }
+
+  return { apiKey, apiSecret };
+}
+
+export function getXCallbackUrl(): string {
+  const explicit = process.env.X_CALLBACK_URL?.trim();
+  if (explicit) {
+    return explicit;
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
+  if (!appUrl) {
+    throw new Error(
+      "Set X_CALLBACK_URL or NEXT_PUBLIC_APP_URL for the X OAuth callback.",
+    );
+  }
+
+  return `${appUrl}/api/admin/social/x/callback`;
+}
+
+export function percentEncode(value: string): string {
+  return encodeURIComponent(value).replace(
+    /[!'()*]/g,
+    (char) => `%${char.charCodeAt(0).toString(16).toUpperCase()}`,
+  );
+}
+
+export function buildOAuthAuthorizationHeader(
+  method: string,
+  url: string,
+  consumer: XConsumerCredentials,
+  token?: { key: string; secret: string },
+  extraParams: Record<string, string> = {},
+): string {
+  const oauthParams: Record<string, string> = {
+    oauth_consumer_key: consumer.apiKey,
+    oauth_nonce: crypto.randomBytes(16).toString("hex"),
+    oauth_signature_method: "HMAC-SHA1",
+    oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
+    oauth_version: "1.0",
+    ...extraParams,
+  };
+
+  if (token) {
+    oauthParams.oauth_token = token.key;
+  }
+
+  const allParams = { ...oauthParams, ...extraParams };
+  const signatureBase = [
+    method.toUpperCase(),
+    percentEncode(url),
+    percentEncode(
+      Object.keys(allParams)
+        .sort()
+        .map((key) => `${percentEncode(key)}=${percentEncode(allParams[key]!)}`)
+        .join("&"),
+    ),
+  ].join("&");
+
+  const signingKey = `${percentEncode(consumer.apiSecret)}&${percentEncode(token?.secret ?? "")}`;
+  const signature = crypto
+    .createHmac("sha1", signingKey)
+    .update(signatureBase)
+    .digest("base64");
+
+  const headerParams: Record<string, string> = {
+    ...oauthParams,
+    oauth_signature: signature,
+  };
+
+  const headerValue = Object.keys(headerParams)
+    .sort()
+    .map(
+      (key) =>
+        `${percentEncode(key)}="${percentEncode(headerParams[key]!)}"`,
+    )
+    .join(", ");
+
+  return `OAuth ${headerValue}`;
+}
+
+function parseOAuthResponse(body: string): Record<string, string> {
+  return Object.fromEntries(
+    body.split("&").map((pair) => {
+      const [key, value = ""] = pair.split("=");
+      return [decodeURIComponent(key!), decodeURIComponent(value)];
+    }),
+  );
+}
+
+export async function fetchXRequestToken(callbackUrl: string): Promise<{
+  oauthToken: string;
+  oauthTokenSecret: string;
+  authorizeUrl: string;
+}> {
+  const consumer = getXConsumerCredentials();
+  if (!consumer) {
+    throw new Error("X_API_KEY and X_API_SECRET must be configured.");
+  }
+
+  const response = await fetch(REQUEST_TOKEN_URL, {
+    method: "POST",
+    headers: {
+      Authorization: buildOAuthAuthorizationHeader(
+        "POST",
+        REQUEST_TOKEN_URL,
+        consumer,
+        undefined,
+        { oauth_callback: callbackUrl },
+      ),
+    },
+  });
+
+  const body = await response.text();
+  if (!response.ok) {
+    throw new Error(`Failed to obtain X request token (${response.status}).`);
+  }
+
+  const params = parseOAuthResponse(body);
+  const oauthToken = params.oauth_token;
+  const oauthTokenSecret = params.oauth_token_secret;
+
+  if (!oauthToken || !oauthTokenSecret) {
+    throw new Error("X request token response was missing required fields.");
+  }
+
+  return {
+    oauthToken,
+    oauthTokenSecret,
+    authorizeUrl: `${AUTHORIZE_URL}?oauth_token=${encodeURIComponent(oauthToken)}`,
+  };
+}
+
+export async function fetchXAccessToken(
+  oauthToken: string,
+  oauthTokenSecret: string,
+  oauthVerifier: string,
+): Promise<{
+  accessToken: string;
+  accessSecret: string;
+  userId: string;
+  screenName: string;
+}> {
+  const consumer = getXConsumerCredentials();
+  if (!consumer) {
+    throw new Error("X_API_KEY and X_API_SECRET must be configured.");
+  }
+
+  const response = await fetch(ACCESS_TOKEN_URL, {
+    method: "POST",
+    headers: {
+      Authorization: buildOAuthAuthorizationHeader(
+        "POST",
+        ACCESS_TOKEN_URL,
+        consumer,
+        { key: oauthToken, secret: oauthTokenSecret },
+        { oauth_verifier: oauthVerifier },
+      ),
+    },
+  });
+
+  const body = await response.text();
+  if (!response.ok) {
+    throw new Error(`Failed to exchange X access token (${response.status}).`);
+  }
+
+  const params = parseOAuthResponse(body);
+  const accessToken = params.oauth_token;
+  const accessSecret = params.oauth_token_secret;
+  const userId = params.user_id;
+  const screenName = params.screen_name;
+
+  if (!accessToken || !accessSecret || !userId || !screenName) {
+    throw new Error("X access token response was missing required fields.");
+  }
+
+  return { accessToken, accessSecret, userId, screenName };
+}
