@@ -26,6 +26,8 @@ export async function POST(_request: Request, { params }: RouteContext) {
     );
   }
 
+  console.log("[X post] Manual publish requested", { postId: id });
+
   const result = await postToX(post.content);
 
   if (result.ok) {
@@ -38,8 +40,14 @@ export async function POST(_request: Request, { params }: RouteContext) {
         error: null,
       },
     });
+    console.log("[X post] Marked posted in database", {
+      postId: id,
+      xPostId: result.postId,
+    });
     return NextResponse.json({ post: updated });
   }
+
+  console.error("[X post] Publish failed", { postId: id, error: result.error });
 
   const updated = await prisma.socialPost.update({
     where: { id },

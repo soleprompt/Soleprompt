@@ -235,11 +235,23 @@ export function AdminSocialPanel({
       const response = await fetch(`/api/admin/social/posts/${postId}/post`, {
         method: "POST",
       });
-      const data = (await response.json()) as { error?: string };
+      const data = (await response.json()) as {
+        error?: string;
+        post?: SocialPost;
+      };
       if (!response.ok) {
-        throw new Error(data.error ?? "Failed to post to X.");
+        throw new Error(data.error ?? data.post?.error ?? "Failed to post to X.");
       }
-      setMessage("Posted to X successfully.");
+      if (data.post?.status !== "posted" || !data.post.xPostId) {
+        throw new Error(
+          data.error ??
+            data.post?.error ??
+            "X did not confirm the tweet was published.",
+        );
+      }
+      setMessage(
+        `Posted to X successfully (tweet ID ${data.post.xPostId}).`,
+      );
     });
   }
 
@@ -450,7 +462,21 @@ export function AdminSocialPanel({
                     {post.postedAt && (
                       <span className="text-xs text-muted-foreground">
                         Posted {formatDateTime(post.postedAt)}
-                        {post.xPostId ? ` · ID ${post.xPostId}` : ""}
+                        {post.xPostId ? (
+                          <>
+                            {" · "}
+                            <a
+                              href={`https://x.com/i/web/status/${post.xPostId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-electric hover:underline"
+                            >
+                              View on X
+                            </a>
+                          </>
+                        ) : (
+                          " · missing tweet ID"
+                        )}
                       </span>
                     )}
                   </div>
@@ -465,7 +491,17 @@ export function AdminSocialPanel({
                     <p className="whitespace-pre-wrap text-sm">{post.content}</p>
                   )}
 
-                  {post.error && (
+                  {post.status === "failed" && post.error && (
+                    <div
+                      className="mt-3 rounded-lg border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+                      role="alert"
+                    >
+                      <p className="font-medium">X posting failed</p>
+                      <p className="mt-1 whitespace-pre-wrap">{post.error}</p>
+                    </div>
+                  )}
+
+                  {post.status !== "failed" && post.error && (
                     <p className="mt-2 text-sm text-destructive">{post.error}</p>
                   )}
 

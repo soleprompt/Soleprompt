@@ -22,6 +22,7 @@ export async function processScheduledPosts(): Promise<ProcessScheduledPostsResu
   let failed = 0;
 
   for (const post of duePosts) {
+    console.log("[X post] Scheduled publish", { postId: post.id });
     const result = await postToX(post.content);
 
     if (result.ok) {
@@ -34,8 +35,16 @@ export async function processScheduledPosts(): Promise<ProcessScheduledPostsResu
           error: null,
         },
       });
+      console.log("[X post] Scheduled post published", {
+        postId: post.id,
+        xPostId: result.postId,
+      });
       posted += 1;
     } else {
+      console.error("[X post] Scheduled post failed", {
+        postId: post.id,
+        error: result.error,
+      });
       await prisma.socialPost.update({
         where: { id: post.id },
         data: {
