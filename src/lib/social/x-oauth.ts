@@ -25,6 +25,49 @@ export function getXConsumerCredentials(): XConsumerCredentials | null {
   return { apiKey, apiSecret };
 }
 
+/** Logs which X OAuth env vars are set (presence only — never values). */
+export function logXOAuthEnvDebug(context: string): void {
+  console.log(`[X OAuth] ${context}`, {
+    env: {
+      X_API_KEY: Boolean(process.env.X_API_KEY),
+      X_API_SECRET: Boolean(process.env.X_API_SECRET),
+      X_CALLBACK_URL: Boolean(process.env.X_CALLBACK_URL),
+      NEXT_PUBLIC_APP_URL: Boolean(process.env.NEXT_PUBLIC_APP_URL),
+      X_ACCESS_TOKEN: Boolean(process.env.X_ACCESS_TOKEN),
+      X_ACCESS_SECRET: Boolean(process.env.X_ACCESS_SECRET),
+    },
+  });
+}
+
+function formatRequestTokenError(
+  status: number,
+  body: string,
+  callbackUrl: string,
+): string {
+  const trimmedBody = body.trim();
+  const bodyHint = trimmedBody ? ` Response: ${trimmedBody.slice(0, 200)}` : "";
+
+  if (status === 401) {
+    return (
+      `Failed to obtain X request token (401).` +
+      bodyHint +
+      ` Callback URL sent: ${callbackUrl}.` +
+      " Common causes: invalid X_API_KEY/X_API_SECRET, OAuth 1.0a disabled in the X developer portal," +
+      " callback URL not registered exactly (scheme, host, path), or app missing Read+Write permissions."
+    );
+  }
+
+  if (status === 403) {
+    return (
+      `Failed to obtain X request token (403).` +
+      bodyHint +
+      " The app may lack required permissions or elevated access for OAuth 1.0a."
+    );
+  }
+
+  return `Failed to obtain X request token (${status}).${bodyHint}`;
+}
+
 export function getXCallbackUrl(): string {
   const explicit = process.env.X_CALLBACK_URL?.trim();
   if (explicit) {
@@ -121,6 +164,8 @@ export async function fetchXRequestToken(callbackUrl: string): Promise<{
     throw new Error("X_API_KEY and X_API_SECRET must be configured.");
   }
 
+  console.log("[X OAuth] request_token request", { callbackUrl });
+
   const response = await fetch(REQUEST_TOKEN_URL, {
     method: "POST",
     headers: {
@@ -135,8 +180,14 @@ export async function fetchXRequestToken(callbackUrl: string): Promise<{
   });
 
   const body = await response.text();
+  console.log("[X OAuth] request_token response", {
+    status: response.status,
+    statusText: response.statusText,
+    body,
+  });
+
   if (!response.ok) {
-    throw new Error(`Failed to obtain X request token (${response.status}).`);
+    throw new Error(formatRequestTokenError(response.status, body, callbackUrl));
   }
 
   const params = parseOAuthResponse(body);

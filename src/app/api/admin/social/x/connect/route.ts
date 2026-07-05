@@ -5,6 +5,7 @@ import {
   fetchXRequestToken,
   getXCallbackUrl,
   getXConsumerCredentials,
+  logXOAuthEnvDebug,
 } from "@/lib/social/x-oauth";
 
 const OAUTH_TOKEN_COOKIE = "x_oauth_token";
@@ -37,7 +38,10 @@ export async function GET() {
   }
 
   try {
+    logXOAuthEnvDebug("connect flow start");
     const callbackUrl = getXCallbackUrl();
+    console.log("[X OAuth] connect using callback URL:", callbackUrl);
+
     const { oauthToken, oauthTokenSecret, authorizeUrl } =
       await fetchXRequestToken(callbackUrl);
 
@@ -53,6 +57,7 @@ export async function GET() {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to start X OAuth flow.";
+    console.error("[X OAuth] connect flow failed:", message);
     return NextResponse.json({ error: message }, { status: 502 });
   }
 }
