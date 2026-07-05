@@ -10,11 +10,20 @@ export function getAdminEmail(): string | undefined {
 
 export function isAdminEmail(email: string | null | undefined): boolean {
   const adminEmail = getAdminEmail();
-  return !!(
-    adminEmail &&
-    email &&
-    email.toLowerCase() === adminEmail.toLowerCase()
-  );
+  const normalizedAdminEmail = adminEmail?.trim().toLowerCase() ?? "";
+  const normalizedUserEmail = email?.trim().toLowerCase() ?? "";
+  const isAdmin =
+    normalizedAdminEmail.length > 0 &&
+    normalizedUserEmail.length > 0 &&
+    normalizedUserEmail === normalizedAdminEmail;
+
+  console.log("[admin] email check", {
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+    primaryEmail: email ?? null,
+    isAdmin,
+  });
+
+  return isAdmin;
 }
 
 function clerkUserFields(user: ClerkUser) {
