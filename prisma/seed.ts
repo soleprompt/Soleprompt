@@ -5,7 +5,7 @@ import { PrismaClient } from "../src/generated/prisma/client";
 dotenv.config({ path: ".env.local" });
 dotenv.config();
 
-const connectionString = process.env.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL?.replace("-pooler", "");
 if (!connectionString) {
   throw new Error("DATABASE_URL environment variable is not set");
 }
@@ -278,8 +278,18 @@ async function clearDatabase() {
   ]);
 }
 
+async function withSeedLock<T>(fn: () => Promise<T>): Promise<T> {
+  await prisma.$executeRaw`SELECT pg_advisory_lock(hashtext('soleprompt-seed'))`;
+  try {
+    return await fn();
+  } finally {
+    await prisma.$executeRaw`SELECT pg_advisory_unlock(hashtext('soleprompt-seed'))`;
+  }
+}
+
 async function main() {
-  console.log("Seeding marketplace database...");
+  await withSeedLock(async () => {
+    console.log("Seeding marketplace database...");
 
   await clearDatabase();
 
@@ -323,6 +333,21 @@ async function main() {
     );
   }
 
+  const tagIds = new Map<string, string>();
+
+  async function getOrCreateTagId(name: string) {
+    const cached = tagIds.get(name);
+    if (cached) return cached;
+
+    const tag = await prisma.tag.upsert({
+      where: { name },
+      create: { name },
+      update: {},
+    });
+    tagIds.set(name, tag.id);
+    return tag.id;
+  }
+
   const createdPrompts: Array<{ id: string; price: number; seed: PromptSeed }> = [];
 
   for (const promptData of PROMPTS) {
@@ -346,18 +371,17 @@ async function main() {
         views: promptData.views,
         sellerId: seller.id,
         categoryId: category.id,
-        tags: {
-          create: promptData.tags.map((tagName) => ({
-            tag: {
-              connectOrCreate: {
-                where: { name: tagName },
-                create: { name: tagName },
-              },
-            },
-          })),
-        },
       },
     });
+
+    for (const tagName of promptData.tags) {
+      await prisma.promptTag.create({
+        data: {
+          promptId: promptRecord.id,
+          tagId: await getOrCreateTagId(tagName),
+        },
+      });
+    }
 
     createdPrompts.push({ id: promptRecord.id, price: promptRecord.price, seed: promptData });
   }
@@ -445,6 +469,25 @@ async function main() {
   console.log(`Seeded ${buyerUsers.length} buyers`);
   console.log(`Seeded ${createdPrompts.length} prompts`);
   console.log(`Seeded ~${completedSales} completed sales (of ${purchaseIndex} total purchases)`);
+
+  const publishedCount = await prisma.prompt.count({ where: { status: "published" } });
+  const categoryCounts = await prisma.category.findMany({
+    include: { _count: { select: { prompts: true } } },
+    orderBy: { slug: "asc" },
+  });
+  const titles = await prisma.prompt.findMany({
+    select: { title: true },
+    orderBy: { createdAt: "asc" },
+  });
+
+  console.log(`Verification: ${publishedCount} published prompts in database`);
+  console.log(
+    "Category counts:",
+    categoryCounts.map((c) => `${c.slug}=${c._count.prompts}`).join(", "),
+  );
+  console.log(`First title: ${titles[0]?.title}`);
+  console.log(`Last title: ${titles.at(-1)?.title}`);
+  });
 }
 
 main()
