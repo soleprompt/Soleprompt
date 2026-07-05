@@ -5,12 +5,13 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { completePurchase } from "@/lib/purchase-fulfillment";
 import {
-  getAppUrl,
   getCheckoutSessionAmount,
   getCheckoutSessionCurrency,
   getStripe,
   getStripePaymentId,
   isStripeConfigured,
+  STRIPE_CHECKOUT_CANCEL_URL,
+  STRIPE_CHECKOUT_SUCCESS_URL,
 } from "@/lib/stripe";
 import { syncClerkUser } from "@/lib/user";
 
@@ -86,7 +87,6 @@ export async function startPurchase(
   }
 
   const stripe = getStripe();
-  const appUrl = getAppUrl();
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -107,8 +107,8 @@ export async function startPurchase(
       promptId: prompt.id,
       buyerId: buyer.id,
     },
-    success_url: `${appUrl}/purchase/success?session_id={CHECKOUT_SESSION_ID}`,
-    cancel_url: `${appUrl}/prompts/${prompt.id}?checkout=cancelled`,
+    success_url: STRIPE_CHECKOUT_SUCCESS_URL,
+    cancel_url: STRIPE_CHECKOUT_CANCEL_URL,
   });
 
   if (!session.url) {

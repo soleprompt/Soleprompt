@@ -52,3 +52,10 @@ export function getAppUrl(): string {
 
   return "http://localhost:3000";
 }
+
+/** Stripe Checkout redirect URLs always use production domain (never Vercel preview). */
+export const STRIPE_CHECKOUT_SUCCESS_URL =
+  "https://getsoleprompt.com/purchase/success?session_id={CHECKOUT_SESSION_ID}";
+
+export const STRIPE_CHECKOUT_CANCEL_URL =
+  "https://getsoleprompt.com/purchase/cancel";
