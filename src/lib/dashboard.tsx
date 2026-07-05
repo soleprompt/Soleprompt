@@ -1,6 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
+import { getDashboardPath } from "@/lib/auth";
 import { getCurrentUserRole } from "@/lib/user";
 import type { DashboardSection } from "@/types/dashboard";
 import type { UserRole } from "@/types/user";
@@ -9,6 +10,7 @@ export async function createDashboardLayout(
   section: DashboardSection,
   allowedRoles: UserRole[],
   children: React.ReactNode,
+  options?: { hasAccess?: () => Promise<boolean> },
 ) {
   const user = await currentUser();
 
@@ -17,9 +19,12 @@ export async function createDashboardLayout(
   }
 
   const role = await getCurrentUserRole();
+  const roleAllowed = allowedRoles.includes(role);
+  const customAllowed = options?.hasAccess ? await options.hasAccess() : false;
+  const allowed = roleAllowed || customAllowed;
 
-  if (!allowedRoles.includes(role)) {
-    redirect(role === "admin" ? "/admin" : role === "seller" ? "/seller" : "/buyer");
+  if (!allowed) {
+    redirect(getDashboardPath(role));
   }
 
   const userName =

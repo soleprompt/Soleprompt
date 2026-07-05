@@ -1,3 +1,4 @@
+import { isAdminUser } from "@/lib/admin";
 import { createDashboardLayout } from "@/lib/dashboard";
 
 export default async function AdminLayout({
@@ -5,5 +6,7 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return createDashboardLayout("admin", ["admin"], children);
+  return createDashboardLayout("admin", ["admin"], children, {
+    hasAccess: isAdminUser,
+  });
 }

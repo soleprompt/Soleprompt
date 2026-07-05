@@ -3,6 +3,20 @@ import { prisma } from "@/lib/db";
 import { safeDbRead } from "@/lib/safe-db";
 import type { UserRole } from "@/types/user";
 
+export function getAdminEmail(): string | undefined {
+  const email = process.env.ADMIN_EMAIL?.trim();
+  return email || undefined;
+}
+
+export function isAdminEmail(email: string | null | undefined): boolean {
+  const adminEmail = getAdminEmail();
+  return !!(
+    adminEmail &&
+    email &&
+    email.toLowerCase() === adminEmail.toLowerCase()
+  );
+}
+
 function clerkUserFields(user: ClerkUser) {
   return {
     clerkUserId: user.id,
@@ -41,6 +55,11 @@ export async function syncCurrentUser() {
 }
 
 export async function getCurrentUserRole(): Promise<UserRole> {
+  const user = await currentUser();
+  if (user && isAdminEmail(user.primaryEmailAddress?.emailAddress)) {
+    return "admin";
+  }
+
   const dbUser = await syncCurrentUser();
   return dbUser ? toUserRole(dbUser.role) : "buyer";
 }

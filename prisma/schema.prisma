@@ -17,6 +17,7 @@ enum PromptStatus {
   draft
   review
   published
+  rejected
 }
 
 enum PurchaseStatus {

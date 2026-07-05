@@ -19,6 +19,8 @@ function statusBadgeVariant(status: PromptStatus) {
       return "electric" as const;
     case "review":
       return "purple" as const;
+    case "rejected":
+      return "outline" as const;
     default:
       return "outline" as const;
   }
@@ -30,6 +32,8 @@ function statusLabel(status: PromptStatus) {
       return "Published";
     case "review":
       return "In Review";
+    case "rejected":
+      return "Rejected";
     default:
       return "Draft";
   }

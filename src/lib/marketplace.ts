@@ -331,6 +331,34 @@ export async function getSellerPrompts(clerkUserId: string) {
   });
 }
 
+export async function getReviewPrompts() {
+  return safeDbRead([], async () => {
+    const prompts = await prisma.prompt.findMany({
+      where: { status: "review" },
+      include: {
+        category: true,
+        seller: { include: { sellerProfile: true } },
+        tags: { include: { tag: true } },
+      },
+      orderBy: { updatedAt: "asc" },
+    });
+
+    return prompts.map((prompt) => ({
+      id: prompt.id,
+      title: prompt.title,
+      description: prompt.description,
+      preview: prompt.preview,
+      price: prompt.price,
+      category: prompt.category.name,
+      seller:
+        prompt.seller.sellerProfile?.displayName ?? prompt.seller.username,
+      sellerEmail: prompt.seller.email,
+      tags: prompt.tags.map((t) => t.tag.name),
+      updatedAt: prompt.updatedAt.toISOString(),
+    }));
+  });
+}
+
 export async function getSellerSales(clerkUserId: string) {
   return safeDbRead([], async () => {
     const user = await prisma.user.findUnique({ where: { clerkUserId } });
