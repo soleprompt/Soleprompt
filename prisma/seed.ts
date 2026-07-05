@@ -3,6 +3,7 @@ import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
 import { BUNDLES } from "./seed-data/bundles";
 import { STARTER_PROMPTS } from "./seed-data/starter-prompts";
+import { WELCOME_PACK } from "./seed-data/welcome-pack";
 import type { CatalogEntry } from "./seed-data/helpers";
 
 dotenv.config({ path: ".env.local" });
@@ -80,7 +81,7 @@ const BUYERS = [
   { clerkUserId: "seed_buyer_8", username: "drew_h", email: "drew.h@example.com" },
 ] as const;
 
-const CATALOG: CatalogEntry[] = [...STARTER_PROMPTS, ...BUNDLES];
+const CATALOG: CatalogEntry[] = [WELCOME_PACK, ...STARTER_PROMPTS, ...BUNDLES];
 
 type PromptSeed = CatalogEntry & {
   featured: boolean;
@@ -96,7 +97,8 @@ function buildCatalogPrompts(): PromptSeed[] {
   return CATALOG.map((definition, index) => {
     const sellerIndex = definition.sellerIndex ?? index % SELLERS.length;
     const views = 120 + index * 23;
-    const salesCount = 2 + (index * 5) % 32;
+    const salesCount =
+      definition.price <= 0 ? 0 : 2 + (index * 5) % 32;
     const ratings = [
       ratingPool[index % ratingPool.length],
       ratingPool[(index + 2) % ratingPool.length],
@@ -341,7 +343,9 @@ async function main() {
     console.log(`Seeded ${categories.length} categories`);
     console.log(`Seeded ${sellerUsers.length} sellers`);
     console.log(`Seeded ${buyerUsers.length} buyers`);
-    console.log(`Seeded ${starterCount} starter prompts + ${bundleCount} bundles = ${createdPrompts.length} total listings`);
+    console.log(
+      `Seeded Welcome Pack + ${starterCount} starter prompts + ${bundleCount} bundles = ${createdPrompts.length} total listings`,
+    );
     console.log(`Seeded ~${completedSales} completed sales (of ${purchaseIndex} total purchases)`);
 
     const publishedCount = await prisma.prompt.count({ where: { status: "published" } });

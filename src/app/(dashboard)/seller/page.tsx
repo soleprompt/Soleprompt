@@ -3,6 +3,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import {
   BarChart3,
   DollarSign,
+  Download,
   FileText,
   Star,
   TrendingUp,
@@ -16,6 +17,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import {
   formatCurrency,
   formatDate,
+  formatPurchaseAmount,
   getSellerOverviewStats,
   getSellerSales,
 } from "@/lib/marketplace";
@@ -24,7 +26,7 @@ export default async function SellerOverviewPage() {
   const user = await currentUser();
   const stats = user
     ? await getSellerOverviewStats(user.id)
-    : { totalSales: 0, activePrompts: 0, avgRating: 0, totalEarnings: 0 };
+    : { totalSales: 0, freeDownloads: 0, activePrompts: 0, avgRating: 0, totalEarnings: 0 };
   const recentSales = user ? (await getSellerSales(user.id)).slice(0, 5) : [];
 
   return (
@@ -49,11 +51,16 @@ export default async function SellerOverviewPage() {
         </Link>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard
-          label="Total Sales"
+          label="Paid Sales"
           value={String(stats.totalSales)}
           icon={<TrendingUp className="h-4 w-4 text-electric" />}
+        />
+        <StatCard
+          label="Free Downloads"
+          value={String(stats.freeDownloads)}
+          icon={<Download className="h-4 w-4 text-electric" />}
         />
         <StatCard
           label="Active Prompts"
@@ -116,7 +123,11 @@ export default async function SellerOverviewPage() {
                           {sale.buyer}
                         </td>
                         <td className="py-3 pr-4">
-                          {formatCurrency(sale.amount)}
+                          {sale.isFree ? (
+                            <Badge variant="purple">Free</Badge>
+                          ) : (
+                            formatPurchaseAmount(sale.amount)
+                          )}
                         </td>
                         <td className="py-3 text-muted-foreground">
                           {formatDate(sale.date)}

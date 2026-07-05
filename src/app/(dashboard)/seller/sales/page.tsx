@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import {
   formatCurrency,
   formatDate,
+  formatPurchaseAmount,
   getSellerSales,
 } from "@/lib/marketplace";
 import type { PurchaseStatus } from "@/generated/prisma/client";
@@ -25,10 +26,9 @@ export default async function SellerSalesPage() {
   const user = await currentUser();
   const sales = user ? await getSellerSales(user.id) : [];
 
-  const totalRevenue = sales
-    .filter((s) => s.status === "completed")
-    .reduce((sum, s) => sum + s.amount, 0);
-  const completedCount = sales.filter((s) => s.status === "completed").length;
+  const paidSales = sales.filter((s) => s.status === "completed" && !s.isFree);
+  const freeDownloads = sales.filter((s) => s.status === "completed" && s.isFree);
+  const totalRevenue = paidSales.reduce((sum, s) => sum + s.amount, 0);
 
   return (
     <>
@@ -37,14 +37,15 @@ export default async function SellerSalesPage() {
         description="View your recent sales and transaction history."
       />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-3">
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard label="Total Revenue" value={formatCurrency(totalRevenue)} />
-        <StatCard label="Completed Sales" value={String(completedCount)} />
+        <StatCard label="Paid Sales" value={String(paidSales.length)} />
+        <StatCard label="Free Downloads" value={String(freeDownloads.length)} />
         <StatCard
           label="Avg. Order Value"
           value={
-            completedCount > 0
-              ? formatCurrency(totalRevenue / completedCount)
+            paidSales.length > 0
+              ? formatCurrency(totalRevenue / paidSales.length)
               : "$0.00"
           }
         />
@@ -54,7 +55,8 @@ export default async function SellerSalesPage() {
         <CardHeader>
           <h2 className="text-lg font-semibold">Transaction History</h2>
           <p className="text-sm text-muted-foreground">
-            {sales.length} transactions
+            {sales.length} transactions · {freeDownloads.length} free download
+            {freeDownloads.length === 1 ? "" : "s"}
           </p>
         </CardHeader>
         <CardContent className="pt-0">
@@ -92,7 +94,11 @@ export default async function SellerSalesPage() {
                           {sale.buyer}
                         </td>
                         <td className="py-4 pr-4">
-                          {formatCurrency(sale.amount)}
+                          {sale.isFree ? (
+                            <Badge variant="purple">Free</Badge>
+                          ) : (
+                            formatPurchaseAmount(sale.amount)
+                          )}
                         </td>
                         <td className="py-4">
                           <Badge variant={badge.variant}>{badge.label}</Badge>

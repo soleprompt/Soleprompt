@@ -1,49 +1,55 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { CheckCircle2, ShoppingBag } from "lucide-react";
-import { fulfillPurchase } from "@/app/actions/purchase";
+import { fulfillFreePurchase, fulfillPurchase } from "@/app/actions/purchase";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import {
-  formatCurrency,
   getPromptById,
   mapPromptToListItem,
 } from "@/lib/marketplace";
+import { formatPurchaseAmount } from "@/lib/format";
 import { isStripeConfigured } from "@/lib/stripe";
 
 export const dynamic = "force-dynamic";
 
 interface PurchaseSuccessPageProps {
-  searchParams: Promise<{ session_id?: string }>;
+  searchParams: Promise<{ session_id?: string; purchase_id?: string }>;
 }
 
 export default async function PurchaseSuccessPage({
   searchParams,
 }: PurchaseSuccessPageProps) {
-  const { session_id: sessionId } = await searchParams;
+  const { session_id: sessionId, purchase_id: purchaseId } = await searchParams;
 
-  if (!sessionId) {
+  let result: { success: boolean; promptId?: string; error?: string };
+
+  if (purchaseId) {
+    result = await fulfillFreePurchase(purchaseId);
+  } else if (sessionId) {
+    if (!isStripeConfigured()) {
+      return (
+        <div className="flex min-h-screen items-center justify-center bg-background px-4 py-16">
+          <Card className="w-full max-w-lg">
+            <CardContent className="pt-8 text-center">
+              <h1 className="text-2xl font-bold">Purchase unavailable</h1>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Payments are not configured for this environment.
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      );
+    }
+
+    result = await fulfillPurchase(sessionId);
+  } else {
     redirect("/buyer");
   }
 
-  if (!isStripeConfigured()) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-background px-4 py-16">
-        <Card className="w-full max-w-lg">
-          <CardContent className="pt-8 text-center">
-            <h1 className="text-2xl font-bold">Purchase unavailable</h1>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Payments are not configured for this environment.
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
-  const result = await fulfillPurchase(sessionId);
   const prompt = result.promptId ? await getPromptById(result.promptId) : null;
   const listing = prompt ? mapPromptToListItem(prompt) : null;
+  const isFree = Boolean(purchaseId) || (prompt?.price ?? 0) <= 0;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-16">
@@ -54,7 +60,9 @@ export default async function PurchaseSuccessPage({
               <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-electric/10">
                 <CheckCircle2 className="h-8 w-8 text-electric" />
               </div>
-              <h1 className="text-2xl font-bold">Purchase successful</h1>
+              <h1 className="text-2xl font-bold">
+                {isFree ? "You're all set!" : "Purchase successful"}
+              </h1>
               {listing && prompt ? (
                 <>
                   <p className="mt-2 text-lg font-medium">{listing.title}</p>
@@ -62,7 +70,7 @@ export default async function PurchaseSuccessPage({
                     {listing.description}
                   </p>
                   <p className="mt-3 text-sm text-muted-foreground">
-                    {formatCurrency(prompt.price)} · {listing.category}
+                    {formatPurchaseAmount(prompt.price)} · {listing.category}
                   </p>
                 </>
               ) : (

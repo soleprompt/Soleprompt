@@ -1,6 +1,5 @@
 import { prisma } from "@/lib/db";
 import { safeDbRead } from "@/lib/safe-db";
-import { formatCurrency, formatDate } from "@/lib/format";
 import type { Category, Prompt } from "@/types";
 import type { PromptStatus, PurchaseStatus } from "@/generated/prisma/client";
 
@@ -421,6 +420,7 @@ export async function getSellerSales(clerkUserId: string) {
       promptTitle: p.prompt.title,
       buyer: maskUsername(p.buyer.username),
       amount: p.amount,
+      isFree: p.amount <= 0,
       date: p.createdAt.toISOString(),
       status: p.status as PurchaseStatus,
     }));
@@ -434,6 +434,7 @@ function maskUsername(username: string) {
 
 const EMPTY_SELLER_OVERVIEW_STATS = {
   totalSales: 0,
+  freeDownloads: 0,
   activePrompts: 0,
   avgRating: 0,
   totalEarnings: 0,
@@ -468,12 +469,13 @@ export async function getSellerOverviewStats(clerkUserId: string) {
       return EMPTY_SELLER_OVERVIEW_STATS;
     }
 
-    const [completedPurchases, activePrompts, reviews, allPurchases] =
+    const [completedPurchases, activePrompts, reviews, paidSalesCount, freeDownloads] =
       await Promise.all([
         prisma.purchase.findMany({
           where: {
             prompt: { sellerId: user.id },
             status: "completed",
+            amount: { gt: 0 },
           },
           select: { amount: true },
         }),
@@ -485,7 +487,18 @@ export async function getSellerOverviewStats(clerkUserId: string) {
           select: { rating: true },
         }),
         prisma.purchase.count({
-          where: { prompt: { sellerId: user.id } },
+          where: {
+            prompt: { sellerId: user.id },
+            status: "completed",
+            amount: { gt: 0 },
+          },
+        }),
+        prisma.purchase.count({
+          where: {
+            prompt: { sellerId: user.id },
+            status: "completed",
+            amount: { lte: 0 },
+          },
         }),
       ]);
 
@@ -499,7 +512,8 @@ export async function getSellerOverviewStats(clerkUserId: string) {
         : 0;
 
     return {
-      totalSales: allPurchases,
+      totalSales: paidSalesCount,
+      freeDownloads,
       activePrompts,
       avgRating: Math.round(avgRating * 10) / 10,
       totalEarnings,
@@ -609,4 +623,4 @@ export async function getCategoriesFromDb() {
   );
 }
 
-export { formatCurrency, formatDate };
+export { formatCurrency, formatDate, formatPurchaseAmount } from "@/lib/format";

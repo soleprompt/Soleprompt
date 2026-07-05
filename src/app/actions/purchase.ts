@@ -69,14 +69,14 @@ export async function startPurchase(
   }
 
   if (prompt.price <= 0) {
-    await completePurchase({
+    const result = await completePurchase({
       promptId: prompt.id,
       buyerId: buyer.id,
       amount: 0,
       actorId: buyer.id,
     });
 
-    return { url: "/buyer" };
+    return { url: `/purchase/success?purchase_id=${result.purchaseId}` };
   }
 
   if (!isStripeConfigured()) {
@@ -123,6 +123,38 @@ export type FulfillPurchaseResult = {
   promptId?: string;
   error?: string;
 };
+
+export async function fulfillFreePurchase(
+  purchaseId: string,
+): Promise<FulfillPurchaseResult> {
+  if (!purchaseId) {
+    return { success: false, error: "Invalid purchase." };
+  }
+
+  const buyer = await getBuyerUser();
+
+  const purchase = await prisma.purchase.findFirst({
+    where: {
+      id: purchaseId,
+      buyerId: buyer.id,
+      status: "completed",
+    },
+    select: { promptId: true, amount: true },
+  });
+
+  if (!purchase) {
+    return { success: false, error: "Purchase not found." };
+  }
+
+  if (purchase.amount > 0) {
+    return {
+      success: false,
+      error: "Paid purchases are confirmed via checkout session.",
+    };
+  }
+
+  return { success: true, promptId: purchase.promptId };
+}
 
 export async function fulfillPurchase(
   sessionId: string,

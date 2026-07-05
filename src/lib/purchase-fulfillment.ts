@@ -1,4 +1,5 @@
 import { revalidatePath } from "next/cache";
+import type { Prisma } from "@/generated/prisma/client";
 import { prisma } from "@/lib/db";
 import {
   sendPurchaseReceipt,
@@ -60,6 +61,32 @@ async function findExistingPurchase(
 function resolveAmount(storedAmount: number, inputAmount: number): number {
   if (inputAmount > 0) return inputAmount;
   return storedAmount;
+}
+
+function isFreePurchase(amount: number): boolean {
+  return amount <= 0;
+}
+
+async function incrementSellerStats(
+  tx: Prisma.TransactionClient,
+  sellerId: string,
+  amount: number,
+) {
+  if (isFreePurchase(amount)) {
+    await tx.sellerProfile.updateMany({
+      where: { userId: sellerId },
+      data: { freeDownloadCount: { increment: 1 } },
+    });
+    return;
+  }
+
+  await tx.sellerProfile.updateMany({
+    where: { userId: sellerId },
+    data: {
+      salesCount: { increment: 1 },
+      totalEarnings: { increment: amount },
+    },
+  });
 }
 
 async function repairExistingPurchase(
@@ -144,14 +171,8 @@ async function repairExistingPurchase(
     }
 
     if (needsTransaction) {
-      await tx.sellerProfile.updateMany({
-        where: { userId: purchase.prompt.sellerId },
-        data: {
-          salesCount: { increment: 1 },
-          totalEarnings: { increment: resolvedAmount },
-        },
-      });
-    } else if (earningsDelta !== 0) {
+      await incrementSellerStats(tx, purchase.prompt.sellerId, resolvedAmount);
+    } else if (earningsDelta !== 0 && !isFreePurchase(resolvedAmount)) {
       await tx.sellerProfile.updateMany({
         where: { userId: purchase.prompt.sellerId },
         data: {
@@ -327,13 +348,7 @@ export async function completePurchase(
       },
     });
 
-    await tx.sellerProfile.updateMany({
-      where: { userId: prompt.sellerId },
-      data: {
-        salesCount: { increment: 1 },
-        totalEarnings: { increment: amount },
-      },
-    });
+    await incrementSellerStats(tx, prompt.sellerId, amount);
 
     await tx.auditLog.create({
       data: {

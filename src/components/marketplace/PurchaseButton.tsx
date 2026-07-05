@@ -64,8 +64,13 @@ export function PurchaseButton({
     });
   }
 
-  const label =
-    price <= 0 ? "Get Free Prompt" : isPending ? "Starting checkout…" : "Purchase Prompt";
+  const label = isPending
+    ? price <= 0
+      ? "Claiming…"
+      : "Starting checkout…"
+    : price <= 0
+      ? "Get Free"
+      : "Purchase Prompt";
 
   return (
     <div className="mt-6">

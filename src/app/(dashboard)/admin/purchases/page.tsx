@@ -83,7 +83,13 @@ export default async function AdminPurchasesPage({
                         <p>{purchase.buyer}</p>
                         <p className="text-muted-foreground">{purchase.buyerEmail}</p>
                       </td>
-                      <td className="py-4 pr-4">{formatCurrency(purchase.amount)}</td>
+                      <td className="py-4 pr-4">
+                        {purchase.amount <= 0 ? (
+                          <Badge variant="purple">FREE</Badge>
+                        ) : (
+                          formatCurrency(purchase.amount)
+                        )}
+                      </td>
                       <td className="py-4 pr-4">
                         <Badge
                           variant={
