@@ -129,6 +129,46 @@ export async function getPromptById(id: string) {
   });
 }
 
+export async function getPromptPurchaseState(
+  clerkUserId: string | null | undefined,
+  promptId: string,
+  sellerId: string,
+) {
+  if (!clerkUserId) {
+    return { purchased: false, isOwnPrompt: false };
+  }
+
+  return safeDbRead(
+    { purchased: false, isOwnPrompt: false },
+    async () => {
+      const user = await prisma.user.findUnique({
+        where: { clerkUserId },
+        select: { id: true },
+      });
+
+      if (!user) {
+        return { purchased: false, isOwnPrompt: false };
+      }
+
+      const purchased = Boolean(
+        await prisma.purchase.findFirst({
+          where: {
+            buyerId: user.id,
+            promptId,
+            status: "completed",
+          },
+          select: { id: true },
+        }),
+      );
+
+      return {
+        purchased,
+        isOwnPrompt: user.id === sellerId,
+      };
+    },
+  );
+}
+
 export async function getCategoriesWithCounts(): Promise<Category[]> {
   return safeDbRead([], async () => {
     const categories = await prisma.category.findMany({
