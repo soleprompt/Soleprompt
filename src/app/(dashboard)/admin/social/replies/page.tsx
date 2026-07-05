@@ -25,7 +25,7 @@ export default async function AdminSocialRepliesPage({
   return (
     <>
       <PageHeader
-        title={`Social — ${REPLY_ASSISTANT_LABEL}`}
+        title={REPLY_ASSISTANT_LABEL}
         description="Find relevant X posts, generate helpful reply drafts, and post only after admin approval. No auto-reply."
       />
       <AdminSocialRepliesPanel
