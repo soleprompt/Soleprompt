@@ -39,6 +39,18 @@ enum TransactionStatus {
   refunded
 }
 
+enum SocialPlatform {
+  x
+}
+
+enum SocialPostStatus {
+  draft
+  approved
+  scheduled
+  posted
+  failed
+}
+
 model User {
   id                    String    @id @default(cuid())
   clerkUserId           String    @unique
@@ -208,4 +220,19 @@ model PromptView {
   viewedAt DateTime @default(now())
 
   @@index([userId, viewedAt])
+}
+
+model SocialPost {
+  id          String           @id @default(cuid())
+  platform    SocialPlatform   @default(x)
+  content     String
+  status      SocialPostStatus @default(draft)
+  scheduledAt DateTime?
+  postedAt    DateTime?
+  xPostId     String?
+  error       String?
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([status, scheduledAt])
 }

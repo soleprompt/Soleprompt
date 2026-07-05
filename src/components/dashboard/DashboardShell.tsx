@@ -14,6 +14,7 @@ import {
   Menu,
   Receipt,
   Settings,
+  Share2,
   ShoppingBag,
   Sparkles,
   Star,
@@ -48,6 +49,7 @@ const ICON_MAP = {
   Star,
   Users,
   Flag,
+  Share2,
   Tags,
 } as const;
 

@@ -26,6 +26,7 @@ export const ADMIN_NAV: DashboardNavItem[] = [
   { label: "Sales", href: "/admin/sales", icon: "TrendingUp" },
   { label: "Reports", href: "/admin/reports", icon: "Flag" },
   { label: "Categories", href: "/admin/categories", icon: "Tags" },
+  { label: "Social", href: "/admin/social", icon: "Share2" },
 ];
 
 export function getNavForRole(role: UserRole): DashboardNavItem[] {
