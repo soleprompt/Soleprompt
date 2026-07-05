@@ -1,3 +1,5 @@
+import { Prisma } from "@/generated/prisma/client";
+
 export async function safeDbRead<T>(fallback: T, query: () => Promise<T>): Promise<T> {
   try {
     return await query();
@@ -11,14 +13,24 @@ export type SafeDbReadResult<T> = {
   error?: string;
 };
 
+function isReplyAssistantSchemaMismatch(error: unknown): boolean {
+  if (error instanceof Prisma.PrismaClientKnownRequestError) {
+    return error.code === "P2021" || error.code === "P2022";
+  }
+
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("does not exist") ||
+    message.includes("Unknown column") ||
+    message.includes("P2021") ||
+    message.includes("P2022")
+  );
+}
+
 export function formatDbReadError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
 
-  if (
-    message.includes("does not exist") ||
-    message.includes("Unknown column") ||
-    message.includes("P2022")
-  ) {
+  if (isReplyAssistantSchemaMismatch(error)) {
     return "Reply Assistant database schema is out of date. Run npm run db:migrate:deploy, then refresh this page.";
   }
 
