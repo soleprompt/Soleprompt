@@ -25,9 +25,9 @@ export function PurchaseButton({
 
   if (purchased) {
     return (
-      <Link href="/buyer" className="mt-6 block">
+      <Link href={`/prompts/${promptId}#full-prompt`} className="mt-6 block">
         <Button type="button" className="w-full">
-          View in Library
+          Open Prompt
         </Button>
       </Link>
     );

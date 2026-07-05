@@ -57,6 +57,9 @@ export default async function PromptDetailPage({
     prompt.sellerId,
   );
 
+  const hasFullAccess =
+    purchaseState.purchased || purchaseState.isOwnPrompt;
+
   const listing = mapPromptToListItem(prompt);
 
   return (
@@ -110,25 +113,49 @@ export default async function PromptDetailPage({
             </Card>
           )}
 
+          <div id="full-prompt">
           <Card>
             <CardHeader>
               <div className="flex items-center gap-2">
                 <h2 className="text-lg font-semibold">Full Prompt</h2>
-                <Badge variant="purple">
-                  <Lock className="mr-1 h-3 w-3" />
-                  Premium
-                </Badge>
+                {!hasFullAccess && (
+                  <Badge variant="purple">
+                    <Lock className="mr-1 h-3 w-3" />
+                    Premium
+                  </Badge>
+                )}
               </div>
               <p className="text-sm text-muted-foreground">
-                Complete prompt content included with purchase.
+                {hasFullAccess
+                  ? "Your purchased prompt content — copy or download anytime."
+                  : "Complete prompt content included with purchase."}
               </p>
             </CardHeader>
             <CardContent className="pt-0">
-              <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-border bg-background px-4 py-4 font-mono text-sm leading-relaxed text-foreground/90">
-                {listing.content}
-              </pre>
+              {hasFullAccess ? (
+                <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-border bg-background px-4 py-4 font-mono text-sm leading-relaxed text-foreground/90">
+                  {listing.content}
+                </pre>
+              ) : (
+                <div className="relative overflow-hidden rounded-xl border border-border bg-background">
+                  <pre className="max-h-40 overflow-hidden whitespace-pre-wrap px-4 py-4 font-mono text-sm leading-relaxed text-foreground/40 blur-[2px] select-none">
+                    {listing.content.slice(0, 280)}
+                    {listing.content.length > 280 ? "…" : ""}
+                  </pre>
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-background/80 px-4 text-center">
+                    <Lock className="h-6 w-6 text-muted-foreground" />
+                    <p className="text-sm font-medium text-foreground">
+                      Purchase to unlock the full prompt
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      One-time purchase · Commercial license included
+                    </p>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
+          </div>
 
           {listing.compatibleModels.length > 0 && (
             <Card>

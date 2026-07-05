@@ -121,6 +121,9 @@ export async function startPurchase(
 export type FulfillPurchaseResult = {
   success: boolean;
   promptId?: string;
+  purchaseId?: string;
+  amount?: number;
+  purchasedAt?: Date;
   error?: string;
 };
 
@@ -139,7 +142,7 @@ export async function fulfillFreePurchase(
       buyerId: buyer.id,
       status: "completed",
     },
-    select: { promptId: true, amount: true },
+    select: { id: true, promptId: true, amount: true, createdAt: true },
   });
 
   if (!purchase) {
@@ -153,7 +156,13 @@ export async function fulfillFreePurchase(
     };
   }
 
-  return { success: true, promptId: purchase.promptId };
+  return {
+    success: true,
+    promptId: purchase.promptId,
+    purchaseId: purchase.id,
+    amount: purchase.amount,
+    purchasedAt: purchase.createdAt,
+  };
 }
 
 export async function fulfillPurchase(
@@ -202,7 +211,13 @@ export async function fulfillPurchase(
       actorId: buyer.id,
     });
 
-    return { success: true, promptId: result.promptId };
+    return {
+      success: true,
+      promptId: result.promptId,
+      purchaseId: result.purchaseId,
+      amount,
+      purchasedAt: new Date(session.created * 1000),
+    };
   } catch (error) {
     console.error("[purchase] fulfillPurchase failed:", error);
     return {

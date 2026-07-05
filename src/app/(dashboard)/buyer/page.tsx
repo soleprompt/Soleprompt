@@ -1,22 +1,22 @@
 import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
-import { ShoppingBag } from "lucide-react";
+import { BookOpen } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { StartSellingButton } from "@/components/dashboard/StartSellingButton";
-import { PromptCard } from "@/components/marketplace/PromptCard";
+import { PurchasedPromptCard } from "@/components/marketplace/PurchasedPromptCard";
 import { getBuyerPurchases } from "@/lib/marketplace";
 import { getCurrentUserRole } from "@/lib/user";
 
-export default async function BuyerPurchasedPage() {
+export default async function BuyerLibraryPage() {
   const [role, user] = await Promise.all([getCurrentUserRole(), currentUser()]);
   const purchases = user ? await getBuyerPurchases(user.id) : [];
 
   return (
     <>
       <PageHeader
-        title="My Purchases"
-        description="Access all the premium prompts you've purchased."
+        title="My Library"
+        description="All your purchased prompts — reopen or download anytime."
       />
       {role === "buyer" && (
         <div className="mb-6 flex justify-end">
@@ -25,8 +25,8 @@ export default async function BuyerPurchasedPage() {
       )}
       {purchases.length === 0 ? (
         <EmptyState
-          icon={ShoppingBag}
-          title="No purchases yet"
+          icon={BookOpen}
+          title="Your library is empty"
           description="When you buy prompts from the marketplace, they'll appear here for easy access."
           action={
             <Link
@@ -40,7 +40,7 @@ export default async function BuyerPurchasedPage() {
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {purchases.map((purchase) => (
-            <PromptCard key={purchase.id} prompt={purchase.prompt} />
+            <PurchasedPromptCard key={purchase.id} purchase={purchase} />
           ))}
         </div>
       )}
