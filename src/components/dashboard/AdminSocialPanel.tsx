@@ -75,6 +75,14 @@ type XConnectionState = {
   source?: "database" | "env";
 };
 
+type PostingLimitsState = {
+  allowed: boolean;
+  reason?: string;
+  dailyCount: number;
+  dailyLimit: number;
+  nextAvailableAt: string | null;
+};
+
 export function AdminSocialPanel({
   initialPosts,
   statusFilter,
@@ -89,6 +97,23 @@ export function AdminSocialPanel({
   const [xConnection, setXConnection] = useState<XConnectionState | null>(null);
   const [xLoading, setXLoading] = useState(true);
   const [xBusy, setXBusy] = useState(false);
+  const [postingLimits, setPostingLimits] = useState<PostingLimitsState | null>(
+    null,
+  );
+  const [limitsLoading, setLimitsLoading] = useState(true);
+
+  const loadPostingLimits = useCallback(async () => {
+    setLimitsLoading(true);
+    try {
+      const response = await fetch("/api/admin/social/posting-limits");
+      if (response.ok) {
+        const data = (await response.json()) as PostingLimitsState;
+        setPostingLimits(data);
+      }
+    } finally {
+      setLimitsLoading(false);
+    }
+  }, []);
 
   const loadXStatus = useCallback(async () => {
     setXLoading(true);
@@ -105,7 +130,8 @@ export function AdminSocialPanel({
 
   useEffect(() => {
     void loadXStatus();
-  }, [loadXStatus]);
+    void loadPostingLimits();
+  }, [loadPostingLimits, loadXStatus]);
 
   useEffect(() => {
     const xParam = searchParams.get("x");
@@ -133,6 +159,7 @@ export function AdminSocialPanel({
       setPosts(data.posts);
     }
     router.refresh();
+    await loadPostingLimits();
   }
 
   function runAction(id: string, action: () => Promise<void>) {
@@ -240,6 +267,9 @@ export function AdminSocialPanel({
         post?: SocialPost;
       };
       if (!response.ok) {
+        if (response.status === 429) {
+          await loadPostingLimits();
+        }
         throw new Error(data.error ?? data.post?.error ?? "Failed to post to X.");
       }
       if (data.post?.status !== "posted" || !data.post.xPostId) {
@@ -389,6 +419,43 @@ export function AdminSocialPanel({
 
       <Card className="mb-6">
         <CardHeader>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold">Posting limits</h2>
+              <p className="text-sm text-muted-foreground">
+                Safe caps for X publishing: up to 3 posts per UTC day, at least 4
+                hours apart.
+              </p>
+            </div>
+            <div className="text-sm">
+              {limitsLoading ? (
+                <span className="inline-flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Checking limits…
+                </span>
+              ) : postingLimits ? (
+                <div className="space-y-1">
+                  <p>
+                    <span className="font-medium">
+                      {postingLimits.dailyCount}/{postingLimits.dailyLimit}
+                    </span>{" "}
+                    posts today (UTC)
+                  </p>
+                  {!postingLimits.allowed && postingLimits.nextAvailableAt && (
+                    <p className="text-amber-600 dark:text-amber-400">
+                      Next slot:{" "}
+                      {formatDateTime(postingLimits.nextAvailableAt)}
+                    </p>
+                  )}
+                </div>
+              ) : null}
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <Card className="mb-6">
+        <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-lg font-semibold">Generate tweet ideas</h2>
@@ -501,9 +568,21 @@ export function AdminSocialPanel({
                     </div>
                   )}
 
-                  {post.status !== "failed" && post.error && (
-                    <p className="mt-2 text-sm text-destructive">{post.error}</p>
+                  {post.status === "scheduled" && post.error && (
+                    <div
+                      className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-700 dark:text-amber-300"
+                      role="status"
+                    >
+                      <p className="font-medium">Posting deferred</p>
+                      <p className="mt-1 whitespace-pre-wrap">{post.error}</p>
+                    </div>
                   )}
+
+                  {post.status !== "failed" &&
+                    post.status !== "scheduled" &&
+                    post.error && (
+                      <p className="mt-2 text-sm text-destructive">{post.error}</p>
+                    )}
 
                   {canEdit && (
                     <div className="mt-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">

@@ -1,10 +1,12 @@
 import { prisma } from "@/lib/db";
+import { canPostNow } from "@/lib/social/posting-limits";
 import { postToX } from "@/lib/social/post-to-x";
 
 export type ProcessScheduledPostsResult = {
   processed: number;
   posted: number;
   failed: number;
+  deferred: number;
 };
 
 export async function processScheduledPosts(): Promise<ProcessScheduledPostsResult> {
@@ -20,8 +22,28 @@ export async function processScheduledPosts(): Promise<ProcessScheduledPostsResu
 
   let posted = 0;
   let failed = 0;
+  let deferred = 0;
 
   for (const post of duePosts) {
+    const limits = await canPostNow();
+    if (!limits.allowed) {
+      console.log("[X post] Scheduled publish deferred by limits", {
+        postId: post.id,
+        reason: limits.reason,
+      });
+
+      await prisma.socialPost.update({
+        where: { id: post.id },
+        data: {
+          status: "scheduled",
+          error: limits.reason,
+          scheduledAt: limits.nextAvailableAt ?? post.scheduledAt,
+        },
+      });
+      deferred += 1;
+      continue;
+    }
+
     console.log("[X post] Scheduled publish", { postId: post.id });
     const result = await postToX(post.content);
 
@@ -60,5 +82,6 @@ export async function processScheduledPosts(): Promise<ProcessScheduledPostsResu
     processed: duePosts.length,
     posted,
     failed,
+    deferred,
   };
 }

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { isAdminUser } from "@/lib/admin";
 import { prisma } from "@/lib/db";
+import { canPostNow } from "@/lib/social/posting-limits";
 import { postToX } from "@/lib/social/post-to-x";
 
 interface RouteContext {
@@ -23,6 +24,33 @@ export async function POST(_request: Request, { params }: RouteContext) {
     return NextResponse.json(
       { error: "This post has already been published." },
       { status: 400 },
+    );
+  }
+
+  const limits = await canPostNow();
+  if (!limits.allowed) {
+    console.log("[X post] Manual publish blocked by limits", {
+      postId: id,
+      reason: limits.reason,
+    });
+
+    const updated = await prisma.socialPost.update({
+      where: { id },
+      data: {
+        status: "scheduled",
+        error: limits.reason,
+        scheduledAt: limits.nextAvailableAt ?? post.scheduledAt,
+      },
+    });
+
+    return NextResponse.json(
+      {
+        error: limits.reason,
+        post: updated,
+        limitReached: true,
+        nextAvailableAt: limits.nextAvailableAt?.toISOString() ?? null,
+      },
+      { status: 429 },
     );
   }
 
