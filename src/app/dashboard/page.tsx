@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { DashboardWelcomeHeader } from "@/components/dashboard/DashboardWelcomeHeader";
+import { OnboardingChecklistSection } from "@/components/dashboard/OnboardingChecklistSection";
 import { StartSellingButton } from "@/components/dashboard/StartSellingButton";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -38,8 +39,10 @@ export default async function DashboardPage() {
     <div className="flex min-h-screen flex-col bg-background">
       <DashboardWelcomeHeader />
 
-      <main className="flex flex-1 items-center justify-center p-4 lg:p-6">
-        <Card className="w-full max-w-lg">
+      <main className="flex flex-1 flex-col items-center justify-center p-4 lg:p-6">
+        <div className="w-full max-w-lg space-y-6">
+          <OnboardingChecklistSection />
+          <Card className="w-full">
           <CardContent className="flex flex-col items-center pt-8 text-center">
             <div className="relative mb-6">
               {avatarUrl ? (
@@ -99,6 +102,7 @@ export default async function DashboardPage() {
             </div>
           </CardContent>
         </Card>
+        </div>
       </main>
     </div>
   );

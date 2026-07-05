@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { currentUser } from "@clerk/nextjs/server";
 import { BookOpen } from "lucide-react";
+import { OnboardingChecklistSection } from "@/components/dashboard/OnboardingChecklistSection";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { EmptyState } from "@/components/dashboard/EmptyState";
 import { StartSellingButton } from "@/components/dashboard/StartSellingButton";
@@ -14,6 +15,7 @@ export default async function BuyerLibraryPage() {
 
   return (
     <>
+      <OnboardingChecklistSection />
       <PageHeader
         title="My Library"
         description="All your purchased prompts — reopen or download anytime."
