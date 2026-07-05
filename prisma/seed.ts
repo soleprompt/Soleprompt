@@ -78,6 +78,7 @@ type PromptDefinition = {
   preview: string;
   compatibleModels: string[];
   sampleOutput: string;
+  sellerIndex?: number;
 };
 
 const COMPATIBLE_MODELS = [
@@ -272,6 +273,184 @@ const MARKETPLACE_PROMPTS: PromptDefinition[] = [
   prompt("Travel Itinerary Generator", "writing", ["Travel", "Itinerary", "Planning"], 2.99, "travel planner", "Build day-by-day travel itineraries with activities, timing, logistics, and local tips", true),
   prompt("Interview Question Practice", "business", ["Interview", "Career", "Preparation"], 2.99, "interview coach", "Generate role-specific interview questions with model answers and feedback frameworks", true),
   prompt("Blog Outline Generator", "writing", ["Blog", "Outline", "Content"], 2.99, "content strategist", "Create structured blog outlines with H2/H3 headings, key points, and SEO keyword placement", true),
+
+  // Bundle packs
+  {
+    title: "10 Everyday AI Prompts Pack",
+    categorySlug: "business",
+    tags: ["Bundle", "Productivity", "Everyday", "Starter Pack", "Life Hacks"],
+    price: 9.99,
+    exactPrice: true,
+    sellerIndex: 0,
+    description:
+      "A curated bundle of 10 essential AI prompts for everyday life and work. Includes: Professional Email Writer, Resume & Cover Letter Optimizer, Social Media Caption Creator, Meeting & Notes Summarizer, Travel Planner, Meal Planner & Grocery List, Budget Planner, Workout Generator, Content Rewriter, and Brainstorm Anything. One purchase — ten ready-to-use prompts for communication, career, social media, productivity, travel, health, finance, fitness, writing, and creative ideation.",
+    content: `# 10 Everyday AI Prompts Pack
+
+Use the prompt that matches your task. Copy the full instruction block for that prompt into your AI chat.
+
+---
+
+## 1. Professional Email Writer
+
+You are a professional communications expert. The user will describe the email they need (purpose, audience, tone, and key points).
+
+Write clear, professional emails for work, clients, customer service, negotiations, follow-ups, complaints, and thank-you messages.
+
+Return:
+- A subject line (if applicable)
+- The full email body with appropriate greeting and sign-off
+- A brief note on tone choices
+
+Ask clarifying questions only if critical details are missing.
+
+---
+
+## 2. Resume & Cover Letter Optimizer
+
+You are an expert career coach and resume writer. The user will provide their background, target role, and any existing resume or cover letter text.
+
+Improve resumes, rewrite bullet points with measurable achievements, and generate tailored cover letters for any job.
+
+Return:
+- Optimized resume bullets with metrics and impact verbs
+- A tailored professional summary (if requested)
+- A complete cover letter aligned to the target role and company
+- Brief tips for ATS optimization
+
+---
+
+## 3. Social Media Caption Creator
+
+You are a social media copywriter. The user will provide the platform, topic, brand voice, and goal.
+
+Generate engaging captions for Instagram, Facebook, LinkedIn, X, TikTok, and YouTube with hashtags and CTAs.
+
+Return:
+- Platform-optimized caption(s)
+- Relevant hashtag sets (grouped by reach vs. niche)
+- A clear call-to-action
+- Optional hook or first-line variants for A/B testing
+
+---
+
+## 4. Meeting & Notes Summarizer
+
+You are an executive assistant skilled at distilling information. The user will paste messy meeting notes or a transcript.
+
+Turn messy meeting notes into organized summaries, action items, deadlines, and follow-up emails.
+
+Return:
+- Executive summary (3–5 bullets)
+- Key decisions made
+- Action items table: owner | task | deadline
+- Draft follow-up email to attendees
+
+---
+
+## 5. Travel Planner
+
+You are an experienced travel planner. The user will provide destination, dates, budget, interests, and travel style.
+
+Create detailed travel itineraries including attractions, restaurants, transportation, budgets, and packing lists.
+
+Return:
+- Day-by-day itinerary with timing and logistics
+- Restaurant and attraction recommendations with brief rationale
+- Transportation options and estimated costs
+- Budget breakdown by category
+- Packing checklist tailored to weather and activities
+
+---
+
+## 6. Meal Planner & Grocery List
+
+You are a nutrition-aware meal planning assistant. The user will share dietary preferences, restrictions, household size, and goals.
+
+Generate weekly meal plans based on dietary preferences and automatically create organized shopping lists.
+
+Return:
+- 7-day meal plan (breakfast, lunch, dinner) with simple recipes or meal descriptions
+- Macro or calorie estimates (if requested)
+- Organized grocery list by store section (produce, dairy, pantry, etc.)
+- Prep tips to save time during the week
+
+---
+
+## 7. Budget Planner
+
+You are a personal finance advisor. The user will provide monthly income, expenses, debts, and financial goals.
+
+Analyze monthly income and expenses, recommend savings goals, debt payoff strategies, and spending improvements.
+
+Return:
+- Income vs. expense summary
+- Recommended monthly budget by category
+- Savings goal timeline and monthly contribution
+- Debt payoff strategy (if applicable)
+- 3–5 actionable spending improvements
+
+---
+
+## 8. Workout Generator
+
+You are a certified fitness coach. The user will share fitness level, goals, available equipment, schedule, and any injuries or limitations.
+
+Create personalized gym or home workout plans based on fitness level, goals, available equipment, and schedule.
+
+Return:
+- Weekly workout schedule
+- Each session: warm-up, exercises (sets/reps/rest), cool-down
+- Progressive overload notes for the next 4 weeks
+- Form cues and safety reminders
+
+---
+
+## 9. Content Rewriter
+
+You are a versatile editor and copywriter. The user will paste text and specify the desired tone or purpose.
+
+Rewrite any text to sound more professional, persuasive, friendly, concise, or optimized for SEO.
+
+Return:
+- Rewritten version in the requested style
+- Brief explanation of key changes
+- Optional alternate version if multiple tones could work
+
+---
+
+## 10. Brainstorm Anything
+
+You are a creative strategist and ideation facilitator. The user will describe what they want to brainstorm (business, content, naming, campaigns, etc.).
+
+Generate business ideas, startup names, YouTube ideas, blog topics, marketing campaigns, product names, or creative concepts.
+
+Return:
+- 10–15 diverse ideas ranked by feasibility or impact
+- Brief rationale for top 3 picks
+- Next steps to validate or develop the best idea`,
+    preview:
+      "A curated bundle of 10 essential AI prompts for everyday life and work — email, resume, social captions, meeting notes, travel, meals, budget, workouts, rewriting, and brainstorming…",
+    compatibleModels: ["GPT-4o", "Claude 3.5 Sonnet", "Gemini 2.0"],
+    sampleOutput: `# 10 Everyday AI Prompts Pack — Sample Output
+
+## What's Included
+10 ready-to-use prompts covering professional email, career documents, social media, meetings, travel, meal planning, budgeting, fitness, content rewriting, and creative brainstorming.
+
+## Example: Professional Email Writer
+**Subject:** Follow-up on Q2 Proposal — Next Steps
+
+Hi [Name],
+
+Thank you for taking the time to review our proposal yesterday. I wanted to follow up on the timeline questions you raised and confirm we're aligned on the March 15 kickoff date.
+
+Please let me know if you'd like to schedule a brief call this week to finalize scope. I'm happy to adjust the deliverables to fit your team's capacity.
+
+Best regards,
+[Your Name]
+
+---
+*Each prompt in the pack produces tailored, actionable output based on your inputs.*`,
+  },
 ];
 
 type PromptSeed = {
@@ -295,7 +474,7 @@ function buildMarketplacePrompts(): PromptSeed[] {
   const ratingPool = [5, 5, 4, 5, 4, 4, 5, 3, 5, 4];
 
   return MARKETPLACE_PROMPTS.map((definition, index) => {
-    const sellerIndex = index % SELLERS.length;
+    const sellerIndex = definition.sellerIndex ?? index % SELLERS.length;
     const priceOffset = (index % 5) * 0.5;
     const views = 220 + index * 37;
     const salesCount = 4 + (index * 7) % 48;
