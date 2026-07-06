@@ -13,7 +13,7 @@ export type SafeDbReadResult<T> = {
   error?: string;
 };
 
-function isReplyAssistantSchemaMismatch(error: unknown): boolean {
+function isSocialSchemaMismatch(error: unknown): boolean {
   if (error instanceof Prisma.PrismaClientKnownRequestError) {
     return error.code === "P2021" || error.code === "P2022";
   }
@@ -30,8 +30,8 @@ function isReplyAssistantSchemaMismatch(error: unknown): boolean {
 export function formatDbReadError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);
 
-  if (isReplyAssistantSchemaMismatch(error)) {
-    return "Reply Assistant database schema is out of date. Run npm run db:migrate:deploy, then refresh this page.";
+  if (isSocialSchemaMismatch(error)) {
+    return "Social tools database schema is out of date. Run npm run db:migrate:deploy, then refresh this page.";
   }
 
   if (
@@ -42,7 +42,7 @@ export function formatDbReadError(error: unknown): string {
     return "Could not connect to the database. Check DATABASE_URL and try again.";
   }
 
-  return "Could not load Reply Assistant data. Please try again later.";
+  return "Could not load social tools data. Please try again later.";
 }
 
 export async function safeDbReadWithError<T>(

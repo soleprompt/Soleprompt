@@ -119,14 +119,21 @@ export function buildOAuthAuthorizationHeader(
     oauth_signature_method: "HMAC-SHA1",
     oauth_timestamp: Math.floor(Date.now() / 1000).toString(),
     oauth_version: "1.0",
-    ...extraParams,
   };
 
   if (token) {
     oauthParams.oauth_token = token.key;
   }
 
-  const allParams = { ...oauthParams, ...extraParams };
+  // Handshake params (oauth_callback, oauth_verifier) belong in the header.
+  // Query/body params are signature-only and must not appear in Authorization.
+  for (const [key, value] of Object.entries(extraParams)) {
+    if (key.startsWith("oauth_")) {
+      oauthParams[key] = value;
+    }
+  }
+
+  const allParams = { ...extraParams, ...oauthParams };
   const signatureBase = [
     method.toUpperCase(),
     percentEncode(url),

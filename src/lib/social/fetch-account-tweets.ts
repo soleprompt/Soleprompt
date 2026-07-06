@@ -42,7 +42,9 @@ function normalizeUsername(username: string): string {
 }
 
 function buildLookupUrl(username: string): string {
-  return `https://api.twitter.com/2/users/by/username/${encodeURIComponent(username)}?user.fields=id,username`;
+  const base = `https://api.twitter.com/2/users/by/username/${encodeURIComponent(username)}`;
+  const params = new URLSearchParams({ "user.fields": "id,username" });
+  return `${base}?${params.toString()}`;
 }
 
 function buildUserTweetsUrl(xUserId: string): string {
