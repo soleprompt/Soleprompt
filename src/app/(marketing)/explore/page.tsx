@@ -1,9 +1,31 @@
+import { Suspense } from "react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { PromptCard } from "@/components/marketplace/PromptCard";
-import { getPublishedPrompts } from "@/lib/marketplace";
+import {
+  PromptFilters,
+  parsePromptFilterParams,
+} from "@/components/marketplace/PromptFilters";
+import {
+  getCategoriesWithCounts,
+  getPublishedPrompts,
+} from "@/lib/marketplace";
 
-export default async function ExplorePage() {
-  const prompts = await getPublishedPrompts();
+interface ExplorePageProps {
+  searchParams: Promise<{
+    sort?: string;
+    category?: string;
+    price?: string;
+    rating?: string;
+  }>;
+}
+
+export default async function ExplorePage({ searchParams }: ExplorePageProps) {
+  const params = await searchParams;
+  const filters = parsePromptFilterParams(params);
+  const [prompts, categories] = await Promise.all([
+    getPublishedPrompts(filters),
+    getCategoriesWithCounts(),
+  ]);
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
@@ -11,6 +33,9 @@ export default async function ExplorePage() {
         title="Explore Prompts"
         description="Browse all premium prompts in the marketplace."
       />
+      <Suspense fallback={null}>
+        <PromptFilters categories={categories} basePath="/explore" />
+      </Suspense>
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {prompts.map((prompt) => (
           <PromptCard key={prompt.id} prompt={prompt} />
