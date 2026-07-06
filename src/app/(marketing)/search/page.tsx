@@ -1,10 +1,8 @@
 import { Suspense } from "react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { PromptCard } from "@/components/marketplace/PromptCard";
-import {
-  PromptFilters,
-  parsePromptFilterParams,
-} from "@/components/marketplace/PromptFilters";
+import { PromptFilters } from "@/components/marketplace/PromptFilters";
+import { parsePromptFilterParams } from "@/lib/prompt-filters";
 import { SearchBar } from "@/components/landing/SearchBar";
 import {
   getCategoriesWithCounts,
