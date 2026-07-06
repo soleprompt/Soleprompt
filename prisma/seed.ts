@@ -6,6 +6,7 @@ import { SCRUBBING_PROMPTS } from "./seed-data/scrubbing-prompts";
 import { STARTER_PROMPTS } from "./seed-data/starter-prompts";
 import { WELCOME_PACK } from "./seed-data/welcome-pack";
 import { X_SCRUBBING_TOOL } from "./seed-data/x-scrubbing-tool";
+import { SOCIAL_SCRUBBING_SUITE } from "./seed-data/social-scrubbing-suite";
 import type { CatalogEntry } from "./seed-data/helpers";
 
 dotenv.config({ path: ".env.local" });
@@ -86,6 +87,7 @@ const BUYERS = [
 const CATALOG: CatalogEntry[] = [
   WELCOME_PACK,
   X_SCRUBBING_TOOL,
+  SOCIAL_SCRUBBING_SUITE,
   ...SCRUBBING_PROMPTS,
   ...STARTER_PROMPTS,
   ...BUNDLES,

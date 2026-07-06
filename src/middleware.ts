@@ -16,6 +16,9 @@ const isPublicRoute = createRouteMatcher([
   "/tools/x-checker(.*)",
   "/api/buyer/social/x/callback(.*)",
   "/api/buyer/scrubber/x/callback(.*)",
+  "/api/buyer/social-tools/facebook/callback(.*)",
+  "/api/buyer/social-tools/instagram/callback(.*)",
+  "/api/buyer/social-tools/linkedin/callback(.*)",
   "/api/webhooks(.*)",
   "/api/stripe/webhook",
 ]);

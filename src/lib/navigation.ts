@@ -13,6 +13,12 @@ export const BUYER_SCRUBBER_NAV: DashboardNavItem = {
   icon: "Share2",
 };
 
+export const BUYER_SOCIAL_TOOLS_NAV: DashboardNavItem = {
+  label: "Social Tools",
+  href: "/buyer/social",
+  icon: "Users",
+};
+
 export const SELLER_NAV: DashboardNavItem[] = [
   { label: "Overview", href: "/seller", icon: "LayoutDashboard" },
   { label: "Upload Prompt", href: "/seller/upload", icon: "Upload" },

@@ -3,8 +3,9 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/dashboard/DashboardShell";
 import { getDashboardPath } from "@/lib/auth";
-import { BUYER_SCRUBBER_NAV } from "@/lib/navigation";
+import { BUYER_SCRUBBER_NAV, BUYER_SOCIAL_TOOLS_NAV } from "@/lib/navigation";
 import { hasScrubberAccess } from "@/lib/scrubber/access";
+import { hasSocialSuiteAccess } from "@/lib/social-tools/access";
 import {
   getCurrentUserRole,
   isClerkUserAdmin,
@@ -69,6 +70,11 @@ export async function createDashboardLayout(
     const showScrubber = await hasScrubberAccess(user.id);
     if (showScrubber) {
       extraNavItems.push(BUYER_SCRUBBER_NAV);
+    }
+
+    const showSocialTools = await hasSocialSuiteAccess(user.id);
+    if (showSocialTools) {
+      extraNavItems.push(BUYER_SOCIAL_TOOLS_NAV);
     }
   }
 
