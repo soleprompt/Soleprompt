@@ -328,6 +328,19 @@ export async function getCategoriesWithCounts(): Promise<Category[]> {
   });
 }
 
+export async function getPublishedPromptCount(): Promise<number> {
+  return safeDbRead(0, async () => {
+    return prisma.prompt.count({ where: { status: "published" } });
+  });
+}
+
+export function formatToolCountDisplay(count: number): string {
+  if (count <= 0) return "500+";
+  if (count < 500) return String(count);
+  const rounded = Math.floor(count / 50) * 50;
+  return `${rounded}+`;
+}
+
 export async function getMarketplaceStats() {
   return safeDbRead([...EMPTY_MARKETPLACE_STATS], async () => {
     const [promptCount, sellerCount, buyerCount, avgRatingResult] =

@@ -63,6 +63,30 @@ const CATEGORIES = [
     description: "Lesson plans, assessments, and teaching tools",
     icon: "GraduationCap",
   },
+  {
+    slug: "sales",
+    name: "Sales",
+    description: "Outreach, proposals, objection handling, and closing",
+    icon: "Target",
+  },
+  {
+    slug: "solar",
+    name: "Solar",
+    description: "ROI calculators, proposals, and solar sales workflows",
+    icon: "Sun",
+  },
+  {
+    slug: "social-media",
+    name: "Social Media",
+    description: "Content, audits, profile cleanup, and growth",
+    icon: "Share2",
+  },
+  {
+    slug: "real-estate",
+    name: "Real Estate",
+    description: "Listings, market analysis, and client communication",
+    icon: "Home",
+  },
 ] as const;
 
 const SELLERS = [

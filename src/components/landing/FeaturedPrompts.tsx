@@ -15,8 +15,8 @@ export function FeaturedPrompts({ prompts }: FeaturedPromptsProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="Featured"
-          title="Top-rated prompts"
-          description="Hand-picked by our team. Every prompt is tested, refined, and ready to deliver results."
+          title="Top-rated AI tools"
+          description="Hand-picked tools tested across ChatGPT, Claude, and Gemini — ready to download and use."
         />
 
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

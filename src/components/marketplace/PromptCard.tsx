@@ -1,18 +1,27 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import {
   Star,
   ArrowUpRight,
-  Cpu,
+  Download,
   ShoppingBag,
-  User,
-  Eye,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
-import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { Card, CardContent, CardFooter } from "@/components/ui/Card";
 import { trackClickThrough } from "@/lib/click-throughs/client";
-import { formatCurrency } from "@/lib/format";
+import { getCategoryVisual } from "@/lib/category-visuals";
+import {
+  categoryNameToSlug,
+  getCompatibleModelBadges,
+  getPromptBenefit,
+  getPromptDifficultyTier,
+  getPromptThumbnailGradient,
+} from "@/lib/prompt-thumbnails";
+import { formatCurrency, formatPurchaseAmount } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { Prompt } from "@/types";
 
 interface PromptCardProps {
@@ -21,9 +30,74 @@ interface PromptCardProps {
   variant?: "compact" | "rich";
 }
 
-function truncate(text: string, maxLength: number) {
-  if (text.length <= maxLength) return text;
-  return `${text.slice(0, maxLength).trimEnd()}…`;
+const MODEL_BADGE_STYLES: Record<string, string> = {
+  ChatGPT: "border-emerald-500/25 bg-emerald-500/10 text-emerald-300",
+  Claude: "border-orange-500/25 bg-orange-500/10 text-orange-300",
+  Gemini: "border-sky-500/25 bg-sky-500/10 text-sky-300",
+  Grok: "border-zinc-500/25 bg-zinc-500/10 text-zinc-300",
+};
+
+function PromptThumbnail({
+  prompt,
+  difficulty,
+}: {
+  prompt: Prompt;
+  difficulty: string;
+}) {
+  const slug = categoryNameToSlug(prompt.category);
+  const visual = getCategoryVisual(slug);
+  const Icon = visual.icon;
+  const gradient = getPromptThumbnailGradient(prompt.category, prompt.title);
+
+  const difficultyBadge = (
+    <Badge
+      variant={difficulty === "Pro" ? "electric" : "outline"}
+      className="absolute left-3 top-3 z-10 text-[10px] font-semibold backdrop-blur-sm"
+    >
+      {difficulty}
+    </Badge>
+  );
+
+  if (prompt.coverImageUrl) {
+    return (
+      <div className="relative aspect-[16/10] w-full overflow-hidden">
+        {difficultyBadge}
+        <Image
+          src={prompt.coverImageUrl}
+          alt=""
+          fill
+          className="object-cover transition-transform duration-300 group-hover:scale-105"
+          sizes="(max-width: 768px) 100vw, 33vw"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={cn(
+        "relative flex aspect-[16/10] w-full items-center justify-center overflow-hidden bg-gradient-to-br",
+        gradient,
+      )}
+    >
+      {difficultyBadge}
+      <div
+        className="absolute inset-0 opacity-50"
+        style={{
+          backgroundImage:
+            "radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(0,102,255,0.12) 0%, transparent 45%)",
+        }}
+        aria-hidden
+      />
+      <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-black/40 ring-1 ring-white/15 backdrop-blur-sm transition-transform duration-300 group-hover:scale-105">
+        <Icon className={cn("h-8 w-8", visual.iconColor)} />
+      </div>
+      <span className="absolute right-3 top-3 text-2xl opacity-70" aria-hidden>
+        {visual.emoji}
+      </span>
+    </div>
+  );
 }
 
 export function PromptCard({
@@ -31,6 +105,13 @@ export function PromptCard({
   href = `/prompts/${prompt.id}`,
   variant = "rich",
 }: PromptCardProps) {
+  const benefit = getPromptBenefit(prompt.description, prompt.estimatedTimeSaved);
+  const difficulty = getPromptDifficultyTier(prompt);
+  const modelBadges = getCompatibleModelBadges(prompt.compatibleModels);
+  const downloadCount = prompt.salesCount;
+  const buyLabel =
+    prompt.price <= 0 ? "Get Free" : `Buy · ${formatCurrency(prompt.price)}`;
+
   function handleClick() {
     trackClickThrough({
       eventType: "marketplace_click",
@@ -39,130 +120,125 @@ export function PromptCard({
     });
   }
 
+  if (variant === "compact") {
+    return (
+      <Card hover className="group flex h-full flex-col overflow-hidden">
+        <Link href={href} className="flex flex-1 flex-col" onClick={handleClick}>
+          <PromptThumbnail prompt={prompt} difficulty={difficulty} />
+          <CardContent className="flex flex-1 flex-col pt-4">
+            <div className="flex flex-wrap gap-1">
+              {modelBadges.slice(0, 2).map((model) => (
+                <span
+                  key={model}
+                  className={cn(
+                    "rounded-full border px-1.5 py-0.5 text-[9px] font-medium",
+                    MODEL_BADGE_STYLES[model] ?? "border-border bg-muted/50 text-muted-foreground",
+                  )}
+                >
+                  {model}
+                </span>
+              ))}
+            </div>
+            <h3 className="mt-2 line-clamp-2 text-base font-semibold text-foreground">
+              {prompt.title}
+            </h3>
+            <div className="mt-auto flex items-center justify-between pt-3">
+              <div className="flex items-center gap-1 text-sm">
+                <Star className="h-3.5 w-3.5 fill-electric text-electric" />
+                <span>{prompt.rating > 0 ? prompt.rating : "—"}</span>
+              </div>
+              <span className="font-semibold text-foreground">
+                {formatPurchaseAmount(prompt.price)}
+              </span>
+            </div>
+          </CardContent>
+        </Link>
+      </Card>
+    );
+  }
+
   return (
-    <Card hover className="group flex h-full flex-col">
-      <Link href={href} className="flex flex-1 flex-col" onClick={handleClick}>
-        <CardHeader>
-          <div className="flex items-start justify-between gap-2">
-            <Badge variant="outline">{prompt.category}</Badge>
-            <span className="flex h-8 w-8 items-center justify-center rounded-full opacity-0 transition-all group-hover:opacity-100 hover:bg-electric/10">
-              <ArrowUpRight className="h-4 w-4 text-electric" />
-            </span>
-          </div>
-          <h3 className="mt-4 text-lg font-semibold text-foreground">
+    <Card hover className="group flex h-full flex-col overflow-hidden">
+      <Link href={href} className="block" onClick={handleClick}>
+        <PromptThumbnail prompt={prompt} difficulty={difficulty} />
+      </Link>
+
+      <CardContent className="flex flex-1 flex-col pt-4">
+        <div className="flex items-start justify-between gap-2">
+          <Badge variant="outline" className="text-[10px]">
+            {prompt.category}
+          </Badge>
+          <Link
+            href={href}
+            onClick={handleClick}
+            className="flex h-7 w-7 items-center justify-center rounded-full opacity-0 transition-all group-hover:opacity-100 hover:bg-electric/10"
+            aria-label={`View ${prompt.title}`}
+          >
+            <ArrowUpRight className="h-4 w-4 text-electric" />
+          </Link>
+        </div>
+
+        <Link href={href} onClick={handleClick} className="mt-3 block">
+          <h3 className="line-clamp-2 text-lg font-semibold text-foreground transition-colors group-hover:text-electric">
             {prompt.title}
           </h3>
-        </CardHeader>
-
-        <CardContent className="flex-1 space-y-4 pt-2">
-          <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground">
-            {prompt.description}
+          <p className="mt-1.5 line-clamp-2 text-sm leading-relaxed text-muted-foreground">
+            {benefit}
           </p>
+        </Link>
 
-          {variant === "rich" && prompt.preview && (
-            <div className="rounded-lg border border-border/60 bg-foreground/[0.02] px-3 py-2">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                Preview
-              </p>
-              <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-foreground/80">
-                {prompt.preview}
-              </p>
-            </div>
-          )}
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {modelBadges.map((model) => (
+            <span
+              key={model}
+              className={cn(
+                "rounded-full border px-2 py-0.5 text-[10px] font-medium",
+                MODEL_BADGE_STYLES[model] ?? "border-border bg-muted/50 text-muted-foreground",
+              )}
+            >
+              {model}
+            </span>
+          ))}
+        </div>
 
-          {variant === "rich" && prompt.compatibleModels.length > 0 && (
-            <div>
-              <p className="mb-1.5 flex items-center gap-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                <Cpu className="h-3 w-3" />
-                Compatible Models
-              </p>
-              <div className="flex flex-wrap gap-1.5">
-                {prompt.compatibleModels.slice(0, 3).map((model) => (
-                  <Badge key={model} variant="electric">
-                    {model}
-                  </Badge>
-                ))}
-                {prompt.compatibleModels.length > 3 && (
-                  <Badge variant="default">
-                    +{prompt.compatibleModels.length - 3}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
-
-          {variant === "rich" && prompt.sampleOutput && (
-            <div className="rounded-lg border border-electric/20 bg-electric/5 px-3 py-2">
-              <p className="text-[11px] font-medium uppercase tracking-wide text-electric">
-                Sample Output
-              </p>
-              <p className="mt-1 line-clamp-3 text-xs leading-relaxed text-foreground/80">
-                {truncate(prompt.sampleOutput, 180)}
-              </p>
-            </div>
-          )}
-
-          <div className="flex flex-wrap gap-1.5">
-            {prompt.tags.map((tag) => (
-              <Badge key={tag} variant="default">
-                {tag}
-              </Badge>
-            ))}
-          </div>
-        </CardContent>
-
-        <CardFooter className="flex items-center justify-between gap-3">
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center gap-1.5">
-              <Star className="h-3.5 w-3.5 fill-electric text-electric" />
-              <span className="text-sm font-medium text-foreground">
-                {prompt.rating > 0 ? prompt.rating : "—"}
-              </span>
+        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/40 pt-3">
+          <div className="flex items-center gap-1.5">
+            <Star className="h-3.5 w-3.5 fill-electric text-electric" />
+            <span className="text-sm font-medium text-foreground">
+              {prompt.rating > 0 ? prompt.rating : "New"}
+            </span>
+            {prompt.reviews > 0 && (
               <span className="text-xs text-muted-foreground">
                 ({prompt.reviews})
               </span>
-            </div>
-            {variant === "rich" && (
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <Eye className="h-3 w-3" />
-                {prompt.viewCount.toLocaleString()} views
-              </span>
-            )}
-            {variant === "rich" && (
-              <span className="flex items-center gap-1 text-xs text-muted-foreground">
-                <ShoppingBag className="h-3 w-3" />
-                {prompt.salesCount.toLocaleString()} sold
-              </span>
             )}
           </div>
-          <span className="text-lg font-semibold text-foreground">
-            {formatCurrency(prompt.price)}
+          <span className="text-sm font-semibold text-foreground">
+            {formatPurchaseAmount(prompt.price)}
           </span>
-        </CardFooter>
-      </Link>
-
-      {variant === "rich" && (
-        <div className="border-t border-border/50 px-6 pb-6">
-          <Link
-            href={`/creators/${prompt.seller.username}`}
-            className="flex items-start gap-2 pt-3 transition-colors hover:text-electric"
-          >
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-electric/20 to-purple/20">
-              <User className="h-4 w-4 text-electric" />
-            </div>
-            <div className="min-w-0">
-              <p className="truncate text-sm font-medium text-foreground">
-                {prompt.seller.displayName}
-              </p>
-              {prompt.seller.bio && (
-                <p className="line-clamp-1 text-xs text-muted-foreground">
-                  {prompt.seller.bio}
-                </p>
-              )}
-            </div>
-          </Link>
+          <span className="flex items-center gap-1 text-xs text-muted-foreground">
+            {downloadCount > 0 ? (
+              <>
+                <ShoppingBag className="h-3 w-3" />
+                {downloadCount.toLocaleString()} downloads
+              </>
+            ) : (
+              <>
+                <Download className="h-3 w-3" />
+                Instant download
+              </>
+            )}
+          </span>
         </div>
-      )}
+      </CardContent>
+
+      <CardFooter className="border-t border-border/50 pt-4">
+        <Link href={href} onClick={handleClick} className="w-full">
+          <Button size="sm" className="w-full">
+            {buyLabel}
+          </Button>
+        </Link>
+      </CardFooter>
     </Card>
   );
 }

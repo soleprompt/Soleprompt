@@ -8,6 +8,11 @@ export const SITE = {
   year: 2026,
 } as const;
 
+export const SOCIAL_LINKS = {
+  twitter: "https://x.com/getsoleprompt",
+  discord: "#",
+} as const;
+
 export const NAV_LINKS = [
   { label: "Explore", href: "/explore" },
   { label: "Categories", href: "/categories" },

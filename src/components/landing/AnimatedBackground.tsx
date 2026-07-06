@@ -2,10 +2,28 @@
 
 import { motion } from "framer-motion";
 
+const PARTICLES = Array.from({ length: 24 }, (_, i) => ({
+  id: i,
+  left: `${(i * 17 + 7) % 100}%`,
+  top: `${(i * 23 + 11) % 100}%`,
+  size: 2 + (i % 3),
+  delay: `${(i % 8) * 0.6}s`,
+  duration: `${6 + (i % 5) * 1.5}s`,
+}));
+
 export function AnimatedBackground() {
   return (
     <div className="pointer-events-none absolute inset-0 overflow-hidden">
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-electric/10 via-background to-background" />
+
+      <div
+        className="animate-gradient-shift absolute inset-0 opacity-30"
+        style={{
+          backgroundImage:
+            "linear-gradient(135deg, rgba(0,102,255,0.15) 0%, rgba(124,58,237,0.1) 35%, rgba(0,102,255,0.08) 70%, rgba(139,92,246,0.12) 100%)",
+        }}
+        aria-hidden
+      />
 
       <motion.div
         className="absolute -left-32 top-0 h-[500px] w-[500px] rounded-full bg-electric/20 blur-[120px]"
@@ -35,6 +53,21 @@ export function AnimatedBackground() {
         }}
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
+
+      {PARTICLES.map((particle) => (
+        <span
+          key={particle.id}
+          className="absolute rounded-full bg-electric/60"
+          style={{
+            left: particle.left,
+            top: particle.top,
+            width: particle.size,
+            height: particle.size,
+            animation: `float-particle ${particle.duration} ease-in-out ${particle.delay} infinite`,
+          }}
+          aria-hidden
+        />
+      ))}
 
       <div
         className="absolute inset-0 opacity-[0.03]"

@@ -2,8 +2,12 @@ import {
   Briefcase,
   Code2,
   GraduationCap,
+  Home,
   Megaphone,
   PenLine,
+  Share2,
+  Sun,
+  Target,
   Wallet,
   Zap,
   type LucideIcon,
@@ -13,8 +17,12 @@ export type CategorySlug =
   | "productivity"
   | "business"
   | "marketing"
+  | "sales"
+  | "solar"
+  | "social-media"
   | "coding"
   | "finance"
+  | "real-estate"
   | "writing"
   | "education";
 
@@ -58,6 +66,33 @@ export const CATEGORY_VISUALS: Record<CategorySlug, CategoryVisual> = {
     ringColor:
       "group-hover:ring-orange-500/40 group-focus-visible:ring-orange-500/40",
   },
+  sales: {
+    slug: "sales",
+    icon: Target,
+    emoji: "🎯",
+    gradient: "from-rose-500/30 via-red-500/20 to-orange-500/30",
+    iconColor: "text-rose-400",
+    ringColor:
+      "group-hover:ring-rose-500/40 group-focus-visible:ring-rose-500/40",
+  },
+  solar: {
+    slug: "solar",
+    icon: Sun,
+    emoji: "☀️",
+    gradient: "from-yellow-500/30 via-amber-500/20 to-orange-600/30",
+    iconColor: "text-yellow-400",
+    ringColor:
+      "group-hover:ring-yellow-500/40 group-focus-visible:ring-yellow-500/40",
+  },
+  "social-media": {
+    slug: "social-media",
+    icon: Share2,
+    emoji: "📱",
+    gradient: "from-cyan-500/30 via-sky-500/20 to-blue-600/30",
+    iconColor: "text-cyan-400",
+    ringColor:
+      "group-hover:ring-cyan-500/40 group-focus-visible:ring-cyan-500/40",
+  },
   coding: {
     slug: "coding",
     icon: Code2,
@@ -75,6 +110,15 @@ export const CATEGORY_VISUALS: Record<CategorySlug, CategoryVisual> = {
     iconColor: "text-yellow-400",
     ringColor:
       "group-hover:ring-yellow-500/40 group-focus-visible:ring-yellow-500/40",
+  },
+  "real-estate": {
+    slug: "real-estate",
+    icon: Home,
+    emoji: "🏠",
+    gradient: "from-teal-500/30 via-emerald-500/20 to-green-600/30",
+    iconColor: "text-teal-400",
+    ringColor:
+      "group-hover:ring-teal-500/40 group-focus-visible:ring-teal-500/40",
   },
   writing: {
     slug: "writing",
@@ -98,19 +142,33 @@ export const CATEGORY_VISUALS: Record<CategorySlug, CategoryVisual> = {
 
 const DEFAULT_VISUAL = CATEGORY_VISUALS.marketing;
 
+const SLUG_ALIASES: Record<string, CategorySlug> = {
+  "social media": "social-media",
+  social: "social-media",
+  "real estate": "real-estate",
+  realestate: "real-estate",
+};
+
 const ICON_BY_NAME: Record<string, LucideIcon> = {
   Zap,
   Briefcase,
   Megaphone,
+  Target,
+  Sun,
+  Share2,
   Code2,
   Wallet,
+  Home,
   PenLine,
   GraduationCap,
 };
 
 export function getCategoryVisual(slug: string): CategoryVisual {
-  if (slug in CATEGORY_VISUALS) {
-    return CATEGORY_VISUALS[slug as CategorySlug];
+  const normalized = slug.toLowerCase().trim();
+  const resolved = SLUG_ALIASES[normalized] ?? normalized;
+
+  if (resolved in CATEGORY_VISUALS) {
+    return CATEGORY_VISUALS[resolved as CategorySlug];
   }
   return DEFAULT_VISUAL;
 }

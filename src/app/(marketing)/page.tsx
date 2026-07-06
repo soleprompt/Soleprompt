@@ -1,5 +1,8 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { Hero } from "@/components/landing/Hero";
+import { TrustSection } from "@/components/landing/TrustSection";
+import { BeforeAfterShowcase } from "@/components/landing/BeforeAfterShowcase";
+import { FeaturedCollections } from "@/components/landing/FeaturedCollections";
 import { FeaturedPrompts } from "@/components/landing/FeaturedPrompts";
 import { TrendingPrompts } from "@/components/landing/TrendingPrompts";
 import { PromptOfTheDay } from "@/components/landing/PromptOfTheDay";
@@ -13,6 +16,8 @@ import {
   getFeaturedPrompts,
   getMarketplaceStats,
   getPopularSearchTerms,
+  getPublishedPromptCount,
+  formatToolCountDisplay,
   getTrendingPrompts,
   getPromptOfTheDay,
 } from "@/lib/marketplace";
@@ -28,7 +33,7 @@ export default async function HomePage({
   const utmParams = parseUtmAttribution(await searchParams);
   void recordToolVisit("homepage", user?.id, utmParams);
 
-  const [featuredPrompts, trendingPrompts, promptOfTheDay, categories, stats, suggestions] =
+  const [featuredPrompts, trendingPrompts, promptOfTheDay, categories, stats, suggestions, publishedCount] =
     await Promise.all([
     getFeaturedPrompts(4),
     getTrendingPrompts(6),
@@ -36,11 +41,17 @@ export default async function HomePage({
     getCategoriesWithCounts(),
     getMarketplaceStats(),
     getPopularSearchTerms(4),
+    getPublishedPromptCount(),
   ]);
+
+  const toolCountLabel = formatToolCountDisplay(publishedCount);
 
   return (
     <>
-      <Hero suggestions={suggestions} />
+      <Hero suggestions={suggestions} toolCountLabel={toolCountLabel} />
+      <TrustSection toolCountLabel={toolCountLabel} />
+      <BeforeAfterShowcase />
+      <FeaturedCollections />
       {promptOfTheDay && <PromptOfTheDay prompt={promptOfTheDay} />}
       <FeaturedPrompts prompts={featuredPrompts} />
       <TrendingPrompts prompts={trendingPrompts} />

@@ -15,8 +15,8 @@ export function Categories({ categories }: CategoriesProps) {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="Categories"
-          title="Find prompts for every use case"
-          description="Browse curated collections across industries and disciplines."
+          title="Find tools for every use case"
+          description="Browse curated collections across sales, marketing, solar, social media, and more."
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
