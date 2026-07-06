@@ -11,6 +11,13 @@ import {
 
 const isPublicRoute = createRouteMatcher([
   "/",
+  "/explore(.*)",
+  "/search(.*)",
+  "/prompts/(.*)",
+  "/creators/(.*)",
+  "/categories(.*)",
+  "/privacy(.*)",
+  "/terms(.*)",
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/tools/x-checker(.*)",
