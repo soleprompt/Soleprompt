@@ -4,6 +4,7 @@ import { Inter } from "next/font/google";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { SITE } from "@/lib/constants";
 import { clerkAppearance } from "@/lib/clerk";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 
 const inter = Inter({
@@ -46,6 +47,7 @@ export default function RootLayout({
       >
         <body className="min-h-full flex flex-col antialiased">
           <ThemeProvider>{children}</ThemeProvider>
+          <SpeedInsights />
         </body>
       </html>
     </ClerkProvider>
