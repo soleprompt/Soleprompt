@@ -6,6 +6,7 @@ import { useAuth } from "@clerk/nextjs";
 import { startPurchase } from "@/app/actions/purchase";
 import { Button } from "@/components/ui/Button";
 import { trackClickThrough } from "@/lib/click-throughs/client";
+import { scrubberCheckoutMetadata } from "@/lib/scrubber/constants";
 
 interface PurchaseButtonProps {
   promptId: string;
@@ -54,10 +55,18 @@ export function PurchaseButton({
     }
 
     if (price > 0) {
+      const scrubberMetadata = promptTitle
+        ? scrubberCheckoutMetadata(promptTitle)
+        : null;
+
       trackClickThrough({
         eventType: "checkout_started",
         targetKey: promptId,
-        metadata: promptTitle ? { promptTitle, source: "purchase-button" } : { source: "purchase-button" },
+        metadata: {
+          source: "purchase-button",
+          ...(promptTitle ? { promptTitle } : {}),
+          ...scrubberMetadata,
+        },
       });
     }
 

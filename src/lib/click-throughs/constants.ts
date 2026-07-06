@@ -40,6 +40,9 @@ export function formatClickThroughLabel(
   switch (eventType) {
     case "paid_tool_cta":
       if (targetKey === "x-scrubber") {
+        if (source === "locked-page") {
+          return "X Scrubber — Unlock CTA (locked page)";
+        }
         if (source === "x-checker-upsell") {
           return "X Scrubber — Upgrade from X Checker";
         }

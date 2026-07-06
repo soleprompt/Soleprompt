@@ -14,6 +14,7 @@ import {
   STRIPE_CHECKOUT_CANCEL_URL,
   STRIPE_CHECKOUT_SUCCESS_URL,
 } from "@/lib/stripe";
+import { scrubberCheckoutMetadata } from "@/lib/scrubber/constants";
 import { syncClerkUser } from "@/lib/user";
 
 export type PurchaseActionResult = {
@@ -122,6 +123,7 @@ export async function startPurchase(
     metadata: {
       promptTitle: prompt.title,
       source: "stripe-session",
+      ...scrubberCheckoutMetadata(prompt.title),
     },
     clerkUserId: buyer.clerkUserId,
   });
