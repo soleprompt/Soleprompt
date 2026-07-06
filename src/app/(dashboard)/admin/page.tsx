@@ -7,11 +7,15 @@ import {
   getRecentAuditLogs,
 } from "@/lib/admin-data";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { getClickThroughStats } from "@/lib/click-throughs";
+import { getToolVisitStats } from "@/lib/tool-visits";
 
 export default async function AdminOverviewPage() {
-  const [stats, auditLogs] = await Promise.all([
+  const [stats, auditLogs, toolVisits, clickThroughs] = await Promise.all([
     getAdminOverviewStats(),
     getRecentAuditLogs(8),
+    getToolVisitStats(),
+    getClickThroughStats(),
   ]);
 
   const statCards = [
@@ -44,6 +48,82 @@ export default async function AdminOverviewPage() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold">🛠️ Tool visits</h2>
+            <p className="text-sm text-muted-foreground">
+              Page views per buyer-facing tool · all time and last 7 days
+            </p>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <ul className="divide-y divide-border text-sm">
+              {toolVisits.map((tool) => (
+                <li
+                  key={tool.slug}
+                  className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                >
+                  <div>
+                    <p className="font-medium">{tool.label}</p>
+                    <p className="text-muted-foreground">{tool.description}</p>
+                    <p className="text-xs text-muted-foreground">{tool.path}</p>
+                  </div>
+                  <div className="shrink-0 text-right">
+                    <p className="font-medium tabular-nums">
+                      {tool.totalVisits.toLocaleString()}
+                    </p>
+                    <p className="text-muted-foreground">
+                      {tool.visitsLast7Days.toLocaleString()} last 7d
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <h2 className="text-lg font-semibold">🖱️ Click-throughs</h2>
+            <p className="text-sm text-muted-foreground">
+              Paid tool CTAs, checkout starts, marketplace clicks, and upgrades ·
+              all time and last 7 days
+            </p>
+          </CardHeader>
+          <CardContent className="pt-0">
+            {clickThroughs.length === 0 ? (
+              <p className="text-sm text-muted-foreground">
+                No click-throughs yet.
+              </p>
+            ) : (
+              <ul className="divide-y divide-border text-sm">
+                {clickThroughs.map((row) => (
+                  <li
+                    key={row.key}
+                    className="flex items-center justify-between gap-4 py-3 first:pt-0 last:pb-0"
+                  >
+                    <div>
+                      <p className="font-medium">{row.label}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {row.eventType}
+                      </p>
+                    </div>
+                    <div className="shrink-0 text-right">
+                      <p className="font-medium tabular-nums">
+                        {row.totalClicks.toLocaleString()}
+                      </p>
+                      <p className="text-muted-foreground">
+                        {row.clicksLast7Days.toLocaleString()} last 7d
+                      </p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

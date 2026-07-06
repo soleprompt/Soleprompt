@@ -7,6 +7,7 @@ import { Link2, Loader2, ScanSearch, Unlink } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { apiErrorMessage } from "@/lib/api-error";
+import { trackClickThrough } from "@/lib/click-throughs/client";
 import {
   SOCIAL_TOOL_DESCRIPTIONS,
   SOCIAL_TOOL_LABELS,
@@ -111,6 +112,11 @@ export function SocialToolPanel({ platform }: SocialToolPanelProps) {
   }, [loadConnection]);
 
   const handleConnect = () => {
+    trackClickThrough({
+      eventType: "oauth_connect",
+      targetKey: platform,
+      metadata: { source: "social-tool-panel" },
+    });
     window.location.href = `/api/buyer/social-tools/${platform}/connect`;
   };
 

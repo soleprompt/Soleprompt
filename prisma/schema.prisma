@@ -73,6 +73,8 @@ model User {
   reviews             Review[]
   wishlist            Wishlist[]
   promptViews         PromptView[]
+  toolVisits          ToolVisit[]
+  clickThroughs       ClickThrough[]
   xConnections        XConnection[]
   socialConnections   SocialConnection[]
 }
@@ -256,6 +258,28 @@ model PromptView {
   viewedAt DateTime @default(now())
 
   @@index([userId, viewedAt])
+}
+
+model ToolVisit {
+  id        String   @id @default(cuid())
+  toolSlug  String
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  visitedAt DateTime @default(now())
+
+  @@index([toolSlug, visitedAt])
+}
+
+model ClickThrough {
+  id        String   @id @default(cuid())
+  eventType String
+  targetKey String
+  metadata  Json?
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  clickedAt DateTime @default(now())
+
+  @@index([eventType, targetKey, clickedAt])
 }
 
 model SocialPost {

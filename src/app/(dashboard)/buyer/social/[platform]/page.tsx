@@ -1,10 +1,9 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { Suspense } from "react";
+import { LockedToolPurchaseCta } from "@/components/analytics/LockedToolPurchaseCta";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SocialToolPanel } from "@/components/social-tools/SocialToolPanel";
-import { Button } from "@/components/ui/Button";
 import {
   getSocialSuiteProductId,
   hasSocialSuiteAccess,
@@ -13,6 +12,8 @@ import {
   SOCIAL_TOOL_LABELS,
   type SocialToolPlatform,
 } from "@/lib/social-tools/constants";
+import { recordToolVisit } from "@/lib/tool-visits";
+import { socialPlatformToolSlug } from "@/lib/tool-visits/constants";
 
 type PlatformPageProps = {
   params: Promise<{ platform: string }>;
@@ -38,6 +39,8 @@ export default async function BuyerSocialPlatformPage({
     redirect("/sign-in");
   }
 
+  void recordToolVisit(socialPlatformToolSlug(platform), user.id);
+
   const label = SOCIAL_TOOL_LABELS[platform];
   const hasAccess = await hasSocialSuiteAccess(user.id);
 
@@ -55,15 +58,15 @@ export default async function BuyerSocialPlatformPage({
             Purchase the Social Scrubbing Suite to connect {label} and prepare
             for content scanning and cleanup.
           </p>
-          <Link
+          <LockedToolPurchaseCta
             href={
               productId
                 ? `/prompts/${productId}`
                 : "/explore?search=social+scrubbing"
             }
-          >
-            <Button className="mt-6">View product</Button>
-          </Link>
+            targetKey="social-suite"
+            source={`locked-${platform}`}
+          />
         </div>
       </>
     );

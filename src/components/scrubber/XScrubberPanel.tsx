@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -14,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { ClickThroughLink } from "@/components/analytics/ClickThroughLink";
 import type { TweetRiskResult } from "@/lib/social/risk-scorer";
 import { apiErrorMessage, parseApiError } from "@/lib/api-error";
 
@@ -299,12 +299,17 @@ export function XScrubberPanel() {
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           {!connection?.connected ? (
-            <Link href="/api/buyer/scrubber/x/connect">
+            <ClickThroughLink
+              href="/api/buyer/scrubber/x/connect"
+              eventType="oauth_connect"
+              targetKey="x"
+              metadata={{ source: "x-scrubber" }}
+            >
               <Button disabled={!connection?.configured || connectionBusy}>
                 <Link2 className="h-4 w-4" />
                 Connect X
               </Button>
-            </Link>
+            </ClickThroughLink>
           ) : (
             <>
               <Button

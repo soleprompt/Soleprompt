@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
@@ -15,10 +14,12 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
+import { ClickThroughLink } from "@/components/analytics/ClickThroughLink";
 import {
   getReputationDisplay,
   type TweetRiskResult,
 } from "@/lib/social/risk-scorer";
+import { trackClickThrough } from "@/lib/click-throughs/client";
 import {
   buildReputationShareFullText,
   buildTwitterIntentUrl,
@@ -212,6 +213,11 @@ export function XCheckerPanel({
     : null;
 
   async function handleShareScore(score: number) {
+    trackClickThrough({
+      eventType: "share_score",
+      targetKey: "x-checker",
+    });
+
     const fullText = buildReputationShareFullText(score);
 
     if (typeof navigator !== "undefined" && navigator.share) {
@@ -272,9 +278,16 @@ export function XCheckerPanel({
                 plus the full social scrubbing prompt bundle.
               </p>
             </div>
-            <Link href={upsellHref}>
+            <ClickThroughLink
+              href={upsellHref}
+              eventType={hasScrubberAccess ? "paid_tool_cta" : "upgrade_prompt"}
+              targetKey="x-scrubber"
+              metadata={{
+                source: hasScrubberAccess ? "x-checker-open-tool" : "x-checker-upsell",
+              }}
+            >
               <Button variant="secondary">{upsellLabel}</Button>
-            </Link>
+            </ClickThroughLink>
           </CardContent>
         </Card>
       )}
@@ -302,12 +315,17 @@ export function XCheckerPanel({
         </CardHeader>
         <CardContent className="flex flex-wrap gap-3">
           {!connection?.connected ? (
-            <Link href="/api/buyer/social/x/connect">
+            <ClickThroughLink
+              href="/api/buyer/social/x/connect"
+              eventType="oauth_connect"
+              targetKey="x"
+              metadata={{ source: "x-checker" }}
+            >
               <Button disabled={!connection?.configured || connectionBusy}>
                 <Link2 className="h-4 w-4" />
                 Connect X
               </Button>
-            </Link>
+            </ClickThroughLink>
           ) : (
             <>
               <Button
@@ -526,9 +544,14 @@ export function XCheckerPanel({
                 risky tweets — with confirmation for every batch.
               </p>
             </div>
-            <Link href={upsellHref}>
+            <ClickThroughLink
+              href={upsellHref}
+              eventType="upgrade_prompt"
+              targetKey="x-scrubber"
+              metadata={{ source: "x-checker-flagged-upsell" }}
+            >
               <Button>{upsellLabel}</Button>
-            </Link>
+            </ClickThroughLink>
           </CardContent>
         </Card>
       )}

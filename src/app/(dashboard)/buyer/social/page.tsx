@@ -1,19 +1,21 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
+import { LockedToolPurchaseCta } from "@/components/analytics/LockedToolPurchaseCta";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { SocialToolsHub } from "@/components/social-tools/SocialToolsHub";
-import { Button } from "@/components/ui/Button";
 import {
   getSocialSuiteProductId,
   hasSocialSuiteAccess,
 } from "@/lib/social-tools/access";
+import { recordToolVisit } from "@/lib/tool-visits";
 
 export default async function BuyerSocialToolsPage() {
   const user = await currentUser();
   if (!user) {
     redirect("/sign-in");
   }
+
+  void recordToolVisit("social-tools", user.id);
 
   const hasAccess = await hasSocialSuiteAccess(user.id);
   if (!hasAccess) {
@@ -30,15 +32,15 @@ export default async function BuyerSocialToolsPage() {
             Purchase the Social Scrubbing Suite to connect Facebook, Instagram,
             and LinkedIn accounts and clean up brand-risk content.
           </p>
-          <Link
+          <LockedToolPurchaseCta
             href={
               productId
                 ? `/prompts/${productId}`
                 : "/explore?search=social+scrubbing"
             }
-          >
-            <Button className="mt-6">View product</Button>
-          </Link>
+            targetKey="social-suite"
+            source="locked-page"
+          />
         </div>
       </>
     );

@@ -241,6 +241,7 @@ export default async function PromptDetailPage({
               <PurchaseButton
                 promptId={prompt.id}
                 price={prompt.price}
+                promptTitle={prompt.title}
                 purchased={purchaseState.purchased}
                 isOwnPrompt={purchaseState.isOwnPrompt}
               />

@@ -5,10 +5,12 @@ import { useState, useTransition } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { startPurchase } from "@/app/actions/purchase";
 import { Button } from "@/components/ui/Button";
+import { trackClickThrough } from "@/lib/click-throughs/client";
 
 interface PurchaseButtonProps {
   promptId: string;
   price: number;
+  promptTitle?: string;
   purchased?: boolean;
   isOwnPrompt?: boolean;
 }
@@ -16,6 +18,7 @@ interface PurchaseButtonProps {
 export function PurchaseButton({
   promptId,
   price,
+  promptTitle,
   purchased = false,
   isOwnPrompt = false,
 }: PurchaseButtonProps) {
@@ -48,6 +51,14 @@ export function PurchaseButton({
       const returnUrl = encodeURIComponent(`/prompts/${promptId}`);
       window.location.href = `/sign-in?redirect_url=${returnUrl}`;
       return;
+    }
+
+    if (price > 0) {
+      trackClickThrough({
+        eventType: "checkout_started",
+        targetKey: promptId,
+        metadata: promptTitle ? { promptTitle, source: "purchase-button" } : { source: "purchase-button" },
+      });
     }
 
     startTransition(async () => {

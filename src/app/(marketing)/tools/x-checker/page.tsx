@@ -16,6 +16,7 @@ import {
   getScrubberProductId,
   hasScrubberAccess,
 } from "@/lib/scrubber/access";
+import { recordToolVisit } from "@/lib/tool-visits";
 
 const FEATURES = [
   {
@@ -52,6 +53,8 @@ function CheckerToolFallback() {
 
 export default async function XCheckerPage() {
   const user = await currentUser();
+  void recordToolVisit("x-checker", user?.id);
+
   const [scrubberProductId, userHasScrubber] = user
     ? await Promise.all([
         getScrubberProductId(),

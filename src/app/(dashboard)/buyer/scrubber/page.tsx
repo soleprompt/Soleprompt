@@ -1,20 +1,22 @@
-import Link from "next/link";
 import { redirect } from "next/navigation";
 import { currentUser } from "@clerk/nextjs/server";
 import { Suspense } from "react";
+import { LockedToolPurchaseCta } from "@/components/analytics/LockedToolPurchaseCta";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { XScrubberPanel } from "@/components/scrubber/XScrubberPanel";
-import { Button } from "@/components/ui/Button";
 import {
   getScrubberProductId,
   hasScrubberAccess,
 } from "@/lib/scrubber/access";
+import { recordToolVisit } from "@/lib/tool-visits";
 
 export default async function BuyerScrubberPage() {
   const user = await currentUser();
   if (!user) {
     redirect("/sign-in");
   }
+
+  void recordToolVisit("x-scrubber", user.id);
 
   const hasAccess = await hasScrubberAccess(user.id);
   if (!hasAccess) {
@@ -31,13 +33,13 @@ export default async function BuyerScrubberPage() {
             Purchase the X Scrubbing Tool ($20) to connect your account, scan
             tweets for brand risk, and delete selected posts with confirmation.
           </p>
-          <Link
+          <LockedToolPurchaseCta
             href={
               productId ? `/prompts/${productId}` : "/explore?search=scrubbing"
             }
-          >
-            <Button className="mt-6">View product</Button>
-          </Link>
+            targetKey="x-scrubber"
+            source="locked-page"
+          />
         </div>
       </>
     );

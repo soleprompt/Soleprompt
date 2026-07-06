@@ -4,6 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { completePurchase } from "@/lib/purchase-fulfillment";
+import { recordClickThrough } from "@/lib/click-throughs";
 import {
   getCheckoutSessionAmount,
   getCheckoutSessionCurrency,
@@ -114,6 +115,16 @@ export async function startPurchase(
   if (!session.url) {
     return { error: "Unable to start checkout. Please try again." };
   }
+
+  void recordClickThrough({
+    eventType: "checkout_started",
+    targetKey: prompt.id,
+    metadata: {
+      promptTitle: prompt.title,
+      source: "stripe-session",
+    },
+    clerkUserId: buyer.clerkUserId,
+  });
 
   return { url: session.url };
 }

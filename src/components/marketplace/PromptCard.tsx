@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import {
   Star,
@@ -8,6 +10,7 @@ import {
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/Card";
+import { trackClickThrough } from "@/lib/click-throughs/client";
 import { formatCurrency } from "@/lib/format";
 import type { Prompt } from "@/types";
 
@@ -27,8 +30,16 @@ export function PromptCard({
   href = `/prompts/${prompt.id}`,
   variant = "rich",
 }: PromptCardProps) {
+  function handleClick() {
+    trackClickThrough({
+      eventType: "marketplace_click",
+      targetKey: prompt.id,
+      metadata: { promptTitle: prompt.title },
+    });
+  }
+
   return (
-    <Link href={href} className="block h-full">
+    <Link href={href} className="block h-full" onClick={handleClick}>
       <Card hover className="group flex h-full flex-col">
         <CardHeader>
           <div className="flex items-start justify-between gap-2">
