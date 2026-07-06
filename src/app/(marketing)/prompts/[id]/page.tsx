@@ -12,10 +12,18 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { PurchaseButton } from "@/components/marketplace/PurchaseButton";
+import { FavoriteButton } from "@/components/marketplace/FavoriteButton";
+import { ReviewForm } from "@/components/marketplace/ReviewForm";
+import { CopyPromptButton } from "@/components/marketplace/CopyPromptButton";
+import { DownloadPromptButton } from "@/components/marketplace/DownloadPromptButton";
+import { PromptVariablesPreview } from "@/components/marketplace/PromptVariablesPreview";
+import { extractPromptVariables } from "@/lib/prompt-variables";
 import {
   formatCurrency,
   getPromptById,
   getPromptPurchaseState,
+  getUserReviewForPrompt,
+  isPromptWishlisted,
   mapPromptToListItem,
   recordPromptView,
 } from "@/lib/marketplace";
@@ -48,8 +56,8 @@ export default async function PromptDetailPage({
   const { userId } = await auth();
   if (userId) {
     await syncCurrentUser();
-    await recordPromptView(userId, id);
   }
+  await recordPromptView(userId, id);
 
   const purchaseState = await getPromptPurchaseState(
     userId,
@@ -57,10 +65,19 @@ export default async function PromptDetailPage({
     prompt.sellerId,
   );
 
+  const [wishlisted, userReview] = userId
+    ? await Promise.all([
+        isPromptWishlisted(userId, id),
+        getUserReviewForPrompt(userId, id),
+      ])
+    : [false, null];
+
   const hasFullAccess =
     purchaseState.purchased || purchaseState.isOwnPrompt;
 
   const listing = mapPromptToListItem(prompt);
+  const promptVariables = extractPromptVariables(listing.content);
+  const hasVariables = promptVariables.length > 0;
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
@@ -96,6 +113,14 @@ export default async function PromptDetailPage({
               </div>
             </CardContent>
           </Card>
+
+          {hasVariables && (
+            <PromptVariablesPreview
+              content={hasFullAccess ? listing.content : ""}
+              variableNames={hasFullAccess ? undefined : promptVariables}
+              locked={!hasFullAccess}
+            />
+          )}
 
           {listing.preview && (
             <Card>
@@ -133,9 +158,18 @@ export default async function PromptDetailPage({
             </CardHeader>
             <CardContent className="pt-0">
               {hasFullAccess ? (
-                <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-border bg-background px-4 py-4 font-mono text-sm leading-relaxed text-foreground/90">
-                  {listing.content}
-                </pre>
+                <>
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    <CopyPromptButton content={listing.content} />
+                    <DownloadPromptButton
+                      title={listing.title}
+                      content={listing.content}
+                    />
+                  </div>
+                  <pre className="overflow-x-auto whitespace-pre-wrap rounded-xl border border-border bg-background px-4 py-4 font-mono text-sm leading-relaxed text-foreground/90">
+                    {listing.content}
+                  </pre>
+                </>
               ) : (
                 <div className="relative overflow-hidden rounded-xl border border-border bg-background">
                   <pre className="max-h-40 overflow-hidden whitespace-pre-wrap px-4 py-4 font-mono text-sm leading-relaxed text-foreground/40 blur-[2px] select-none">
@@ -224,6 +258,18 @@ export default async function PromptDetailPage({
               </CardContent>
             </Card>
           )}
+
+          {purchaseState.purchased && (
+            <Card>
+              <CardContent className="pt-6">
+                <ReviewForm
+                  promptId={prompt.id}
+                  existingRating={userReview?.rating}
+                  existingComment={userReview?.comment}
+                />
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="space-y-6">
@@ -245,6 +291,13 @@ export default async function PromptDetailPage({
                 purchased={purchaseState.purchased}
                 isOwnPrompt={purchaseState.isOwnPrompt}
               />
+              <div className="mt-3">
+                <FavoriteButton
+                  promptId={prompt.id}
+                  initialSaved={wishlisted}
+                  className="w-full"
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -256,7 +309,10 @@ export default async function PromptDetailPage({
               </h2>
             </CardHeader>
             <CardContent className="pt-0">
-              <div className="flex items-start gap-3">
+              <Link
+                href={`/creators/${listing.seller.username}`}
+                className="flex items-start gap-3 transition-colors hover:text-electric"
+              >
                 <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-electric/20 to-purple/20">
                   <User className="h-6 w-6 text-electric" />
                 </div>
@@ -273,7 +329,7 @@ export default async function PromptDetailPage({
                     </p>
                   )}
                 </div>
-              </div>
+              </Link>
             </CardContent>
           </Card>
         </div>
