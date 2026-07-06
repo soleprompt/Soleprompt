@@ -3,6 +3,7 @@ import type { DashboardNavItem, UserRole } from "@/types/user";
 export const BUYER_NAV: DashboardNavItem[] = [
   { label: "My Library", href: "/buyer", icon: "BookOpen" },
   { label: "Favorites", href: "/buyer/favorites", icon: "Heart" },
+  { label: "Recently Viewed", href: "/buyer/recent", icon: "Clock" },
   { label: "Purchase History", href: "/buyer/history", icon: "Receipt" },
   { label: "Account", href: "/buyer/account", icon: "User" },
 ];
