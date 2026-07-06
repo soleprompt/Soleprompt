@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { CategoryFilterChips } from "@/components/marketplace/CategoryFilterChips";
 import { PromptCard } from "@/components/marketplace/PromptCard";
 import { PromptFilters } from "@/components/marketplace/PromptFilters";
 import { parsePromptFilterParams } from "@/lib/prompt-filters";
@@ -32,7 +33,10 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
         description="Browse all premium prompts in the marketplace."
       />
       <Suspense fallback={null}>
-        <PromptFilters categories={categories} basePath="/explore" />
+        <div className="space-y-4">
+          <CategoryFilterChips categories={categories} basePath="/explore" />
+          <PromptFilters categories={categories} basePath="/explore" />
+        </div>
       </Suspense>
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {prompts.map((prompt) => (

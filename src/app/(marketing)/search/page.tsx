@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
+import { CategoryFilterChips } from "@/components/marketplace/CategoryFilterChips";
 import { PromptCard } from "@/components/marketplace/PromptCard";
 import { PromptFilters } from "@/components/marketplace/PromptFilters";
 import { parsePromptFilterParams } from "@/lib/prompt-filters";
@@ -42,7 +43,10 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         <SearchBar defaultQuery={query} />
       </div>
       <Suspense fallback={null}>
-        <PromptFilters categories={categories} basePath="/search" />
+        <div className="space-y-4">
+          <CategoryFilterChips categories={categories} basePath="/search" />
+          <PromptFilters categories={categories} basePath="/search" />
+        </div>
       </Suspense>
       {prompts.length === 0 ? (
         <p className="mt-8 text-center text-muted-foreground">

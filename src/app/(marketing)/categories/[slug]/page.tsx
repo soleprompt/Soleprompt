@@ -1,8 +1,11 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { PageHeader } from "@/components/dashboard/PageHeader";
+import { CategoryBanner } from "@/components/marketplace/CategoryBanner";
 import { PromptCard } from "@/components/marketplace/PromptCard";
-import { getPublishedPrompts } from "@/lib/marketplace";
+import {
+  getCategoriesWithCounts,
+  getPublishedPrompts,
+} from "@/lib/marketplace";
 
 interface CategoryDetailPageProps {
   params: Promise<{ slug: string }>;
@@ -12,8 +15,14 @@ export default async function CategoryDetailPage({
   params,
 }: CategoryDetailPageProps) {
   const { slug } = await params;
-  const prompts = await getPublishedPrompts({ categorySlug: slug });
+  const [prompts, categories] = await Promise.all([
+    getPublishedPrompts({ categorySlug: slug }),
+    getCategoriesWithCounts(),
+  ]);
+
+  const categoryMeta = categories.find((c) => c.id === slug);
   const categoryName =
+    categoryMeta?.name ??
     prompts[0]?.category ??
     slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -26,14 +35,20 @@ export default async function CategoryDetailPage({
         <ArrowLeft className="h-4 w-4" />
         All Categories
       </Link>
-      <PageHeader
-        title={categoryName}
-        description={`${prompts.length} premium prompt${prompts.length === 1 ? "" : "s"} in this category.`}
+      <CategoryBanner
+        slug={slug}
+        name={categoryName}
+        count={prompts.length}
       />
+      {categoryMeta?.description && (
+        <p className="-mt-4 mb-8 text-muted-foreground">
+          {categoryMeta.description}
+        </p>
+      )}
       {prompts.length === 0 ? (
         <p className="text-muted-foreground">No prompts in this category yet.</p>
       ) : (
-        <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {prompts.map((prompt) => (
             <PromptCard key={prompt.id} prompt={prompt} />
           ))}
