@@ -252,6 +252,60 @@ model SocialPost {
   @@index([status, scheduledAt])
 }
 
+model EngageTargetAccount {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  xUserId   String?
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  posts EngagePost[]
+}
+
+model EngagePost {
+  id              String              @id @default(cuid())
+  targetAccountId String
+  targetAccount   EngageTargetAccount @relation(fields: [targetAccountId], references: [id], onDelete: Cascade)
+  xTweetId        String              @unique
+  authorUsername  String
+  tweetText       String
+  tweetUrl        String
+  tweetedAt       DateTime
+  relevanceScore  Int                 @default(0)
+  matchedTopics   String[]
+  likeCount       Int                 @default(0)
+  replyCount      Int                 @default(0)
+  retweetCount    Int                 @default(0)
+  scannedAt       DateTime            @default(now())
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  drafts EngageReplyDraft[]
+
+  @@index([targetAccountId, tweetedAt])
+  @@index([relevanceScore])
+}
+
+model EngageReplyDraft {
+  id           String           @id @default(cuid())
+  postId       String
+  post         EngagePost       @relation(fields: [postId], references: [id], onDelete: Cascade)
+  style        String
+  content      String
+  status       SocialPostStatus @default(draft)
+  includesLink Boolean          @default(false)
+  taglineKey   String?
+  postedAt     DateTime?
+  xReplyId     String?
+  error        String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  @@index([postId])
+  @@index([status])
+}
+
 model SocialReply {
   id                String           @id @default(cuid())
   platform          SocialPlatform   @default(x)

@@ -19,22 +19,49 @@ export async function getDailyReplyCount(
 ): Promise<number> {
   const { start, end } = getUtcDayBounds(date);
 
-  return prisma.socialReply.count({
-    where: {
-      status: "posted",
-      postedAt: { gte: start, lt: end },
-    },
-  });
+  const [socialCount, engageCount] = await Promise.all([
+    prisma.socialReply.count({
+      where: {
+        status: "posted",
+        postedAt: { gte: start, lt: end },
+      },
+    }),
+    prisma.engageReplyDraft.count({
+      where: {
+        status: "posted",
+        postedAt: { gte: start, lt: end },
+      },
+    }),
+  ]);
+
+  return socialCount + engageCount;
 }
 
 export async function getLastReplyPostedAt(): Promise<Date | null> {
-  const last = await prisma.socialReply.findFirst({
-    where: { status: "posted", postedAt: { not: null } },
-    orderBy: { postedAt: "desc" },
-    select: { postedAt: true },
-  });
+  const [lastSocial, lastEngage] = await Promise.all([
+    prisma.socialReply.findFirst({
+      where: { status: "posted", postedAt: { not: null } },
+      orderBy: { postedAt: "desc" },
+      select: { postedAt: true },
+    }),
+    prisma.engageReplyDraft.findFirst({
+      where: { status: "posted", postedAt: { not: null } },
+      orderBy: { postedAt: "desc" },
+      select: { postedAt: true },
+    }),
+  ]);
 
-  return last?.postedAt ?? null;
+  const dates = [lastSocial?.postedAt, lastEngage?.postedAt].filter(
+    (d): d is Date => d != null,
+  );
+
+  if (dates.length === 0) {
+    return null;
+  }
+
+  return dates.reduce((latest, current) =>
+    current > latest ? current : latest,
+  );
 }
 
 export type CanReplyNowResult = {

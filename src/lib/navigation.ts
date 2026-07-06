@@ -29,6 +29,7 @@ export const REPLY_ASSISTANT_LABEL = "Reply Assistant";
 export const ADMIN_SOCIAL_TABS = [
   { href: "/admin/social", label: "Posts" },
   { href: "/admin/social/replies", label: REPLY_ASSISTANT_LABEL },
+  { href: "/admin/social/engage", label: "Engage" },
 ] as const;
 
 export const ADMIN_NAV: DashboardNavItem[] = [

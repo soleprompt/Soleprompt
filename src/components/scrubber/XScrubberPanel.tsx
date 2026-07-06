@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  AlertTriangle,
   Check,
   Link2,
   Loader2,
@@ -422,15 +421,22 @@ export function XScrubberPanel() {
                         </span>
                       </div>
                       <p className="text-sm leading-relaxed">{tweet.text}</p>
-                      {tweet.risk.reasons.length > 0 && (
-                        <ul className="text-xs text-muted-foreground">
-                          {tweet.risk.reasons.map((reason) => (
-                            <li key={reason} className="flex items-start gap-1">
-                              <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-                              {reason}
-                            </li>
-                          ))}
-                        </ul>
+                      {tweet.risk.impacts.length > 0 && (
+                        <div className="text-xs text-muted-foreground">
+                          <p className="font-medium text-foreground">
+                            Potential impact
+                          </p>
+                          <ul className="mt-1">
+                            {tweet.risk.impacts.map((impact) => (
+                              <li key={impact} className="flex items-start gap-1">
+                                <span className="shrink-0" aria-hidden>
+                                  ⚠️
+                                </span>
+                                {impact}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
                       )}
                     </div>
                   </label>

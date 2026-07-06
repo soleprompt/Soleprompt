@@ -13,6 +13,8 @@ export type TweetRiskResult = {
   categories: RiskCategory[];
   matchedKeywords: string[];
   reasons: string[];
+  /** Concrete potential-impact statements for matched categories. */
+  impacts: string[];
   /** Short label for the top matched risk category. */
   primaryReason: string | null;
   /** Match strength from 0–100; 0 when the tweet is clean. */
@@ -29,6 +31,45 @@ export const CATEGORY_LABELS: Record<RiskCategory, string> = {
   personal: "Personal oversharing",
 };
 
+/** Guidance-style impact statements per risk category. */
+export const CATEGORY_IMPACTS: Record<RiskCategory, string[]> = {
+  political: [
+    "May affect hiring decisions",
+    "May discourage potential clients",
+    "Could reduce brand trust",
+  ],
+  offensive: [
+    "May affect hiring decisions",
+    "Could damage professional reputation",
+    "May discourage potential clients",
+  ],
+  profanity: [
+    "May appear unprofessional to recruiters",
+    "Could discourage potential clients",
+    "May affect hiring decisions",
+  ],
+  substances: [
+    "May raise concerns with employers",
+    "Could affect client trust",
+    "May affect hiring decisions",
+  ],
+  employer: [
+    "May affect hiring decisions",
+    "Could harm current employment",
+    "May discourage potential clients",
+  ],
+  controversial: [
+    "Could reduce brand trust",
+    "May discourage potential clients",
+    "May affect hiring decisions",
+  ],
+  personal: [
+    "May overshare beyond professional comfort",
+    "Could affect how others perceive you professionally",
+    "May discourage potential clients",
+  ],
+};
+
 const CATEGORY_WEIGHTS: Record<RiskCategory, number> = {
   employer: 35,
   offensive: 30,
@@ -43,7 +84,6 @@ type RiskPattern = {
   category: RiskCategory;
   keywords: string[];
   weight: number;
-  reason: string;
 };
 
 const RISK_PATTERNS: RiskPattern[] = [
@@ -64,7 +104,6 @@ const RISK_PATTERNS: RiskPattern[] = [
       "antifa",
     ],
     weight: 25,
-    reason: "Political content can polarize audiences and employers.",
   },
   {
     category: "offensive",
@@ -81,7 +120,6 @@ const RISK_PATTERNS: RiskPattern[] = [
       "fat",
     ],
     weight: 30,
-    reason: "Potentially offensive or insulting language.",
   },
   {
     category: "profanity",
@@ -96,7 +134,6 @@ const RISK_PATTERNS: RiskPattern[] = [
       "af",
     ],
     weight: 15,
-    reason: "Profanity may appear unprofessional to recruiters or clients.",
   },
   {
     category: "substances",
@@ -112,7 +149,6 @@ const RISK_PATTERNS: RiskPattern[] = [
       "blackout",
     ],
     weight: 20,
-    reason: "Substance-related content can raise professional concerns.",
   },
   {
     category: "employer",
@@ -128,7 +164,6 @@ const RISK_PATTERNS: RiskPattern[] = [
       "hr is useless",
     ],
     weight: 35,
-    reason: "Employer or workplace complaints are high-risk for career damage.",
   },
   {
     category: "controversial",
@@ -143,7 +178,6 @@ const RISK_PATTERNS: RiskPattern[] = [
       "cancel culture",
     ],
     weight: 18,
-    reason: "Deliberately provocative framing may not age well.",
   },
   {
     category: "personal",
@@ -158,24 +192,55 @@ const RISK_PATTERNS: RiskPattern[] = [
       "diagnosis",
     ],
     weight: 12,
-    reason: "Deeply personal content may be oversharing for a public timeline.",
   },
 ];
 
+const AGGRESSIVE_TONE_IMPACT =
+  "Could read as aggressive to professional audiences";
+
 function normalizeText(text: string): string {
   return text.toLowerCase().replace(/\s+/g, " ").trim();
+}
+
+function sortCategoriesByWeight(
+  categories: RiskCategory[],
+): RiskCategory[] {
+  return [...categories].sort(
+    (a, b) => CATEGORY_WEIGHTS[b] - CATEGORY_WEIGHTS[a],
+  );
 }
 
 function primaryReasonForCategories(
   categories: RiskCategory[],
 ): string | null {
   if (categories.length === 0) return null;
+  return CATEGORY_LABELS[sortCategoriesByWeight(categories)[0]];
+}
 
-  const topCategory = [...categories].sort(
-    (a, b) => CATEGORY_WEIGHTS[b] - CATEGORY_WEIGHTS[a],
-  )[0];
+export function getImpactsForCategories(
+  categories: RiskCategory[],
+  extraImpacts: string[] = [],
+): string[] {
+  const seen = new Set<string>();
+  const impacts: string[] = [];
 
-  return CATEGORY_LABELS[topCategory];
+  for (const impact of extraImpacts) {
+    if (!seen.has(impact)) {
+      seen.add(impact);
+      impacts.push(impact);
+    }
+  }
+
+  for (const category of sortCategoriesByWeight(categories)) {
+    for (const impact of CATEGORY_IMPACTS[category]) {
+      if (!seen.has(impact)) {
+        seen.add(impact);
+        impacts.push(impact);
+      }
+    }
+  }
+
+  return impacts;
 }
 
 function calculateConfidence(
@@ -220,12 +285,12 @@ export function getReputationDisplay(score: number): {
   tone: "good" | "caution" | "poor";
 } {
   if (score >= 90) {
-    return { emoji: "🟢", tone: "good" };
+    return { emoji: "🛡️", tone: "good" };
   }
   if (score >= 70) {
-    return { emoji: "🟡", tone: "caution" };
+    return { emoji: "🛡️", tone: "caution" };
   }
-  return { emoji: "🔴", tone: "poor" };
+  return { emoji: "🛡️", tone: "poor" };
 }
 
 export function countRiskBreakdown(
@@ -247,7 +312,7 @@ export function scoreTweetRisk(text: string): TweetRiskResult {
   const normalized = normalizeText(text);
   const categories = new Set<RiskCategory>();
   const matchedKeywords = new Set<string>();
-  const reasons = new Set<string>();
+  const extraImpacts: string[] = [];
   let score = 0;
 
   for (const pattern of RISK_PATTERNS) {
@@ -255,7 +320,6 @@ export function scoreTweetRisk(text: string): TweetRiskResult {
       if (normalized.includes(keyword)) {
         categories.add(pattern.category);
         matchedKeywords.add(keyword);
-        reasons.add(pattern.reason);
         score += pattern.weight;
         break;
       }
@@ -267,7 +331,7 @@ export function scoreTweetRisk(text: string): TweetRiskResult {
     const capsWords = text.split(/\s+/).filter((w) => w.length > 3 && w === w.toUpperCase());
     if (capsWords.length >= 3) {
       score += 8;
-      reasons.add("Heavy use of caps can read as aggressive.");
+      extraImpacts.push(AGGRESSIVE_TONE_IMPACT);
     }
   }
 
@@ -282,13 +346,15 @@ export function scoreTweetRisk(text: string): TweetRiskResult {
 
   const categoryList = [...categories];
   const matchedKeywordList = [...matchedKeywords];
+  const impacts = getImpactsForCategories(categoryList, extraImpacts);
 
   return {
     score,
     level,
     categories: categoryList,
     matchedKeywords: matchedKeywordList,
-    reasons: [...reasons],
+    reasons: impacts,
+    impacts,
     primaryReason: primaryReasonForCategories(categoryList),
     confidence: calculateConfidence(score, matchedKeywordList.length),
   };

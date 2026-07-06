@@ -19,6 +19,10 @@ import {
   getReputationDisplay,
   type TweetRiskResult,
 } from "@/lib/social/risk-scorer";
+import {
+  buildReputationShareFullText,
+  buildTwitterIntentUrl,
+} from "@/lib/social/share-reputation-score";
 import { apiErrorMessage, parseApiError } from "@/lib/api-error";
 
 type XConnectionState = {
@@ -179,8 +183,9 @@ export function XCheckerPanel({
         reputationScore: payload.reputationScore ?? 100,
         breakdown: payload.breakdown ?? { low: 0, medium: 0, high: 0 },
       });
+      const reputation = getReputationDisplay(payload.reputationScore ?? 100);
       setMessage(
-        `Scanned ${payload.count ?? 0} tweets — ${payload.flaggedCount ?? 0} flagged for review.`,
+        `Scanned ${payload.count ?? 0} tweets — ${payload.flaggedCount ?? 0} flagged · ${reputation.emoji} Reputation Score: ${payload.reputationScore ?? 100}/100`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to fetch tweets.");
@@ -205,6 +210,21 @@ export function XCheckerPanel({
   const reputationDisplay = summary
     ? getReputationDisplay(summary.reputationScore)
     : null;
+
+  async function handleShareScore(score: number) {
+    const fullText = buildReputationShareFullText(score);
+
+    if (typeof navigator !== "undefined" && navigator.share) {
+      try {
+        await navigator.share({ text: fullText });
+        return;
+      } catch (err) {
+        if (err instanceof Error && err.name === "AbortError") return;
+      }
+    }
+
+    window.open(buildTwitterIntentUrl(score), "_blank", "noopener,noreferrer");
+  }
 
   async function handleDisconnect() {
     setConnectionBusy(true);
@@ -356,6 +376,13 @@ export function XCheckerPanel({
               {summary.breakdown.high} High Risk · {summary.breakdown.medium}{" "}
               Medium Risk · {summary.breakdown.low} Low Risk
             </p>
+            <button
+              type="button"
+              onClick={() => void handleShareScore(summary.reputationScore)}
+              className="text-sm font-medium text-electric transition-colors hover:text-electric/80"
+            >
+              Share your score →
+            </button>
           </CardContent>
         </Card>
       )}
@@ -397,10 +424,10 @@ export function XCheckerPanel({
                 {displayedTweets.map((tweet) => {
                   const isFlagged = tweet.risk.score > 0;
                   const tweetNumber = tweetNumbers.get(tweet.id) ?? 0;
-                  const reason =
-                    tweet.risk.primaryReason ??
-                    tweet.risk.reasons[0] ??
-                    "Flagged for review";
+                  const impacts =
+                    tweet.risk.impacts.length > 0
+                      ? tweet.risk.impacts
+                      : tweet.risk.reasons;
 
                   return (
                     <li
@@ -409,17 +436,36 @@ export function XCheckerPanel({
                     >
                       <div className="space-y-3">
                         {isFlagged ? (
-                          <div className="space-y-1 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm">
+                          <div className="space-y-2 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm">
                             <p className="flex items-center gap-1.5 font-medium text-foreground">
                               <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
                               Tweet #{tweetNumber}
+                              {tweet.risk.primaryReason && (
+                                <span className="font-normal text-muted-foreground">
+                                  · {tweet.risk.primaryReason}
+                                </span>
+                              )}
                             </p>
-                            <p>
-                              <span className="font-medium text-foreground">
-                                Reason:
-                              </span>{" "}
-                              {reason}
-                            </p>
+                            {impacts.length > 0 && (
+                              <div>
+                                <p className="font-medium text-foreground">
+                                  Potential impact
+                                </p>
+                                <ul className="mt-1 space-y-0.5 text-muted-foreground">
+                                  {impacts.map((impact) => (
+                                    <li
+                                      key={impact}
+                                      className="flex items-start gap-1.5"
+                                    >
+                                      <span className="shrink-0" aria-hidden>
+                                        ⚠️
+                                      </span>
+                                      {impact}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
                             <p>
                               <span className="font-medium text-foreground">
                                 Risk:
@@ -460,19 +506,6 @@ export function XCheckerPanel({
                           </span>
                         </div>
                         <p className="text-sm leading-relaxed">{tweet.text}</p>
-                        {tweet.risk.reasons.length > 1 && (
-                          <ul className="text-xs text-muted-foreground">
-                            {tweet.risk.reasons.map((detail) => (
-                              <li
-                                key={detail}
-                                className="flex items-start gap-1"
-                              >
-                                <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
-                                {detail}
-                              </li>
-                            ))}
-                          </ul>
-                        )}
                       </div>
                     </li>
                   );
