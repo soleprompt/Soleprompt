@@ -1,6 +1,8 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { Hero } from "@/components/landing/Hero";
 import { FeaturedPrompts } from "@/components/landing/FeaturedPrompts";
+import { TrendingPrompts } from "@/components/landing/TrendingPrompts";
+import { PromptOfTheDay } from "@/components/landing/PromptOfTheDay";
 import { Categories } from "@/components/landing/Categories";
 import { BecomeSeller } from "@/components/landing/BecomeSeller";
 import { Statistics } from "@/components/landing/Statistics";
@@ -11,6 +13,8 @@ import {
   getFeaturedPrompts,
   getMarketplaceStats,
   getPopularSearchTerms,
+  getTrendingPrompts,
+  getPromptOfTheDay,
 } from "@/lib/marketplace";
 import { recordToolVisit } from "@/lib/tool-visits";
 import { parseUtmAttribution } from "@/lib/utm";
@@ -24,8 +28,11 @@ export default async function HomePage({
   const utmParams = parseUtmAttribution(await searchParams);
   void recordToolVisit("homepage", user?.id, utmParams);
 
-  const [featuredPrompts, categories, stats, suggestions] = await Promise.all([
+  const [featuredPrompts, trendingPrompts, promptOfTheDay, categories, stats, suggestions] =
+    await Promise.all([
     getFeaturedPrompts(4),
+    getTrendingPrompts(6),
+    getPromptOfTheDay(),
     getCategoriesWithCounts(),
     getMarketplaceStats(),
     getPopularSearchTerms(4),
@@ -34,7 +41,9 @@ export default async function HomePage({
   return (
     <>
       <Hero suggestions={suggestions} />
+      {promptOfTheDay && <PromptOfTheDay prompt={promptOfTheDay} />}
       <FeaturedPrompts prompts={featuredPrompts} />
+      <TrendingPrompts prompts={trendingPrompts} />
       <Categories categories={categories} />
       <BecomeSeller />
       <Statistics stats={stats} />
