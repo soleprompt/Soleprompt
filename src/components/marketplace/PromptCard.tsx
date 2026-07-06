@@ -7,6 +7,7 @@ import {
   Cpu,
   ShoppingBag,
   User,
+  Eye,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardFooter, CardHeader } from "@/components/ui/Card";
@@ -39,8 +40,8 @@ export function PromptCard({
   }
 
   return (
-    <Link href={href} className="block h-full" onClick={handleClick}>
-      <Card hover className="group flex h-full flex-col">
+    <Card hover className="group flex h-full flex-col">
+      <Link href={href} className="flex flex-1 flex-col" onClick={handleClick}>
         <CardHeader>
           <div className="flex items-start justify-between gap-2">
             <Badge variant="outline">{prompt.category}</Badge>
@@ -108,24 +109,6 @@ export function PromptCard({
               </Badge>
             ))}
           </div>
-
-          {variant === "rich" && (
-            <div className="flex items-start gap-2 border-t border-border/50 pt-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-electric/20 to-purple/20">
-                <User className="h-4 w-4 text-electric" />
-              </div>
-              <div className="min-w-0">
-                <p className="truncate text-sm font-medium text-foreground">
-                  {prompt.seller.displayName}
-                </p>
-                {prompt.seller.bio && (
-                  <p className="line-clamp-1 text-xs text-muted-foreground">
-                    {prompt.seller.bio}
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
         </CardContent>
 
         <CardFooter className="flex items-center justify-between gap-3">
@@ -141,6 +124,12 @@ export function PromptCard({
             </div>
             {variant === "rich" && (
               <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                <Eye className="h-3 w-3" />
+                {prompt.viewCount.toLocaleString()} views
+              </span>
+            )}
+            {variant === "rich" && (
+              <span className="flex items-center gap-1 text-xs text-muted-foreground">
                 <ShoppingBag className="h-3 w-3" />
                 {prompt.salesCount.toLocaleString()} sold
               </span>
@@ -150,7 +139,30 @@ export function PromptCard({
             {formatCurrency(prompt.price)}
           </span>
         </CardFooter>
-      </Card>
-    </Link>
+      </Link>
+
+      {variant === "rich" && (
+        <div className="border-t border-border/50 px-6 pb-6">
+          <Link
+            href={`/creators/${prompt.seller.username}`}
+            className="flex items-start gap-2 pt-3 transition-colors hover:text-electric"
+          >
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-electric/20 to-purple/20">
+              <User className="h-4 w-4 text-electric" />
+            </div>
+            <div className="min-w-0">
+              <p className="truncate text-sm font-medium text-foreground">
+                {prompt.seller.displayName}
+              </p>
+              {prompt.seller.bio && (
+                <p className="line-clamp-1 text-xs text-muted-foreground">
+                  {prompt.seller.bio}
+                </p>
+              )}
+            </div>
+          </Link>
+        </div>
+      )}
+    </Card>
   );
 }
