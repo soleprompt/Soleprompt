@@ -44,6 +44,7 @@ export function mapPromptToListItem(prompt: PromptWithRelations): Prompt {
     rating: Math.round(avgRating * 10) / 10,
     reviews: prompt._count.reviews,
     salesCount: prompt._count.purchases,
+    viewCount: prompt.views,
     author: sellerProfile?.displayName ?? prompt.seller.username,
     seller: {
       displayName: sellerProfile?.displayName ?? prompt.seller.username,
@@ -86,13 +87,43 @@ export async function getFeaturedPrompts(limit = 4): Promise<Prompt[]> {
   });
 }
 
+export type PromptSortOption =
+  | "newest"
+  | "popular"
+  | "trending"
+  | "rating"
+  | "price_asc"
+  | "price_desc";
+
 export async function getPublishedPrompts(options?: {
   categorySlug?: string;
   search?: string;
   limit?: number;
+  sort?: PromptSortOption;
+  freeOnly?: boolean;
+  maxPrice?: number;
+  minRating?: number;
 }): Promise<Prompt[]> {
   return safeDbRead([], async () => {
     const search = options?.search?.trim();
+    const sort = options?.sort ?? "newest";
+
+    const orderBy = (() => {
+      switch (sort) {
+        case "popular":
+          return [{ purchases: { _count: "desc" as const } }, { createdAt: "desc" as const }];
+        case "trending":
+          return [{ views: "desc" as const }, { purchases: { _count: "desc" as const } }];
+        case "rating":
+          return [{ reviews: { _count: "desc" as const } }, { createdAt: "desc" as const }];
+        case "price_asc":
+          return [{ price: "asc" as const }];
+        case "price_desc":
+          return [{ price: "desc" as const }];
+        default:
+          return [{ featured: "desc" as const }, { createdAt: "desc" as const }];
+      }
+    })();
 
     const prompts = await prisma.prompt.findMany({
       where: {
@@ -100,22 +131,128 @@ export async function getPublishedPrompts(options?: {
         ...(options?.categorySlug
           ? { category: { slug: options.categorySlug } }
           : {}),
+        ...(options?.freeOnly ? { price: { lte: 0 } } : {}),
+        ...(options?.maxPrice !== undefined
+          ? { price: { lte: options.maxPrice } }
+          : {}),
         ...(search
           ? {
               OR: [
-                { title: { contains: search } },
-                { description: { contains: search } },
-                { tags: { some: { tag: { name: { contains: search } } } } },
+                { title: { contains: search, mode: "insensitive" } },
+                { description: { contains: search, mode: "insensitive" } },
+                { tags: { some: { tag: { name: { contains: search, mode: "insensitive" } } } } },
               ],
             }
           : {}),
       },
       include: promptInclude,
-      orderBy: [{ featured: "desc" }, { createdAt: "desc" }],
-      take: options?.limit,
+      orderBy,
+      take: options?.minRating ? undefined : options?.limit,
     });
 
-    return prompts.map(mapPromptToListItem);
+    let results = prompts.map(mapPromptToListItem);
+
+    if (options?.minRating) {
+      results = results.filter((p) => p.rating >= (options.minRating ?? 0));
+      if (options.limit) {
+        results = results.slice(0, options.limit);
+      }
+    }
+
+    return results;
+  });
+}
+
+export async function getTrendingPrompts(limit = 6): Promise<Prompt[]> {
+  return getPublishedPrompts({ sort: "trending", limit });
+}
+
+export async function getPromptOfTheDay(): Promise<Prompt | null> {
+  return safeDbRead(null, async () => {
+    const prompts = await prisma.prompt.findMany({
+      where: { status: "published" },
+      include: promptInclude,
+      orderBy: { id: "asc" },
+    });
+
+    if (prompts.length === 0) return null;
+
+    const dayIndex = Math.floor(Date.now() / 86_400_000);
+    const selected = prompts[dayIndex % prompts.length];
+    return mapPromptToListItem(selected);
+  });
+}
+
+export async function getCreatorByUsername(username: string) {
+  return safeDbRead(null, async () => {
+    const user = await prisma.user.findFirst({
+      where: { username },
+      include: {
+        sellerProfile: true,
+        prompts: {
+          where: { status: "published" },
+          include: promptInclude,
+          orderBy: { createdAt: "desc" },
+        },
+        _count: {
+          select: {
+            prompts: { where: { status: "published" } },
+            sellerTransactions: { where: { status: "completed" } },
+          },
+        },
+      },
+    });
+
+    if (!user?.sellerProfile) return null;
+
+    const allReviews = user.prompts.flatMap((p) => p.reviews);
+    const avgRating =
+      allReviews.length > 0
+        ? allReviews.reduce((sum, r) => sum + r.rating, 0) / allReviews.length
+        : 0;
+
+    return {
+      username: user.username,
+      displayName: user.sellerProfile.displayName,
+      bio: user.sellerProfile.bio,
+      salesCount: user.sellerProfile.salesCount,
+      totalEarnings: user.sellerProfile.totalEarnings,
+      promptCount: user._count.prompts,
+      totalSales: user._count.sellerTransactions,
+      avgRating: Math.round(avgRating * 10) / 10,
+      prompts: user.prompts.map(mapPromptToListItem),
+    };
+  });
+}
+
+export async function isPromptWishlisted(
+  clerkUserId: string,
+  promptId: string,
+): Promise<boolean> {
+  return safeDbRead(false, async () => {
+    const user = await prisma.user.findUnique({ where: { clerkUserId } });
+    if (!user) return false;
+
+    const item = await prisma.wishlist.findUnique({
+      where: { userId_promptId: { userId: user.id, promptId } },
+      select: { id: true },
+    });
+
+    return Boolean(item);
+  });
+}
+
+export async function getUserReviewForPrompt(
+  clerkUserId: string,
+  promptId: string,
+) {
+  return safeDbRead(null, async () => {
+    const user = await prisma.user.findUnique({ where: { clerkUserId } });
+    if (!user) return null;
+
+    return prisma.review.findUnique({
+      where: { promptId_userId: { promptId, userId: user.id } },
+    });
   });
 }
 
@@ -364,19 +501,58 @@ export async function getBuyerRecentlyViewed(clerkUserId: string) {
   });
 }
 
-export async function recordPromptView(clerkUserId: string, promptId: string) {
-  const user = await prisma.user.findUnique({ where: { clerkUserId } });
-  if (!user) return;
+export async function recordPromptView(
+  clerkUserId: string | null | undefined,
+  promptId: string,
+) {
+  const user = clerkUserId
+    ? await prisma.user.findUnique({ where: { clerkUserId } })
+    : null;
 
-  await prisma.$transaction([
-    prisma.promptView.create({
-      data: { userId: user.id, promptId },
-    }),
-    prisma.prompt.update({
-      where: { id: promptId },
-      data: { views: { increment: 1 } },
-    }),
-  ]);
+  if (user) {
+    await prisma.$transaction([
+      prisma.promptView.create({
+        data: { userId: user.id, promptId },
+      }),
+      prisma.prompt.update({
+        where: { id: promptId },
+        data: { views: { increment: 1 } },
+      }),
+    ]);
+    return;
+  }
+
+  await prisma.prompt.update({
+    where: { id: promptId },
+    data: { views: { increment: 1 } },
+  });
+}
+
+export async function getSellerReviews(clerkUserId: string) {
+  return safeDbRead([], async () => {
+    const user = await prisma.user.findUnique({ where: { clerkUserId } });
+    if (!user) return [];
+
+    const reviews = await prisma.review.findMany({
+      where: { prompt: { sellerId: user.id } },
+      include: {
+        user: { select: { username: true } },
+        prompt: { select: { id: true, title: true } },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    });
+
+    return reviews.map((review) => ({
+      id: review.id,
+      rating: review.rating,
+      comment: review.comment,
+      createdAt: review.createdAt,
+      buyerUsername: review.user.username,
+      promptId: review.prompt.id,
+      promptTitle: review.prompt.title,
+    }));
+  });
 }
 
 export async function getSellerPrompts(clerkUserId: string) {

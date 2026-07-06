@@ -16,6 +16,7 @@ export interface Prompt {
   rating: number;
   reviews: number;
   salesCount: number;
+  viewCount: number;
   author: string;
   seller: SellerProfile;
   tags: string[];
