@@ -92,7 +92,8 @@ function aggregateStatKey(
   if (
     eventType === "checkout_started" ||
     eventType === "marketplace_click" ||
-    eventType === "share_score"
+    eventType === "share_score" ||
+    eventType === "successful_scan"
   ) {
     return `${eventType}:${targetKey}`;
   }

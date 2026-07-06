@@ -7,16 +7,23 @@ import {
   getRecentAuditLogs,
 } from "@/lib/admin-data";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { TodayFunnelCard } from "@/components/analytics/TodayFunnelCard";
+import { TopAcquisitionSourcesCard } from "@/components/analytics/TopAcquisitionSourcesCard";
+import { getAcquisitionSourceStats } from "@/lib/analytics/acquisition-sources";
+import { getTodayFunnelStats } from "@/lib/analytics/today-funnel";
 import { getClickThroughStats } from "@/lib/click-throughs";
 import { getToolVisitStats } from "@/lib/tool-visits";
 
 export default async function AdminOverviewPage() {
-  const [stats, auditLogs, toolVisits, clickThroughs] = await Promise.all([
-    getAdminOverviewStats(),
-    getRecentAuditLogs(8),
-    getToolVisitStats(),
-    getClickThroughStats(),
-  ]);
+  const [stats, auditLogs, toolVisits, clickThroughs, todayFunnel, acquisitionSources] =
+    await Promise.all([
+      getAdminOverviewStats(),
+      getRecentAuditLogs(8),
+      getToolVisitStats(),
+      getClickThroughStats(),
+      getTodayFunnelStats(),
+      getAcquisitionSourceStats(),
+    ]);
 
   const statCards = [
     { emoji: "💰", label: "Gross Revenue", value: formatCurrency(stats.grossRevenue) },
@@ -48,6 +55,11 @@ export default async function AdminOverviewPage() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="mt-6 grid gap-6 lg:grid-cols-2">
+        <TodayFunnelCard stats={todayFunnel} />
+        <TopAcquisitionSourcesCard stats={acquisitionSources} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">

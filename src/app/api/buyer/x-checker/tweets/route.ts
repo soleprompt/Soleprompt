@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { recordClickThrough } from "@/lib/click-throughs";
 import { requireSignedInUser } from "@/lib/x-checker/api-auth";
 import { fetchUserTweets } from "@/lib/social/fetch-user-tweets";
 import {
@@ -24,6 +25,13 @@ export async function GET() {
   );
 
   const flagged = tweets.filter((t) => t.risk.score > 0);
+
+  void recordClickThrough({
+    eventType: "successful_scan",
+    targetKey: "x-checker",
+    metadata: { tweetCount: tweets.length, flaggedCount: flagged.length },
+    clerkUserId: user.clerkUserId,
+  });
 
   return NextResponse.json({
     screenName: result.screenName,

@@ -5,6 +5,7 @@ export const CLICK_THROUGH_EVENT_TYPES = [
   "upgrade_prompt",
   "share_score",
   "oauth_connect",
+  "successful_scan",
 ] as const;
 
 export type ClickThroughEventType = (typeof CLICK_THROUGH_EVENT_TYPES)[number];
@@ -71,6 +72,9 @@ export function formatClickThroughLabel(
 
     case "share_score":
       return "X Checker — Share score";
+
+    case "successful_scan":
+      return "X Checker — Successful scan";
 
     case "oauth_connect":
       if (targetKey === "x") return "X Checker — Connect OAuth";

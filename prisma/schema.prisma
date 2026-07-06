@@ -261,13 +261,16 @@ model PromptView {
 }
 
 model ToolVisit {
-  id        String   @id @default(cuid())
-  toolSlug  String
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  visitedAt DateTime @default(now())
+  id           String   @id @default(cuid())
+  toolSlug       String
+  userId         String?
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  utmSource      String?
+  utmCampaign    String?
+  visitedAt      DateTime @default(now())
 
   @@index([toolSlug, visitedAt])
+  @@index([utmSource, visitedAt])
 }
 
 model ClickThrough {

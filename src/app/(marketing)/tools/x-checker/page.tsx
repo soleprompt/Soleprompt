@@ -17,6 +17,7 @@ import {
   hasScrubberAccess,
 } from "@/lib/scrubber/access";
 import { recordToolVisit } from "@/lib/tool-visits";
+import { parseUtmAttribution } from "@/lib/utm";
 
 const FEATURES = [
   {
@@ -51,9 +52,14 @@ function CheckerToolFallback() {
   );
 }
 
-export default async function XCheckerPage() {
+export default async function XCheckerPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await currentUser();
-  void recordToolVisit("x-checker", user?.id);
+  const utmParams = parseUtmAttribution(await searchParams);
+  void recordToolVisit("x-checker", user?.id, utmParams);
 
   const [scrubberProductId, userHasScrubber] = user
     ? await Promise.all([

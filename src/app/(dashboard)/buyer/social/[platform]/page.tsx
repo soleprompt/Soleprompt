@@ -14,9 +14,11 @@ import {
 } from "@/lib/social-tools/constants";
 import { recordToolVisit } from "@/lib/tool-visits";
 import { socialPlatformToolSlug } from "@/lib/tool-visits/constants";
+import { parseUtmAttribution } from "@/lib/utm";
 
 type PlatformPageProps = {
   params: Promise<{ platform: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 };
 
 function parsePlatform(value: string): SocialToolPlatform | null {
@@ -28,6 +30,7 @@ function parsePlatform(value: string): SocialToolPlatform | null {
 
 export default async function BuyerSocialPlatformPage({
   params,
+  searchParams,
 }: PlatformPageProps) {
   const platform = parsePlatform((await params).platform);
   if (!platform) {
@@ -39,7 +42,8 @@ export default async function BuyerSocialPlatformPage({
     redirect("/sign-in");
   }
 
-  void recordToolVisit(socialPlatformToolSlug(platform), user.id);
+  const utmParams = parseUtmAttribution(await searchParams);
+  void recordToolVisit(socialPlatformToolSlug(platform), user.id, utmParams);
 
   const label = SOCIAL_TOOL_LABELS[platform];
   const hasAccess = await hasSocialSuiteAccess(user.id);

@@ -1,4 +1,6 @@
-export const SOLEPROMPT_LINK = "https://getsoleprompt.com";
+import { ACQUISITION_SOURCE_URLS } from "@/lib/utm";
+
+export const SOLEPROMPT_LINK = ACQUISITION_SOURCE_URLS.xReplies;
 
 export const REPLY_STYLES = [
   { id: "educational", label: "Educational" },

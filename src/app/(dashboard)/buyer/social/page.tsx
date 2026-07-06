@@ -8,14 +8,20 @@ import {
   hasSocialSuiteAccess,
 } from "@/lib/social-tools/access";
 import { recordToolVisit } from "@/lib/tool-visits";
+import { parseUtmAttribution } from "@/lib/utm";
 
-export default async function BuyerSocialToolsPage() {
+export default async function BuyerSocialToolsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await currentUser();
   if (!user) {
     redirect("/sign-in");
   }
 
-  void recordToolVisit("social-tools", user.id);
+  const utmParams = parseUtmAttribution(await searchParams);
+  void recordToolVisit("social-tools", user.id, utmParams);
 
   const hasAccess = await hasSocialSuiteAccess(user.id);
   if (!hasAccess) {

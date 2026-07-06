@@ -9,14 +9,20 @@ import {
   hasScrubberAccess,
 } from "@/lib/scrubber/access";
 import { recordToolVisit } from "@/lib/tool-visits";
+import { parseUtmAttribution } from "@/lib/utm";
 
-export default async function BuyerScrubberPage() {
+export default async function BuyerScrubberPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
   const user = await currentUser();
   if (!user) {
     redirect("/sign-in");
   }
 
-  void recordToolVisit("x-scrubber", user.id);
+  const utmParams = parseUtmAttribution(await searchParams);
+  void recordToolVisit("x-scrubber", user.id, utmParams);
 
   const hasAccess = await hasScrubberAccess(user.id);
   if (!hasAccess) {

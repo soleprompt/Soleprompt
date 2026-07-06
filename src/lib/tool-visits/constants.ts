@@ -1,5 +1,11 @@
 export const TRACKED_TOOLS = [
   {
+    slug: "homepage",
+    label: "Homepage",
+    description: "Marketing homepage",
+    path: "/",
+  },
+  {
     slug: "x-checker",
     label: "X Checker",
     description: "Free X reputation scan (X Tracker)",

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { safeDbRead } from "@/lib/safe-db";
+import type { UtmAttribution } from "@/lib/utm";
 import {
   TRACKED_TOOLS,
   type TrackedToolSlug,
@@ -19,6 +20,7 @@ export { socialPlatformToolSlug } from "@/lib/tool-visits/constants";
 export async function recordToolVisit(
   toolSlug: TrackedToolSlug,
   clerkUserId?: string | null,
+  attribution?: UtmAttribution,
 ): Promise<void> {
   try {
     let userId: string | undefined;
@@ -32,7 +34,12 @@ export async function recordToolVisit(
     }
 
     await prisma.toolVisit.create({
-      data: { toolSlug, userId },
+      data: {
+        toolSlug,
+        userId,
+        utmSource: attribution?.utmSource,
+        utmCampaign: attribution?.utmCampaign,
+      },
     });
   } catch {
     // Tracking should never block tool pages.

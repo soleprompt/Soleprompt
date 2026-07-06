@@ -1,15 +1,11 @@
-import { getAppUrl } from "@/lib/app-url";
-
-const X_CHECKER_PATH = "/tools/x-checker";
+import { buildChannelUrl, X_CHECKER_PATH } from "@/lib/utm";
 
 export function buildReputationShareUrl(): string {
-  const base = `${getAppUrl()}${X_CHECKER_PATH}`;
-  const params = new URLSearchParams({
-    utm_source: "x",
-    utm_medium: "social",
-    utm_campaign: "reputation_share",
-  });
-  return `${base}?${params.toString()}`;
+  return buildChannelUrl(X_CHECKER_PATH, "x_replies");
+}
+
+export function buildFreeCheckerShareUrl(): string {
+  return buildChannelUrl(X_CHECKER_PATH, "free_checker");
 }
 
 export function buildReputationShareText(score: number): string {
