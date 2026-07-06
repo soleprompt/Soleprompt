@@ -7,10 +7,12 @@ import {
   getRecentAuditLogs,
 } from "@/lib/admin-data";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { MoneyDashboardCard } from "@/components/analytics/MoneyDashboardCard";
 import { ScrubberPaidFunnelCard } from "@/components/analytics/ScrubberPaidFunnelCard";
 import { TodayFunnelCard } from "@/components/analytics/TodayFunnelCard";
 import { TopAcquisitionSourcesCard } from "@/components/analytics/TopAcquisitionSourcesCard";
 import { getAcquisitionSourceStats } from "@/lib/analytics/acquisition-sources";
+import { getMoneyDashboardStats } from "@/lib/analytics/money-dashboard";
 import { getScrubberPaidFunnelStats } from "@/lib/analytics/scrubber-paid-funnel";
 import { getTodayFunnelStats } from "@/lib/analytics/today-funnel";
 import { getClickThroughStats } from "@/lib/click-throughs";
@@ -22,6 +24,7 @@ export default async function AdminOverviewPage() {
     auditLogs,
     toolVisits,
     clickThroughs,
+    moneyDashboard,
     todayFunnel,
     scrubberPaidFunnel,
     acquisitionSources,
@@ -30,6 +33,7 @@ export default async function AdminOverviewPage() {
     getRecentAuditLogs(8),
     getToolVisitStats(),
     getClickThroughStats(),
+    getMoneyDashboardStats(),
     getTodayFunnelStats(),
     getScrubberPaidFunnelStats(),
     getAcquisitionSourceStats(),
@@ -65,6 +69,10 @@ export default async function AdminOverviewPage() {
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="mt-6">
+        <MoneyDashboardCard stats={moneyDashboard} />
       </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
