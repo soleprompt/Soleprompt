@@ -63,6 +63,7 @@ export async function GET(request: Request) {
   try {
     logXOAuthEnvDebug("buyer scrubber connect flow start");
     const callbackUrl = getBuyerXCallbackUrl();
+    console.log("[X OAuth] buyer scrubber connect callback URL:", callbackUrl);
 
     const { oauthToken, oauthTokenSecret, authorizeUrl } =
       await fetchXRequestToken(callbackUrl);
@@ -79,6 +80,7 @@ export async function GET(request: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to start X OAuth flow.";
+    console.error("[X OAuth] buyer scrubber connect failed:", message);
     return redirectXOAuthError(request, "scrubber", message);
   }
 }

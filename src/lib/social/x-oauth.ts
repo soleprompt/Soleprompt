@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { getAppUrl, readEnvCallbackUrl } from "@/lib/app-url";
 
 const REQUEST_TOKEN_URL = "https://api.twitter.com/oauth/request_token";
 const ACCESS_TOKEN_URL = "https://api.twitter.com/oauth/access_token";
@@ -63,60 +64,39 @@ function formatRequestTokenError(
     return (
       `Failed to obtain X request token (403).` +
       bodyHint +
-      " The app may lack required permissions or elevated access for OAuth 1.0a."
+      ` Callback URL sent: ${callbackUrl}.` +
+      " The app may lack required permissions, elevated access for OAuth 1.0a," +
+      " or the callback URL may not be registered in the X developer portal."
     );
   }
 
-  return `Failed to obtain X request token (${status}).${bodyHint}`;
+  return (
+    `Failed to obtain X request token (${status}).` +
+    bodyHint +
+    ` Callback URL sent: ${callbackUrl}.`
+  );
 }
 
 export function getXCallbackUrl(): string {
-  const explicit = process.env.X_CALLBACK_URL?.trim();
-  if (explicit) {
-    return explicit;
-  }
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-  if (!appUrl) {
-    throw new Error(
-      "Set X_CALLBACK_URL or NEXT_PUBLIC_APP_URL for the X OAuth callback.",
-    );
-  }
-
-  return `${appUrl}/api/admin/social/x/callback`;
+  return (
+    readEnvCallbackUrl("X_CALLBACK_URL") ??
+    `${getAppUrl()}/api/admin/social/x/callback`
+  );
 }
 
 export function getBuyerXCallbackUrl(): string {
-  const explicit = process.env.X_BUYER_CALLBACK_URL?.trim();
-  if (explicit) {
-    return explicit;
-  }
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-  if (!appUrl) {
-    throw new Error(
-      "Set X_BUYER_CALLBACK_URL or NEXT_PUBLIC_APP_URL for the buyer X OAuth callback.",
-    );
-  }
-
-  return `${appUrl}/api/buyer/scrubber/x/callback`;
+  return (
+    readEnvCallbackUrl("X_BUYER_CALLBACK_URL") ??
+    `${getAppUrl()}/api/buyer/scrubber/x/callback`
+  );
 }
 
 /** Callback for the free X Checker tool (public /tools/x-checker). */
 export function getBuyerSocialXCallbackUrl(): string {
-  const explicit = process.env.X_SOCIAL_CALLBACK_URL?.trim();
-  if (explicit) {
-    return explicit;
-  }
-
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
-  if (!appUrl) {
-    throw new Error(
-      "Set X_SOCIAL_CALLBACK_URL or NEXT_PUBLIC_APP_URL for the buyer social X OAuth callback.",
-    );
-  }
-
-  return `${appUrl}/api/buyer/social/x/callback`;
+  return (
+    readEnvCallbackUrl("X_SOCIAL_CALLBACK_URL") ??
+    `${getAppUrl()}/api/buyer/social/x/callback`
+  );
 }
 
 export function percentEncode(value: string): string {

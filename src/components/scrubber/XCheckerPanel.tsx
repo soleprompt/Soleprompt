@@ -15,7 +15,10 @@ import {
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
-import type { TweetRiskResult } from "@/lib/social/risk-scorer";
+import {
+  getReputationDisplay,
+  type TweetRiskResult,
+} from "@/lib/social/risk-scorer";
 import { apiErrorMessage, parseApiError } from "@/lib/api-error";
 
 type XConnectionState = {
@@ -39,6 +42,7 @@ type ScoredTweet = {
 type ScanSummary = {
   count: number;
   flaggedCount: number;
+  reputationScore: number;
   breakdown: { low: number; medium: number; high: number };
 };
 
@@ -47,6 +51,20 @@ type XCheckerPanelProps = {
   hasScrubberAccess: boolean;
 };
 
+function formatRiskLevel(level: TweetRiskResult["level"]) {
+  return level.charAt(0).toUpperCase() + level.slice(1);
+}
+
+function reputationToneClass(tone: ReturnType<typeof getReputationDisplay>["tone"]) {
+  switch (tone) {
+    case "good":
+      return "text-green-600 dark:text-green-400";
+    case "caution":
+      return "text-amber-600 dark:text-amber-400";
+    default:
+      return "text-red-600 dark:text-red-400";
+  }
+}
 function riskBadgeVariant(level: TweetRiskResult["level"]) {
   switch (level) {
     case "high":
@@ -146,6 +164,7 @@ export function XCheckerPanel({
         tweets?: ScoredTweet[];
         count?: number;
         flaggedCount?: number;
+        reputationScore?: number;
         breakdown?: ScanSummary["breakdown"];
       };
       if (!response.ok) {
@@ -157,6 +176,7 @@ export function XCheckerPanel({
       setSummary({
         count: payload.count ?? 0,
         flaggedCount: payload.flaggedCount ?? 0,
+        reputationScore: payload.reputationScore ?? 100,
         breakdown: payload.breakdown ?? { low: 0, medium: 0, high: 0 },
       });
       setMessage(
@@ -173,6 +193,18 @@ export function XCheckerPanel({
     if (showAll) return tweets;
     return tweets.filter((t) => t.risk.score > 0);
   }, [tweets, showAll]);
+
+  const tweetNumbers = useMemo(() => {
+    const numbers = new Map<string, number>();
+    tweets.forEach((tweet, index) => {
+      numbers.set(tweet.id, index + 1);
+    });
+    return numbers;
+  }, [tweets]);
+
+  const reputationDisplay = summary
+    ? getReputationDisplay(summary.reputationScore)
+    : null;
 
   async function handleDisconnect() {
     setConnectionBusy(true);
@@ -306,47 +338,26 @@ export function XCheckerPanel({
         </div>
       )}
 
-      {summary && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <Card>
-            <CardContent className="p-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Total scanned
+      {summary && reputationDisplay && (
+        <Card className="border-electric/20 bg-gradient-to-br from-electric/5 to-purple/5">
+          <CardContent className="space-y-4 p-6">
+            <div>
+              <p
+                className={`text-2xl font-semibold tracking-tight ${reputationToneClass(reputationDisplay.tone)}`}
+              >
+                {reputationDisplay.emoji} Reputation Score:{" "}
+                {summary.reputationScore}/100
               </p>
-              <p className="mt-1 text-2xl font-semibold">{summary.count}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Flagged
+              <p className="mt-2 text-sm text-muted-foreground">
+                {summary.count} Tweets Scanned · {summary.flaggedCount} Flagged
               </p>
-              <p className="mt-1 text-2xl font-semibold text-purple">
-                {summary.flaggedCount}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Medium risk
-              </p>
-              <p className="mt-1 text-2xl font-semibold">
-                {summary.breakdown.medium}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-5">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                High risk
-              </p>
-              <p className="mt-1 text-2xl font-semibold">
-                {summary.breakdown.high}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+            <p className="text-sm text-foreground">
+              {summary.breakdown.high} High Risk · {summary.breakdown.medium}{" "}
+              Medium Risk · {summary.breakdown.low} Low Risk
+            </p>
+          </CardContent>
+        </Card>
       )}
 
       {tweets.length > 0 && (
@@ -382,40 +393,90 @@ export function XCheckerPanel({
                 </p>
               </div>
             ) : (
-              <ul className="space-y-3">
-                {displayedTweets.map((tweet) => (
-                  <li
-                    key={tweet.id}
-                    className="rounded-xl border border-border p-4"
-                  >
-                    <div className="space-y-2">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <Badge variant={riskBadgeVariant(tweet.risk.level)}>
-                          {tweet.risk.level} · score {tweet.risk.score}
-                        </Badge>
-                        {tweet.risk.categories.map((cat) => (
-                          <Badge key={cat} variant="outline">
-                            {cat}
-                          </Badge>
-                        ))}
-                        <span className="text-xs text-muted-foreground">
-                          {formatDate(tweet.createdAt)}
-                        </span>
-                      </div>
-                      <p className="text-sm leading-relaxed">{tweet.text}</p>
-                      {tweet.risk.reasons.length > 0 && (
-                        <ul className="text-xs text-muted-foreground">
-                          {tweet.risk.reasons.map((reason) => (
-                            <li key={reason} className="flex items-start gap-1">
-                              <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+              <ul className="space-y-4">
+                {displayedTweets.map((tweet) => {
+                  const isFlagged = tweet.risk.score > 0;
+                  const tweetNumber = tweetNumbers.get(tweet.id) ?? 0;
+                  const reason =
+                    tweet.risk.primaryReason ??
+                    tweet.risk.reasons[0] ??
+                    "Flagged for review";
+
+                  return (
+                    <li
+                      key={tweet.id}
+                      className="rounded-xl border border-border p-4"
+                    >
+                      <div className="space-y-3">
+                        {isFlagged ? (
+                          <div className="space-y-1 rounded-lg border border-amber-500/20 bg-amber-500/5 px-3 py-2 text-sm">
+                            <p className="flex items-center gap-1.5 font-medium text-foreground">
+                              <AlertTriangle className="h-4 w-4 shrink-0 text-amber-600 dark:text-amber-400" />
+                              Tweet #{tweetNumber}
+                            </p>
+                            <p>
+                              <span className="font-medium text-foreground">
+                                Reason:
+                              </span>{" "}
                               {reason}
-                            </li>
+                            </p>
+                            <p>
+                              <span className="font-medium text-foreground">
+                                Risk:
+                              </span>{" "}
+                              {formatRiskLevel(tweet.risk.level)}
+                            </p>
+                            {tweet.risk.confidence > 0 && (
+                              <p>
+                                <span className="font-medium text-foreground">
+                                  Confidence:
+                                </span>{" "}
+                                {tweet.risk.confidence}%
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="flex flex-wrap items-center gap-2">
+                            <Badge variant="electric">Clean</Badge>
+                            <span className="text-xs text-muted-foreground">
+                              Tweet #{tweetNumber}
+                            </span>
+                          </div>
+                        )}
+                        <div className="flex flex-wrap items-center gap-2">
+                          {isFlagged && (
+                            <Badge variant={riskBadgeVariant(tweet.risk.level)}>
+                              {formatRiskLevel(tweet.risk.level)} · score{" "}
+                              {tweet.risk.score}
+                            </Badge>
+                          )}
+                          {tweet.risk.categories.map((cat) => (
+                            <Badge key={cat} variant="outline">
+                              {cat}
+                            </Badge>
                           ))}
-                        </ul>
-                      )}
-                    </div>
-                  </li>
-                ))}
+                          <span className="text-xs text-muted-foreground">
+                            {formatDate(tweet.createdAt)}
+                          </span>
+                        </div>
+                        <p className="text-sm leading-relaxed">{tweet.text}</p>
+                        {tweet.risk.reasons.length > 1 && (
+                          <ul className="text-xs text-muted-foreground">
+                            {tweet.risk.reasons.map((detail) => (
+                              <li
+                                key={detail}
+                                className="flex items-start gap-1"
+                              >
+                                <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+                                {detail}
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                      </div>
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </CardContent>

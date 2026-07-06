@@ -44,6 +44,7 @@ export async function GET(request: Request) {
   try {
     logXOAuthEnvDebug("buyer social x-checker connect flow start");
     const callbackUrl = getBuyerSocialXCallbackUrl();
+    console.log("[X OAuth] buyer social connect callback URL:", callbackUrl);
 
     const { oauthToken, oauthTokenSecret, authorizeUrl } =
       await fetchXRequestToken(callbackUrl);
@@ -60,6 +61,7 @@ export async function GET(request: Request) {
   } catch (error) {
     const message =
       error instanceof Error ? error.message : "Failed to start X OAuth flow.";
+    console.error("[X OAuth] buyer social connect failed:", message);
     return redirectXOAuthError(request, "checker", message);
   }
 }

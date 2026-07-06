@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
 import { requireSignedInUser } from "@/lib/x-checker/api-auth";
 import { fetchUserTweets } from "@/lib/social/fetch-user-tweets";
-import { scoreTweets } from "@/lib/social/risk-scorer";
+import {
+  calculateReputationScore,
+  countRiskBreakdown,
+  scoreTweets,
+} from "@/lib/social/risk-scorer";
 
 export async function GET() {
   const user = await requireSignedInUser();
@@ -20,11 +24,6 @@ export async function GET() {
   );
 
   const flagged = tweets.filter((t) => t.risk.score > 0);
-  const breakdown = {
-    low: tweets.filter((t) => t.risk.level === "low").length,
-    medium: tweets.filter((t) => t.risk.level === "medium").length,
-    high: tweets.filter((t) => t.risk.level === "high").length,
-  };
 
   return NextResponse.json({
     screenName: result.screenName,
@@ -32,6 +31,7 @@ export async function GET() {
     tweets,
     count: tweets.length,
     flaggedCount: flagged.length,
-    breakdown,
+    reputationScore: calculateReputationScore(tweets),
+    breakdown: countRiskBreakdown(tweets, true),
   });
 }

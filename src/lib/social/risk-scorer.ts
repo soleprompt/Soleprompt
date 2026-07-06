@@ -13,6 +13,30 @@ export type TweetRiskResult = {
   categories: RiskCategory[];
   matchedKeywords: string[];
   reasons: string[];
+  /** Short label for the top matched risk category. */
+  primaryReason: string | null;
+  /** Match strength from 0–100; 0 when the tweet is clean. */
+  confidence: number;
+};
+
+export const CATEGORY_LABELS: Record<RiskCategory, string> = {
+  political: "Strong political language",
+  offensive: "Potentially offensive language",
+  profanity: "Profanity",
+  substances: "Substance-related content",
+  employer: "Workplace complaints",
+  controversial: "Controversial framing",
+  personal: "Personal oversharing",
+};
+
+const CATEGORY_WEIGHTS: Record<RiskCategory, number> = {
+  employer: 35,
+  offensive: 30,
+  political: 25,
+  substances: 20,
+  controversial: 18,
+  profanity: 15,
+  personal: 12,
 };
 
 type RiskPattern = {
@@ -142,6 +166,83 @@ function normalizeText(text: string): string {
   return text.toLowerCase().replace(/\s+/g, " ").trim();
 }
 
+function primaryReasonForCategories(
+  categories: RiskCategory[],
+): string | null {
+  if (categories.length === 0) return null;
+
+  const topCategory = [...categories].sort(
+    (a, b) => CATEGORY_WEIGHTS[b] - CATEGORY_WEIGHTS[a],
+  )[0];
+
+  return CATEGORY_LABELS[topCategory];
+}
+
+function calculateConfidence(
+  score: number,
+  matchedKeywordCount: number,
+): number {
+  if (score === 0) return 0;
+
+  const base = 60;
+  const scoreBonus = Math.min(30, score * 0.4);
+  const keywordBonus = Math.min(10, matchedKeywordCount * 5);
+
+  return Math.round(Math.min(100, base + scoreBonus + keywordBonus));
+}
+
+export function calculateReputationScore(
+  tweets: Array<{ risk: TweetRiskResult }>,
+): number {
+  let penalty = 0;
+
+  for (const tweet of tweets) {
+    if (tweet.risk.score === 0) continue;
+
+    switch (tweet.risk.level) {
+      case "high":
+        penalty += 3;
+        break;
+      case "medium":
+        penalty += 1.5;
+        break;
+      case "low":
+        penalty += 0.5;
+        break;
+    }
+  }
+
+  return Math.max(0, Math.round(100 - penalty));
+}
+
+export function getReputationDisplay(score: number): {
+  emoji: string;
+  tone: "good" | "caution" | "poor";
+} {
+  if (score >= 90) {
+    return { emoji: "🟢", tone: "good" };
+  }
+  if (score >= 70) {
+    return { emoji: "🟡", tone: "caution" };
+  }
+  return { emoji: "🔴", tone: "poor" };
+}
+
+export function countRiskBreakdown(
+  tweets: Array<{ risk: TweetRiskResult }>,
+  flaggedOnly = true,
+): { low: number; medium: number; high: number } {
+  const relevant = flaggedOnly
+    ? tweets.filter((t) => t.risk.score > 0)
+    : tweets;
+
+  return {
+    low: relevant.filter((t) => t.risk.level === "low").length,
+    medium: relevant.filter((t) => t.risk.level === "medium").length,
+    high: relevant.filter((t) => t.risk.level === "high").length,
+  };
+}
+
 export function scoreTweetRisk(text: string): TweetRiskResult {
   const normalized = normalizeText(text);
   const categories = new Set<RiskCategory>();
@@ -179,12 +280,17 @@ export function scoreTweetRisk(text: string): TweetRiskResult {
     level = "medium";
   }
 
+  const categoryList = [...categories];
+  const matchedKeywordList = [...matchedKeywords];
+
   return {
     score,
     level,
-    categories: [...categories],
-    matchedKeywords: [...matchedKeywords],
+    categories: categoryList,
+    matchedKeywords: matchedKeywordList,
     reasons: [...reasons],
+    primaryReason: primaryReasonForCategories(categoryList),
+    confidence: calculateConfidence(score, matchedKeywordList.length),
   };
 }
 

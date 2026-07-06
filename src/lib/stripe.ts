@@ -1,6 +1,8 @@
 import type Stripe from "stripe";
 import StripeClient from "stripe";
 
+export { getAppUrl } from "@/lib/app-url";
+
 export function getCheckoutSessionAmount(
   session: Stripe.Checkout.Session,
   fallbackPrice = 0,
@@ -41,16 +43,6 @@ export function getStripe(): StripeClient {
   }
 
   return stripeClient;
-}
-
-export function getAppUrl(): string {
-  const configured = process.env.NEXT_PUBLIC_APP_URL?.trim();
-  if (configured) return configured.replace(/\/$/, "");
-
-  const vercelUrl = process.env.VERCEL_URL?.trim();
-  if (vercelUrl) return `https://${vercelUrl}`;
-
-  return "http://localhost:3000";
 }
 
 /** Stripe Checkout redirect URLs always use production domain (never Vercel preview). */
