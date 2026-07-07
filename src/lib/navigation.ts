@@ -61,6 +61,7 @@ export const ADMIN_NAV: DashboardNavItem[] = [
   { label: "Program Settings", href: "/admin/settings", icon: "Settings" },
   { label: "Categories", href: "/admin/categories", icon: "Tags" },
   { label: "Social", href: "/admin/social", icon: "Share2" },
+  { label: "Anime Ads", href: "/admin/anime-ad", icon: "Star" },
 ];
 
 export function getNavForRole(

@@ -77,6 +77,12 @@ export const TRACKED_TOOLS = [
     description: "LinkedIn content cleanup",
     path: "/buyer/social/linkedin",
   },
+  {
+    slug: "anime-ad-generator",
+    label: "Anime Ad Generator",
+    description: "Admin anime-style ad concept generator",
+    path: "/admin/anime-ad",
+  },
 ] as const;
 
 export type TrackedToolSlug = (typeof TRACKED_TOOLS)[number]["slug"];
