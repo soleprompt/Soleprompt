@@ -2,6 +2,7 @@ import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { CategoryBanner } from "@/components/marketplace/CategoryBanner";
 import { PromptCard } from "@/components/marketplace/PromptCard";
+import { SolarCategoryLayout } from "@/components/marketplace/SolarCategoryLayout";
 import {
   getCategoriesWithCounts,
   getPublishedPrompts,
@@ -41,11 +42,15 @@ export default async function CategoryDetailPage({
         count={prompts.length}
       />
       {categoryMeta?.description && (
-        <p className="-mt-4 mb-8 text-muted-foreground">
-          {categoryMeta.description}
+        <p className="-mt-4 mb-8 max-w-3xl text-muted-foreground">
+          {slug === "solar"
+            ? "ROI calculators, lead scripts, objection handlers, and premium proposal packs built for solar installers and sales teams."
+            : categoryMeta.description}
         </p>
       )}
-      {prompts.length === 0 ? (
+      {slug === "solar" ? (
+        <SolarCategoryLayout prompts={prompts} />
+      ) : prompts.length === 0 ? (
         <p className="text-muted-foreground">No prompts in this category yet.</p>
       ) : (
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

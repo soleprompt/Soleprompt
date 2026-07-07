@@ -12,6 +12,8 @@ export type CategorySlug =
   | "productivity"
   | "business"
   | "marketing"
+  | "sales"
+  | "solar"
   | "coding"
   | "finance"
   | "writing"
@@ -47,6 +49,8 @@ const CATEGORY_COLORS: Record<CategorySlug, string> = {
   productivity: "6366f1",
   business: "0ea5e9",
   marketing: "f97316",
+  sales: "f43f5e",
+  solar: "f59e0b",
   coding: "22c55e",
   finance: "eab308",
   writing: "a855f7",

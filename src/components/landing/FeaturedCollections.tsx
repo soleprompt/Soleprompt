@@ -57,7 +57,7 @@ const COLLECTIONS = [
     emoji: "☀️",
     title: "Solar Professionals",
     description: "ROI calculators, proposals, and solar sales follow-ups.",
-    href: "/explore?category=solar",
+    href: "/categories/solar",
     gradient: "from-amber-500/25 via-yellow-500/15 to-orange-600/25",
     ring: "group-hover:ring-amber-500/30",
   },

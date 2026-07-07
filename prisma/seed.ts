@@ -7,6 +7,7 @@ import { STARTER_PROMPTS } from "./seed-data/starter-prompts";
 import { WELCOME_PACK } from "./seed-data/welcome-pack";
 import { X_SCRUBBING_TOOL } from "./seed-data/x-scrubbing-tool";
 import { SOCIAL_SCRUBBING_SUITE } from "./seed-data/social-scrubbing-suite";
+import { SOLAR_PROMPTS } from "./seed-data/solar-prompts";
 import type { CatalogEntry } from "./seed-data/helpers";
 
 dotenv.config({ path: ".env.local" });
@@ -114,6 +115,7 @@ const CATALOG: CatalogEntry[] = [
   SOCIAL_SCRUBBING_SUITE,
   ...SCRUBBING_PROMPTS,
   ...STARTER_PROMPTS,
+  ...SOLAR_PROMPTS,
   ...BUNDLES,
 ];
 
@@ -338,13 +340,14 @@ async function main() {
 
     const starterCount = STARTER_PROMPTS.length;
     const scrubbingCount = SCRUBBING_PROMPTS.length;
+    const solarCount = SOLAR_PROMPTS.length;
     const bundleCount = BUNDLES.length;
 
     console.log(`Seeded ${categories.length} categories`);
     console.log(`Seeded ${sellerUsers.length} sellers`);
     console.log(`Seeded ${buyerUsers.length} buyers`);
     console.log(
-      `Seeded Welcome Pack + X Scrubbing Tool + ${scrubbingCount} scrubbing prompts + ${starterCount} starter prompts + ${bundleCount} bundles = ${createdPrompts.length} total listings`,
+      `Seeded Welcome Pack + X Scrubbing Tool + ${scrubbingCount} scrubbing prompts + ${starterCount} starter prompts + ${solarCount} solar prompts + ${bundleCount} bundles = ${createdPrompts.length} total listings`,
     );
     console.log("Skipped fake purchase records — live sales come from Stripe checkout");
 
