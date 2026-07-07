@@ -20,11 +20,13 @@ export const metadata: Metadata = {
   },
   description: SITE.description,
   keywords: [
-    "AI prompts",
-    "prompt marketplace",
-    "premium prompts",
-    "ChatGPT prompts",
     "AI tools",
+    "AI academy",
+    "prompt marketplace",
+    "college student AI",
+    "content creator AI",
+    "entrepreneur AI tools",
+    "ChatGPT prompts",
   ],
   openGraph: {
     title: SITE.name,

@@ -11,9 +11,11 @@ const FOOTER_LINKS = {
     { label: "Categories", href: "/categories" },
   ],
   Product: [
+    { label: "AI Academy", href: "/academy" },
+    { label: "For Students", href: "/academy/students" },
+    { label: "For Creators", href: "/academy/creators" },
     { label: "Free X Checker", href: "/tools/x-checker" },
     { label: "Become a Creator", href: "/seller" },
-    { label: "Pricing", href: "#faq" },
     { label: "FAQ", href: "#faq" },
   ],
   Community: [
@@ -46,8 +48,8 @@ export function Footer() {
           <div className="sm:col-span-2">
             <BrandLogo />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              Better prompts. Better results. {SITE.tagline} — for business,
-              marketing, productivity, and everyday tasks.
+              {SITE.description} Start free in the AI Academy, then upgrade to
+              premium toolkits when you&apos;re ready.
             </p>
           </div>
 

@@ -6,6 +6,42 @@ export const TRACKED_TOOLS = [
     path: "/",
   },
   {
+    slug: "academy",
+    label: "AI Academy",
+    description: "Academy hub — learn AI and find audience tools",
+    path: "/academy",
+  },
+  {
+    slug: "academy-students",
+    label: "Academy — Students",
+    description: "College student AI tools",
+    path: "/academy/students",
+  },
+  {
+    slug: "academy-entrepreneurs",
+    label: "Academy — Entrepreneurs",
+    description: "Entrepreneur AI tools",
+    path: "/academy/entrepreneurs",
+  },
+  {
+    slug: "academy-creators",
+    label: "Academy — Creators",
+    description: "Content creator AI tools",
+    path: "/academy/creators",
+  },
+  {
+    slug: "academy-freelancers",
+    label: "Academy — Freelancers",
+    description: "Freelancer AI tools",
+    path: "/academy/freelancers",
+  },
+  {
+    slug: "academy-learners",
+    label: "Academy — AI Learners",
+    description: "AI learning path and starter tools",
+    path: "/academy/learners",
+  },
+  {
     slug: "x-checker",
     label: "X Checker",
     description: "Free X reputation scan (X Tracker)",

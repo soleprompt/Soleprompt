@@ -2,9 +2,9 @@ import type { FAQItem, Testimonial } from "@/types";
 
 export const SITE = {
   name: "SolePrompt",
-  tagline: "The Marketplace for Premium AI Prompts",
+  tagline: "Learn AI. Ship Real Outcomes.",
   description:
-    "Discover, buy, and sell expertly crafted AI prompts. Premium quality for creators, marketers, and developers.",
+    "Where students, creators, and entrepreneurs learn AI and buy tools that help them study, create, and grow faster.",
   year: 2026,
 } as const;
 
@@ -15,6 +15,7 @@ export const SOCIAL_LINKS = {
 
 export const NAV_LINKS = [
   { label: "Explore", href: "/explore" },
+  { label: "Academy", href: "/academy" },
   { label: "Categories", href: "/categories" },
   { label: "Free X Checker", href: "/tools/x-checker" },
   { label: "Sell", href: "#sell" },
@@ -56,7 +57,13 @@ export const FAQ_ITEMS: FAQItem[] = [
     id: "1",
     question: "What makes SolePrompt different from free prompt libraries?",
     answer:
-      "Every prompt on SolePrompt is vetted for quality, tested across multiple AI models, and backed by creator expertise. You're paying for proven results, not guesswork.",
+      "We sell outcomes, not generic prompts. Start free in our AI Academy with basics and templates, then upgrade to career-specific toolkits for students, creators, and entrepreneurs — every tool is built for real results.",
+  },
+  {
+    id: "6",
+    question: "What is the AI Academy?",
+    answer:
+      "Our free learning hub inside SolePrompt. Get AI basics, prompt writing guides, and beginner templates — then explore premium prompt packs, workflows, and automation kits tailored to your goals.",
   },
   {
     id: "2",

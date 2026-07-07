@@ -10,40 +10,49 @@ import type { Category } from "@/types";
 
 const COLLECTIONS = [
   {
-    id: "make-money",
+    id: "students",
+    emoji: "🎓",
+    title: "College Students",
+    description: "Study guides, resumes, internships, and coding helpers.",
+    href: "/academy/students",
+    gradient: "from-indigo-500/25 via-blue-500/15 to-cyan-600/25",
+    ring: "group-hover:ring-indigo-500/30",
+  },
+  {
+    id: "entrepreneurs",
     emoji: "🚀",
-    title: "Make More Money",
-    description: "Side hustles, pricing, and income-boosting AI workflows.",
-    categorySlug: "finance",
+    title: "Entrepreneurs",
+    description: "Business plans, sales emails, marketing, and branding.",
+    href: "/academy/entrepreneurs",
     gradient: "from-emerald-500/25 via-green-500/15 to-teal-600/25",
     ring: "group-hover:ring-emerald-500/30",
   },
   {
-    id: "grow-business",
-    emoji: "📈",
-    title: "Grow Your Business",
-    description: "Ops, strategy, and scaling tools for small teams.",
-    categorySlug: "business",
-    gradient: "from-blue-500/25 via-indigo-500/15 to-violet-600/25",
-    ring: "group-hover:ring-blue-500/30",
-  },
-  {
-    id: "sales-marketing",
-    emoji: "💼",
-    title: "Sales & Marketing",
-    description: "Outreach, ads, proposals, and conversion copy.",
-    categorySlug: "sales",
-    gradient: "from-rose-500/25 via-red-500/15 to-orange-600/25",
+    id: "creators",
+    emoji: "🎬",
+    title: "Content Creators",
+    description: "Scripts, hooks, thumbnails, and caption generators.",
+    href: "/academy/creators",
+    gradient: "from-rose-500/25 via-pink-500/15 to-orange-600/25",
     ring: "group-hover:ring-rose-500/30",
   },
   {
-    id: "productivity",
-    emoji: "🧠",
-    title: "Productivity",
-    description: "Inbox triage, meeting notes, and daily workflows.",
-    categorySlug: "productivity",
-    gradient: "from-purple-500/25 via-violet-500/15 to-fuchsia-600/25",
-    ring: "group-hover:ring-purple-500/30",
+    id: "freelancers",
+    emoji: "💼",
+    title: "Freelancers",
+    description: "Proposals, client copy, and faster project delivery.",
+    href: "/academy/freelancers",
+    gradient: "from-violet-500/25 via-purple-500/15 to-fuchsia-600/25",
+    ring: "group-hover:ring-violet-500/30",
+  },
+  {
+    id: "make-money",
+    emoji: "💰",
+    title: "Make More Money",
+    description: "Side hustles, pricing, and income-boosting AI workflows.",
+    categorySlug: "finance",
+    gradient: "from-amber-500/25 via-yellow-500/15 to-orange-600/25",
+    ring: "group-hover:ring-amber-500/30",
   },
   {
     id: "developers",
@@ -53,16 +62,6 @@ const COLLECTIONS = [
     categorySlug: "coding",
     gradient: "from-cyan-500/25 via-sky-500/15 to-blue-600/25",
     ring: "group-hover:ring-cyan-500/30",
-  },
-  {
-    id: "solar",
-    emoji: "☀️",
-    title: "Solar Professionals",
-    description: "ROI calculators, proposals, and solar sales follow-ups.",
-    categorySlug: "solar",
-    href: "/categories/solar",
-    gradient: "from-amber-500/25 via-yellow-500/15 to-orange-600/25",
-    ring: "group-hover:ring-amber-500/30",
   },
 ] as const;
 
@@ -79,13 +78,16 @@ export function FeaturedCollections({ categories = [] }: FeaturedCollectionsProp
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="Featured Collections"
-          title="Start with a collection that fits your work"
-          description="Curated packs of professional AI tools — jump straight to what matters for your role."
+          title="Tools built for how you work"
+          description="Curated paths for students, creators, entrepreneurs, and freelancers — or browse by category."
         />
 
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {COLLECTIONS.map((collection, index) => {
-            const count = countBySlug[collection.categorySlug];
+            const count =
+              "categorySlug" in collection
+                ? countBySlug[collection.categorySlug]
+                : undefined;
             const href =
               "href" in collection
                 ? collection.href

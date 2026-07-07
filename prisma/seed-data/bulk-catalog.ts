@@ -246,6 +246,43 @@ const REAL_ESTATE_EXTRA: ToolDef[] = [
   { title: "Real Estate Video Tour Script", tags: ["Video", "Listings"], role: "real estate videographer", task: "script a walkthrough video tour with emotional beats", outputs: ["Opening hook", "Room-by-room script", "Neighborhood close", "CTA"] },
 ];
 
+const STUDENT_TOOLS: ToolDef[] = [
+  { title: "Internship Application Coach", tags: ["Internship", "Career"], role: "career services advisor", task: "coach a student through tailoring an internship application", outputs: ["Role fit narrative", "Resume tweaks", "Cover letter draft", "Follow-up email"] },
+  { title: "Presentation Slide Outliner", tags: ["Presentation", "College"], role: "academic presentation coach", task: "outline a class presentation with speaker notes", outputs: ["Slide titles", "Key points per slide", "Opening hook", "Q&A prep"] },
+  { title: "Research Paper Thesis Builder", tags: ["Research", "Thesis"], role: "academic writing tutor", task: "help a student refine a research paper thesis and outline", outputs: ["Thesis statement options", "Outline", "Source search prompts", "Argument map"] },
+  { title: "Coding Interview Prep Pack", tags: ["Interview", "CS"], role: "technical interview coach", task: "generate a personalized coding interview study plan", outputs: ["Topic checklist", "Practice problems", "Behavioral STAR stories", "Day-before review"] },
+  { title: "Group Project Coordinator", tags: ["Group Project", "Team"], role: "student project manager", task: "divide a group project into roles, milestones, and deliverables", outputs: ["Role assignments", "Timeline", "Meeting agenda", "Rubric alignment"] },
+  { title: "Finance Major Case Study Analyzer", tags: ["Finance", "Case Study"], role: "finance professor assistant", task: "break down a finance case study with frameworks and questions", outputs: ["Key metrics", "Framework application", "Discussion questions", "Executive summary draft"] },
+  { title: "Marketing Class Campaign Brief", tags: ["Marketing", "College"], role: "marketing professor TA", task: "create a campaign brief for a marketing class project", outputs: ["Target audience", "Positioning", "Channel plan", "Success metrics"] },
+  { title: "Engineering Lab Report Writer", tags: ["Engineering", "Lab Report"], role: "engineering lab instructor", task: "structure an engineering lab report from raw data and observations", outputs: ["Abstract", "Methods", "Results narrative", "Discussion prompts"] },
+  { title: "Scholarship Essay Drafter", tags: ["Scholarship", "Essays"], role: "scholarship essay coach", task: "draft a scholarship essay from the student's background and prompt", outputs: ["Theme options", "Outline", "Draft paragraphs", "Revision checklist"] },
+  { title: "Exam Cram Session Planner", tags: ["Exam", "Study"], role: "academic success coach", task: "build a 48-hour exam cram plan from syllabus topics", outputs: ["Priority topics", "Hour-by-hour schedule", "Active recall prompts", "Sleep breaks"] },
+];
+
+const ENTREPRENEUR_TOOLS: ToolDef[] = [
+  { title: "One-Page Business Plan Generator", tags: ["Business Plan", "Startup"], role: "startup advisor", task: "generate a one-page business plan from the founder's idea", outputs: ["Problem/solution", "Target customer", "Revenue model", "Next 30 days"] },
+  { title: "Logo & Brand Brief Writer", tags: ["Branding", "Logo"], role: "brand designer brief writer", task: "write a creative brief for logo and visual identity", outputs: ["Brand personality", "Color direction", "Typography mood", "Designer deliverables"] },
+  { title: "Sales Email Sequence Builder", tags: ["Sales", "Email"], role: "SDR coach", task: "build a 5-email outbound sales sequence for a new offer", outputs: ["Email 1-5 drafts", "Subject lines", "Personalization tokens", "Breakup email"] },
+  { title: "Social Media Launch Calendar", tags: ["Launch", "Social"], role: "launch marketer", task: "create a 2-week social media launch calendar for a new product", outputs: ["Daily posts", "Platform mix", "Hashtag sets", "Engagement tactics"] },
+  { title: "Side Hustle Idea Validator", tags: ["Side Hustle", "Validation"], role: "lean startup mentor", task: "validate a side hustle idea with customer interviews and experiments", outputs: ["ICP hypothesis", "Interview questions", "MVP scope", "Go/no-go criteria"] },
+  { title: "Pitch Deck Outline Generator", tags: ["Pitch Deck", "Fundraising"], role: "startup pitch coach", task: "outline a 10-slide pitch deck for investors or demo day", outputs: ["Slide-by-slide content", "Story arc", "Data placeholders", "Speaker notes"] },
+  { title: "Customer Persona Builder", tags: ["Persona", "Marketing"], role: "growth marketer", task: "build detailed customer personas from market research notes", outputs: ["2-3 personas", "Pain points", "Buying triggers", "Messaging angles"] },
+  { title: "MVP Feature Prioritizer", tags: ["MVP", "Product"], role: "product advisor", task: "prioritize MVP features using impact vs effort", outputs: ["Feature list", "Impact/effort matrix", "MVP cut line", "Post-MVP backlog"] },
+  { title: "Founder Weekly Review Template", tags: ["Founder", "Planning"], role: "founder coach", task: "run a weekly founder review with metrics and priorities", outputs: ["Wins and losses", "KPI check", "Top 3 priorities", "Blockers"] },
+  { title: "Etsy/Shopify Product Listing Pack", tags: ["Ecommerce", "Side Hustle"], role: "ecommerce copywriter", task: "write product listings optimized for Etsy or Shopify", outputs: ["Titles", "Descriptions", "Tags/SEO", "FAQ section"] },
+];
+
+const CREATOR_TOOLS: ToolDef[] = [
+  { title: "YouTube Shorts Script Generator", tags: ["YouTube", "Shorts"], role: "short-form video writer", task: "write a 60-second YouTube Shorts script with hook and CTA", outputs: ["Hook", "Script", "On-screen text", "Description"] },
+  { title: "Newsletter Hook Library", tags: ["Newsletter", "Hooks"], role: "newsletter growth strategist", task: "generate 20 newsletter subject lines and opening hooks", outputs: ["Subject lines", "Opening paragraphs", "CTA variants", "A/B test pairs"] },
+  { title: "Podcast Episode Title Generator", tags: ["Podcast", "Titles"], role: "podcast producer", task: "generate click-worthy podcast episode titles and descriptions", outputs: ["10 title options", "Episode description", "Show notes outline", "Social promo copy"] },
+  { title: "Blog Post SEO Hook Writer", tags: ["Blog", "SEO"], role: "content SEO specialist", task: "write SEO-optimized blog introductions for a target keyword", outputs: ["3 intro options", "Meta description", "H2 outline", "Internal link suggestions"] },
+  { title: "Thumbnail Concept Generator", tags: ["Thumbnail", "YouTube"], role: "YouTube creative director", task: "brainstorm thumbnail concepts with text overlays and visual direction", outputs: ["5 concepts", "Text overlay options", "Color palette", "A/B test recommendation"] },
+  { title: "TikTok Hook Library", tags: ["TikTok", "Hooks"], role: "TikTok growth coach", task: "generate 15 scroll-stopping TikTok hooks for a content niche", outputs: ["Hook list", "Video angle per hook", "Caption starters", "Sound suggestions"] },
+  { title: "X Thread Architect", tags: ["X", "Threads"], role: "X growth strategist", task: "structure a viral X thread from a single insight", outputs: ["Thread outline", "Tweet drafts", "Hook tweet options", "CTA tweet"] },
+  { title: "Content Repurposing Workflow", tags: ["Repurposing", "Workflow"], role: "content operations lead", task: "turn one long-form video into a week of cross-platform content", outputs: ["Clip ideas", "Platform posts", "Newsletter section", "Posting schedule"] },
+];
+
 /** Additional catalog entries to reach ~30+ tools per category. */
 export const BULK_CATALOG: StarterPromptDefinition[] = [
   ...batch("productivity", PRODUCTIVITY),
@@ -254,11 +291,12 @@ export const BULK_CATALOG: StarterPromptDefinition[] = [
   ...batch("coding", CODING),
   ...batch("finance", FINANCE),
   ...batch("writing", WRITING),
-  ...batch("education", EDUCATION),
+  ...batch("education", [...EDUCATION, ...STUDENT_TOOLS]),
   ...batch("solar", SOLAR),
   ...batch("sales", SALES_EXTRA),
-  ...batch("social-media", SOCIAL_EXTRA),
+  ...batch("social-media", [...SOCIAL_EXTRA, ...CREATOR_TOOLS]),
   ...batch("real-estate", REAL_ESTATE_EXTRA),
+  ...batch("business", ENTREPRENEUR_TOOLS),
   // Free lead magnets (one per major category)
   ...batch("productivity", [{ title: "Daily Planning Template Generator", tags: ["Free", "Planning"], role: "productivity coach", task: "generate a printable daily planning template", outputs: ["Morning priorities", "Time blocks", "Evening review"], price: 0 }]),
   ...batch("marketing", [{ title: "Social Caption Starter Pack", tags: ["Free", "Social"], role: "social media manager", task: "generate 10 caption templates for the user's niche", outputs: ["10 captions", "Hashtag sets", "CTA variants"], price: 0 }]),

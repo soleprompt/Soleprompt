@@ -41,9 +41,9 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl"
             >
-              The AI Marketplace That{" "}
+              Learn AI.{" "}
               <span className="bg-gradient-to-r from-cyan-400 via-electric to-purple bg-clip-text text-transparent">
-                Actually Saves You Time
+                Study, Create & Grow Faster
               </span>
             </motion.h1>
 
@@ -53,8 +53,9 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground sm:text-xl lg:mx-0"
             >
-              Download professional AI tools built for marketers, developers,
-              founders, and sales teams. Ready in seconds. No subscriptions.
+              For students, creators, and entrepreneurs — free AI Academy
+              lessons plus outcome-focused tools for resumes, content, and
+              business. Instant download. No subscriptions.
             </motion.p>
 
             <motion.div
@@ -81,15 +82,15 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
               transition={{ duration: 0.6, delay: 0.3 }}
               className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start"
             >
-              <Link href="/explore">
+              <Link href="/academy">
                 <Button size="lg" className="group w-full sm:w-auto">
-                  Browse AI Tools
+                  Start AI Academy
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
-              <Link href="/tools/x-checker">
+              <Link href="/explore">
                 <Button size="lg" variant="outline" className="w-full sm:w-auto">
-                  Try Free X Checker
+                  Browse AI Tools
                 </Button>
               </Link>
             </motion.div>
@@ -121,7 +122,7 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
                   />
                 ))}
               </div>
-              <span>{toolCountLabel} tools · Trusted by marketers & founders</span>
+              <span>{toolCountLabel} tools · Trusted by students & creators</span>
             </motion.div>
           </div>
 
