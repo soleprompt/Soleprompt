@@ -1,4 +1,5 @@
 import { getCategoryVisual } from "@/lib/category-visuals";
+import { getCategoryCoverImage } from "@/lib/tool-images";
 
 const GRADIENTS = [
   "from-electric/40 via-purple/30 to-indigo-600/40",
@@ -10,6 +11,11 @@ const GRADIENTS = [
 
 export function categoryNameToSlug(name: string): string {
   return name.toLowerCase().replace(/\s+/g, "-");
+}
+
+export function getPromptThumbnailImage(categoryName: string): string {
+  const slug = categoryNameToSlug(categoryName);
+  return getCategoryCoverImage(slug);
 }
 
 export function getPromptThumbnailGradient(

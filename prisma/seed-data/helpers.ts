@@ -1,3 +1,5 @@
+import { getToolCoverImage } from "../../src/lib/tool-images";
+
 export const COMPATIBLE_MODELS = [
   "GPT-4o",
   "GPT-4",
@@ -45,22 +47,8 @@ export type BundleDefinition = Omit<StarterPromptDefinition, "price"> & {
 
 export type CatalogEntry = StarterPromptDefinition | BundleDefinition;
 
-const CATEGORY_COLORS: Record<CategorySlug, string> = {
-  productivity: "6366f1",
-  business: "0ea5e9",
-  marketing: "f97316",
-  sales: "f43f5e",
-  solar: "f59e0b",
-  coding: "22c55e",
-  finance: "eab308",
-  writing: "a855f7",
-  education: "ec4899",
-};
-
 export function coverImageUrl(categorySlug: CategorySlug, title: string): string {
-  const label = encodeURIComponent(title.slice(0, 24));
-  const bg = CATEGORY_COLORS[categorySlug];
-  return `https://placehold.co/600x400/${bg}/ffffff/png?text=${label}`;
+  return getToolCoverImage(title, categorySlug);
 }
 
 export function pickCompatibleModels(title: string): string[] {

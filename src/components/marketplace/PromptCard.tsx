@@ -12,13 +12,11 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardFooter } from "@/components/ui/Card";
 import { trackClickThrough } from "@/lib/click-throughs/client";
-import { getCategoryVisual } from "@/lib/category-visuals";
 import {
-  categoryNameToSlug,
   getCompatibleModelBadges,
   getPromptBenefit,
   getPromptDifficultyTier,
-  getPromptThumbnailGradient,
+  getPromptThumbnailImage,
 } from "@/lib/prompt-thumbnails";
 import { formatCurrency, formatPurchaseAmount } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -44,11 +42,6 @@ function PromptThumbnail({
   prompt: Prompt;
   difficulty: string;
 }) {
-  const slug = categoryNameToSlug(prompt.category);
-  const visual = getCategoryVisual(slug);
-  const Icon = visual.icon;
-  const gradient = getPromptThumbnailGradient(prompt.category, prompt.title);
-
   const difficultyBadge = (
     <Badge
       variant={difficulty === "Pro" ? "electric" : "outline"}
@@ -58,44 +51,20 @@ function PromptThumbnail({
     </Badge>
   );
 
-  if (prompt.coverImageUrl) {
-    return (
-      <div className="relative aspect-[16/10] w-full overflow-hidden">
-        {difficultyBadge}
-        <Image
-          src={prompt.coverImageUrl}
-          alt=""
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-          sizes="(max-width: 768px) 100vw, 33vw"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
-      </div>
-    );
-  }
+  const thumbnailSrc =
+    prompt.coverImageUrl ?? getPromptThumbnailImage(prompt.category);
 
   return (
-    <div
-      className={cn(
-        "relative flex aspect-[16/10] w-full items-center justify-center overflow-hidden bg-gradient-to-br",
-        gradient,
-      )}
-    >
+    <div className="relative aspect-[16/10] w-full overflow-hidden">
       {difficultyBadge}
-      <div
-        className="absolute inset-0 opacity-50"
-        style={{
-          backgroundImage:
-            "radial-gradient(circle at 30% 70%, rgba(255,255,255,0.1) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(0,102,255,0.12) 0%, transparent 45%)",
-        }}
-        aria-hidden
+      <Image
+        src={thumbnailSrc}
+        alt=""
+        fill
+        className="object-cover transition-transform duration-300 group-hover:scale-105"
+        sizes="(max-width: 768px) 100vw, 33vw"
       />
-      <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-black/40 ring-1 ring-white/15 backdrop-blur-sm transition-transform duration-300 group-hover:scale-105">
-        <Icon className={cn("h-8 w-8", visual.iconColor)} />
-      </div>
-      <span className="absolute right-3 top-3 text-2xl opacity-70" aria-hidden>
-        {visual.emoji}
-      </span>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
     </div>
   );
 }
