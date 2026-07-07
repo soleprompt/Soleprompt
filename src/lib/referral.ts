@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { REFERRAL_COOKIE_NAME } from "@/lib/affiliate-program";
+import { REFERRAL_COOKIE_NAME } from "@/lib/affiliate/constants";
 
 export async function getReferralCodeFromCookies(): Promise<string | null> {
   try {

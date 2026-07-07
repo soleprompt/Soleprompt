@@ -9,7 +9,7 @@ import {
 import {
   CREATOR_PRICE_PRESETS,
   SUPPORTED_AI_MODELS,
-} from "@/lib/creator-program";
+} from "@/lib/creator/constants";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";

@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import {
   REFERRAL_COOKIE_NAME,
   REFERRAL_QUERY_PARAM,
-} from "@/lib/affiliate-program";
+} from "@/lib/affiliate/constants";
 
 const COOKIE_MAX_AGE_DAYS = 30;
 

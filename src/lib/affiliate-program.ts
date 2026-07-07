@@ -1,8 +1,8 @@
 import { prisma } from "@/lib/db";
 import type { AffiliateStatus, PayoutStatus } from "@/generated/prisma/client";
+import { REFERRAL_QUERY_PARAM } from "@/lib/affiliate/constants";
 
-export const REFERRAL_COOKIE_NAME = "sp_affiliate";
-export const REFERRAL_QUERY_PARAM = "ref";
+export { REFERRAL_COOKIE_NAME, REFERRAL_QUERY_PARAM } from "@/lib/affiliate/constants";
 
 export function buildAffiliateCode(username: string): string {
   const base = username.replace(/[^a-zA-Z0-9]/g, "").toUpperCase().slice(0, 8);
