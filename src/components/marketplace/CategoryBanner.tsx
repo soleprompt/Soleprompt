@@ -1,6 +1,6 @@
 import Image from "next/image";
 import { getCategoryVisual } from "@/lib/category-visuals";
-import { getCategoryHeaderImage } from "@/lib/tool-images";
+import { getCategoryHeaderImage, isSvgImageSrc } from "@/lib/tool-images";
 import { cn } from "@/lib/utils";
 
 interface CategoryBannerProps {
@@ -33,6 +33,7 @@ export function CategoryBanner({
             src={headerImage}
             alt=""
             fill
+            unoptimized={isSvgImageSrc(headerImage)}
             className="object-cover"
             sizes="(max-width: 768px) 100vw, 1200px"
             priority

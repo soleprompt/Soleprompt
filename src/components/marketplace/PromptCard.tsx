@@ -16,8 +16,8 @@ import {
   getCompatibleModelBadges,
   getPromptBenefit,
   getPromptDifficultyTier,
-  getPromptThumbnailImage,
 } from "@/lib/prompt-thumbnails";
+import { isSvgImageSrc, resolvePromptCoverImage } from "@/lib/tool-images";
 import { formatCurrency, formatPurchaseAmount } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Prompt } from "@/types";
@@ -51,8 +51,7 @@ function PromptThumbnail({
     </Badge>
   );
 
-  const thumbnailSrc =
-    prompt.coverImageUrl ?? getPromptThumbnailImage(prompt.category);
+  const thumbnailSrc = resolvePromptCoverImage(prompt);
 
   return (
     <div className="relative aspect-[16/10] w-full overflow-hidden">
@@ -61,6 +60,7 @@ function PromptThumbnail({
         src={thumbnailSrc}
         alt=""
         fill
+        unoptimized={isSvgImageSrc(thumbnailSrc)}
         className="object-cover transition-transform duration-300 group-hover:scale-105"
         sizes="(max-width: 768px) 100vw, 33vw"
       />

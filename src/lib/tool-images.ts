@@ -73,3 +73,22 @@ export function getCategoryHeaderImage(categorySlug: string): string | null {
   const slug = categorySlug.toLowerCase().replace(/\s+/g, "-") as ToolCategorySlug;
   return CATEGORY_HEADER_IMAGES[slug] ?? null;
 }
+
+/** Next.js image optimization rejects SVG — serve them unoptimized. */
+export function isSvgImageSrc(src: string): boolean {
+  return /\.svg($|\?)/i.test(src);
+}
+
+export function resolvePromptCoverImage(prompt: {
+  title: string;
+  category: string;
+  coverImageUrl: string | null;
+}): string {
+  const url = prompt.coverImageUrl;
+  if (url && !url.includes("placehold.co")) {
+    return url;
+  }
+
+  const slug = prompt.category.toLowerCase().replace(/\s+/g, "-") as ToolCategorySlug;
+  return getToolCoverImage(prompt.title, slug);
+}
