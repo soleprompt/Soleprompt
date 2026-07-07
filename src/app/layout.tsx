@@ -1,6 +1,7 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
 import { SITE } from "@/lib/constants";
 import { clerkAppearance } from "@/lib/clerk";
