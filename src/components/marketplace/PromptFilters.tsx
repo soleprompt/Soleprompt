@@ -18,6 +18,15 @@ const SORT_OPTIONS: { value: PromptSortOption; label: string }[] = [
   { value: "price_desc", label: "Price: High to Low" },
 ];
 
+const MODEL_OPTIONS = [
+  { value: "", label: "Any AI model" },
+  { value: "GPT-4", label: "GPT-4 / GPT-4o" },
+  { value: "Claude", label: "Claude" },
+  { value: "Gemini", label: "Gemini" },
+  { value: "Llama", label: "Llama" },
+  { value: "Mistral", label: "Mistral" },
+] as const;
+
 export function PromptFilters({
   categories,
   basePath = "/search",
@@ -29,6 +38,7 @@ export function PromptFilters({
   const currentCategory = searchParams.get("category") ?? "";
   const currentPrice = searchParams.get("price") ?? "";
   const currentRating = searchParams.get("rating") ?? "";
+  const currentModel = searchParams.get("model") ?? "";
   const query = searchParams.get("q") ?? "";
 
   function updateFilters(updates: Record<string, string>) {
@@ -90,6 +100,19 @@ export function PromptFilters({
       </select>
 
       <select
+        value={currentModel}
+        onChange={(e) => updateFilters({ model: e.target.value })}
+        className={selectClass}
+        aria-label="Filter by AI model"
+      >
+        {MODEL_OPTIONS.map((opt) => (
+          <option key={opt.value || "any"} value={opt.value}>
+            {opt.label}
+          </option>
+        ))}
+      </select>
+
+      <select
         value={currentRating}
         onChange={(e) => updateFilters({ rating: e.target.value })}
         className={selectClass}
@@ -103,7 +126,8 @@ export function PromptFilters({
       {(currentSort !== "newest" ||
         currentCategory ||
         currentPrice ||
-        currentRating) && (
+        currentRating ||
+        currentModel) && (
         <button
           type="button"
           onClick={() => {

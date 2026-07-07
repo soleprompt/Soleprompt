@@ -12,6 +12,9 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { Badge } from "@/components/ui/Badge";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { PurchaseButton } from "@/components/marketplace/PurchaseButton";
+import { ProductHeroImage } from "@/components/marketplace/ProductHeroImage";
+import { RelatedPromptsSection } from "@/components/marketplace/RelatedPromptsSection";
+import { ModelBadge } from "@/components/ui/ModelLogo";
 import { FavoriteButton } from "@/components/marketplace/FavoriteButton";
 import { ReviewForm } from "@/components/marketplace/ReviewForm";
 import { CopyPromptButton } from "@/components/marketplace/CopyPromptButton";
@@ -24,6 +27,9 @@ import {
   getPromptPurchaseState,
   getUserReviewForPrompt,
   isPromptWishlisted,
+  getCustomersAlsoBought,
+  getRelatedPrompts,
+  getTrendingPromptIds,
   mapPromptToListItem,
   recordPromptView,
 } from "@/lib/marketplace";
@@ -79,9 +85,57 @@ export default async function PromptDetailPage({
   const promptVariables = extractPromptVariables(listing.content);
   const hasVariables = promptVariables.length > 0;
 
+  const categorySlug = prompt.category.slug;
+  const tagNames = listing.tags;
+  const [relatedPrompts, alsoBought, trendingIds] = await Promise.all([
+    getRelatedPrompts(prompt.id, categorySlug, tagNames, 4),
+    getCustomersAlsoBought(prompt.id, 4),
+    getTrendingPromptIds(24),
+  ]);
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 lg:px-8">
-      <PageHeader title={prompt.title} description={prompt.description} />
+      <div className="grid gap-8 lg:grid-cols-3 lg:gap-12">
+        <div className="lg:col-span-2">
+          <ProductHeroImage
+            prompt={listing}
+            trendingIds={trendingIds}
+            className="mb-6"
+          />
+          <PageHeader title={prompt.title} description={prompt.description} />
+        </div>
+        <div className="lg:col-span-1">
+          <Card className="sticky top-24">
+            <CardContent className="pt-6">
+              <p className="text-3xl font-bold">
+                {prompt.price <= 0 ? "Free" : formatCurrency(prompt.price)}
+              </p>
+              <p className="mt-2 text-sm text-muted-foreground">
+                One-time purchase · Commercial license included
+              </p>
+              {checkout === "cancelled" && (
+                <p className="mt-4 rounded-lg border border-border bg-foreground/[0.02] px-3 py-2 text-sm text-muted-foreground">
+                  Checkout was cancelled.
+                </p>
+              )}
+              <PurchaseButton
+                promptId={prompt.id}
+                price={prompt.price}
+                promptTitle={prompt.title}
+                purchased={purchaseState.purchased}
+                isOwnPrompt={purchaseState.isOwnPrompt}
+              />
+              <div className="mt-3">
+                <FavoriteButton
+                  promptId={prompt.id}
+                  initialSaved={wishlisted}
+                  className="w-full"
+                />
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
@@ -97,6 +151,13 @@ export default async function PromptDetailPage({
               </div>
 
               <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground">
+                <Link
+                  href={`/creators/${listing.seller.username}`}
+                  className="flex items-center gap-1 hover:text-electric"
+                >
+                  <User className="h-3.5 w-3.5" />
+                  {listing.seller.displayName}
+                </Link>
                 <span className="flex items-center gap-1">
                   <Star className="h-3.5 w-3.5 fill-electric text-electric" />
                   {listing.rating > 0 ? listing.rating : "—"} ({listing.reviews}{" "}
@@ -104,13 +165,20 @@ export default async function PromptDetailPage({
                 </span>
                 <span className="flex items-center gap-1">
                   <ShoppingBag className="h-3.5 w-3.5" />
-                  {listing.salesCount.toLocaleString()} sold
+                  {listing.salesCount.toLocaleString()} downloads
                 </span>
                 <span className="flex items-center gap-1">
                   <Eye className="h-3.5 w-3.5" />
                   {prompt.views.toLocaleString()} views
                 </span>
               </div>
+              {listing.compatibleModels.length > 0 && (
+                <div className="mt-4 flex flex-wrap gap-1.5">
+                  {listing.compatibleModels.map((model) => (
+                    <ModelBadge key={model} model={model} size="sm" />
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
@@ -273,39 +341,11 @@ export default async function PromptDetailPage({
         </div>
 
         <div className="space-y-6">
-          <Card className="sticky top-24">
-            <CardContent className="pt-6">
-              <p className="text-3xl font-bold">{formatCurrency(prompt.price)}</p>
-              <p className="mt-2 text-sm text-muted-foreground">
-                One-time purchase · Commercial license included
-              </p>
-              {checkout === "cancelled" && (
-                <p className="mt-4 rounded-lg border border-border bg-foreground/[0.02] px-3 py-2 text-sm text-muted-foreground">
-                  Checkout was cancelled.
-                </p>
-              )}
-              <PurchaseButton
-                promptId={prompt.id}
-                price={prompt.price}
-                promptTitle={prompt.title}
-                purchased={purchaseState.purchased}
-                isOwnPrompt={purchaseState.isOwnPrompt}
-              />
-              <div className="mt-3">
-                <FavoriteButton
-                  promptId={prompt.id}
-                  initialSaved={wishlisted}
-                  className="w-full"
-                />
-              </div>
-            </CardContent>
-          </Card>
-
           <Card>
             <CardHeader>
               <h2 className="flex items-center gap-2 text-lg font-semibold">
                 <User className="h-5 w-5 text-electric" />
-                Seller
+                Creator
               </h2>
             </CardHeader>
             <CardContent className="pt-0">
@@ -334,6 +374,19 @@ export default async function PromptDetailPage({
           </Card>
         </div>
       </div>
+
+      <RelatedPromptsSection
+        title="Related products"
+        description="More tools in this category you might like."
+        prompts={relatedPrompts}
+        viewAllHref={`/explore?category=${categorySlug}`}
+      />
+      <RelatedPromptsSection
+        title="Customers also bought"
+        description="Popular with buyers who purchased this tool."
+        prompts={alsoBought}
+        viewAllHref="/explore?sort=popular"
+      />
     </div>
   );
 }

@@ -24,6 +24,7 @@ export interface Prompt {
   difficulty: "beginner" | "intermediate" | "advanced";
   estimatedTimeSaved: string | null;
   coverImageUrl: string | null;
+  createdAt?: string;
 }
 
 export interface Category {

@@ -53,7 +53,7 @@ export default async function HomePage({
       <Hero suggestions={suggestions} toolCountLabel={toolCountLabel} />
       <TrustSection toolCountLabel={toolCountLabel} metrics={trustMetrics} />
       <BeforeAfterShowcase />
-      <FeaturedCollections />
+      <FeaturedCollections categories={categories} />
       {promptOfTheDay && <PromptOfTheDay prompt={promptOfTheDay} />}
       <FeaturedPrompts prompts={featuredPrompts} />
       <TrendingPrompts prompts={trendingPrompts} />

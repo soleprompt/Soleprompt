@@ -8,6 +8,7 @@ import { parsePromptFilterParams } from "@/lib/prompt-filters";
 import {
   getCategoriesWithCounts,
   getPublishedPrompts,
+  getTrendingPromptIds,
 } from "@/lib/marketplace";
 
 interface ExplorePageProps {
@@ -16,15 +17,17 @@ interface ExplorePageProps {
     category?: string;
     price?: string;
     rating?: string;
+    model?: string;
   }>;
 }
 
 export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   const params = await searchParams;
   const filters = parsePromptFilterParams(params);
-  const [prompts, categories] = await Promise.all([
+  const [prompts, categories, trendingIds] = await Promise.all([
     getPublishedPrompts(filters),
     getCategoriesWithCounts(),
+    getTrendingPromptIds(24),
   ]);
 
   return (
@@ -42,7 +45,11 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
       </Suspense>
       <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
         {prompts.map((prompt) => (
-          <PromptCard key={prompt.id} prompt={prompt} />
+          <PromptCard
+            key={prompt.id}
+            prompt={prompt}
+            trendingIds={trendingIds}
+          />
         ))}
       </div>
     </div>

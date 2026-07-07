@@ -11,6 +11,7 @@ import { SOLAR_PROMPTS } from "./seed-data/solar-prompts";
 import { SALES_PROMPTS } from "./seed-data/sales-prompts";
 import { SOCIAL_MEDIA_PROMPTS } from "./seed-data/social-media-prompts";
 import { REAL_ESTATE_PROMPTS } from "./seed-data/real-estate-prompts";
+import { BULK_CATALOG } from "./seed-data/bulk-catalog";
 import type { CatalogEntry } from "./seed-data/helpers";
 
 dotenv.config({ path: ".env.local" });
@@ -122,6 +123,7 @@ const CATALOG: CatalogEntry[] = [
   ...SALES_PROMPTS,
   ...SOCIAL_MEDIA_PROMPTS,
   ...REAL_ESTATE_PROMPTS,
+  ...BULK_CATALOG,
   ...BUNDLES,
 ];
 

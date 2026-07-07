@@ -16,6 +16,8 @@ const QUICK_FILTERS: QuickFilter[] = [
   { label: "Free", params: { price: "free" } },
   { label: "Under $10", params: { price: "under10" } },
   { label: "Top Rated", params: { sort: "rating", rating: "4" } },
+  { label: "GPT-4", params: { model: "GPT-4" } },
+  { label: "Claude", params: { model: "Claude" } },
 ];
 
 interface SearchQuickFiltersProps {

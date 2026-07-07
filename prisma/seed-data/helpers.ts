@@ -29,7 +29,7 @@ export type StarterPromptDefinition = {
   title: string;
   categorySlug: CategorySlug;
   tags: string[];
-  price: 1.99 | 2.99;
+  price: 0 | 1.99 | 2.99;
   difficulty: Difficulty;
   estimatedTimeSaved: string;
   description: string;
@@ -86,7 +86,7 @@ export function starterPrompt(
   title: string,
   categorySlug: CategorySlug,
   tags: string[],
-  price: 1.99 | 2.99,
+  price: 0 | 1.99 | 2.99,
   difficulty: Difficulty,
   estimatedTimeSaved: string,
   role: string,

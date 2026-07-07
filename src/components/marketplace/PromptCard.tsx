@@ -6,8 +6,7 @@ import {
   ArrowUpRight,
   Download,
   ShoppingBag,
-  Sparkles,
-  TrendingUp,
+  User,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -17,63 +16,51 @@ import { trackClickThrough } from "@/lib/click-throughs/client";
 import {
   getCompatibleModelBadges,
   getPromptBenefit,
-  getPromptDifficultyTier,
 } from "@/lib/prompt-thumbnails";
+import { BADGE_STYLES, getPromptBadges } from "@/lib/prompt-badges";
 import { resolvePromptCoverImage } from "@/lib/tool-images";
 import {
   formatCurrency,
   formatPurchaseAmount,
   getCompareAtPrice,
 } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { Prompt } from "@/types";
 
 interface PromptCardProps {
   prompt: Prompt;
   href?: string;
   variant?: "compact" | "rich";
+  trendingIds?: string[];
 }
 
 function PromptThumbnail({
   prompt,
-  difficulty,
+  trendingIds,
 }: {
   prompt: Prompt;
-  difficulty: string;
+  trendingIds?: string[];
 }) {
-  const isBestseller = prompt.salesCount >= 10;
-  const isNew =
-    prompt.reviews === 0 &&
-    prompt.rating === 0 &&
-    prompt.salesCount < 5;
-
+  const badges = getPromptBadges(prompt, {
+    trendingIds: trendingIds ? new Set(trendingIds) : undefined,
+  });
   const thumbnailSrc = resolvePromptCoverImage(prompt);
 
   return (
     <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#0a0a12]">
-      <Badge
-        variant={difficulty === "Pro" ? "electric" : "outline"}
-        className="absolute left-3 top-3 z-10 text-[10px] font-semibold backdrop-blur-sm"
-      >
-        {difficulty}
-      </Badge>
-      {isBestseller && (
-        <Badge
-          variant="electric"
-          className="absolute right-3 top-3 z-10 gap-1 text-[10px] font-semibold backdrop-blur-sm"
-        >
-          <TrendingUp className="h-3 w-3" />
-          Bestseller
-        </Badge>
-      )}
-      {isNew && !isBestseller && (
-        <Badge
-          variant="outline"
-          className="absolute right-3 top-3 z-10 gap-1 border-purple/40 bg-purple/10 text-[10px] font-semibold text-purple-300 backdrop-blur-sm"
-        >
-          <Sparkles className="h-3 w-3" />
-          New
-        </Badge>
-      )}
+      <div className="absolute left-3 top-3 z-10 flex max-w-[70%] flex-wrap gap-1">
+        {badges.map((badge) => (
+          <span
+            key={badge.type}
+            className={cn(
+              "rounded-full border px-2 py-0.5 text-[9px] font-semibold backdrop-blur-sm",
+              BADGE_STYLES[badge.type],
+            )}
+          >
+            {badge.label}
+          </span>
+        ))}
+      </div>
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={thumbnailSrc}
@@ -82,7 +69,7 @@ function PromptThumbnail({
         loading="lazy"
         decoding="async"
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
     </div>
   );
 }
@@ -106,11 +93,6 @@ function PriceDisplay({ price }: { price: number }) {
           {formatPurchaseAmount(price)}
         </span>
       </div>
-      {compareAt && (
-        <span className="text-[10px] font-medium text-electric/80">
-          Limited launch pricing
-        </span>
-      )}
     </div>
   );
 }
@@ -118,24 +100,20 @@ function PriceDisplay({ price }: { price: number }) {
 function RatingDisplay({ prompt }: { prompt: Prompt }) {
   if (prompt.rating > 0) {
     return (
-      <div className="flex items-center gap-1.5">
+      <div className="flex items-center gap-1">
         <Star className="h-3.5 w-3.5 fill-electric text-electric" />
-        <span className="text-sm font-medium text-foreground">
-          {prompt.rating.toFixed(1)}
+        <span className="text-sm font-medium">{prompt.rating.toFixed(1)}</span>
+        <span className="text-xs text-muted-foreground">
+          ({prompt.reviews.toLocaleString()})
         </span>
-        {prompt.reviews > 0 && (
-          <span className="text-xs text-muted-foreground">
-            ({prompt.reviews.toLocaleString()})
-          </span>
-        )}
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-1.5">
-      <Star className="h-3.5 w-3.5 text-muted-foreground" />
-      <span className="text-sm font-medium text-muted-foreground">New</span>
+    <div className="flex items-center gap-1 text-sm text-muted-foreground">
+      <Star className="h-3.5 w-3.5" />
+      <span>New</span>
     </div>
   );
 }
@@ -144,11 +122,10 @@ export function PromptCard({
   prompt,
   href = `/prompts/${prompt.id}`,
   variant = "rich",
+  trendingIds,
 }: PromptCardProps) {
   const benefit = getPromptBenefit(prompt.description, prompt.estimatedTimeSaved);
-  const difficulty = getPromptDifficultyTier(prompt);
   const modelBadges = getCompatibleModelBadges(prompt.compatibleModels);
-  const downloadCount = prompt.salesCount;
   const buyLabel =
     prompt.price <= 0 ? "Get Free" : `Buy · ${formatCurrency(prompt.price)}`;
 
@@ -160,24 +137,47 @@ export function PromptCard({
     });
   }
 
+  const metaRow = (
+    <div className="mt-3 space-y-2 border-t border-border/40 pt-3">
+      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+        <User className="h-3 w-3 shrink-0" />
+        <span className="truncate">{prompt.seller.displayName}</span>
+      </div>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <RatingDisplay prompt={prompt} />
+        <PriceDisplay price={prompt.price} />
+      </div>
+      <div className="flex items-center gap-1 text-xs text-muted-foreground">
+        {prompt.salesCount > 0 ? (
+          <>
+            <ShoppingBag className="h-3 w-3" />
+            {prompt.salesCount.toLocaleString()} downloads
+          </>
+        ) : (
+          <>
+            <Download className="h-3 w-3" />
+            Instant download
+          </>
+        )}
+      </div>
+    </div>
+  );
+
   if (variant === "compact") {
     return (
       <Card hover className="group flex h-full flex-col overflow-hidden">
         <Link href={href} className="flex flex-1 flex-col" onClick={handleClick}>
-          <PromptThumbnail prompt={prompt} difficulty={difficulty} />
-          <CardContent className="flex flex-1 flex-col pt-4">
+          <PromptThumbnail prompt={prompt} trendingIds={trendingIds} />
+          <CardContent className="flex flex-1 flex-col pt-3">
             <div className="flex flex-wrap gap-1">
               {modelBadges.slice(0, 2).map((model) => (
                 <ModelBadge key={model} model={model} size="sm" className="px-1.5 text-[9px]" />
               ))}
             </div>
-            <h3 className="mt-2 line-clamp-2 text-base font-semibold text-foreground">
+            <h3 className="mt-2 line-clamp-2 text-sm font-semibold text-foreground">
               {prompt.title}
             </h3>
-            <div className="mt-auto flex items-center justify-between pt-3">
-              <RatingDisplay prompt={prompt} />
-              <PriceDisplay price={prompt.price} />
-            </div>
+            {metaRow}
           </CardContent>
         </Link>
       </Card>
@@ -187,7 +187,7 @@ export function PromptCard({
   return (
     <Card hover className="group flex h-full flex-col overflow-hidden">
       <Link href={href} className="block" onClick={handleClick}>
-        <PromptThumbnail prompt={prompt} difficulty={difficulty} />
+        <PromptThumbnail prompt={prompt} trendingIds={trendingIds} />
       </Link>
 
       <CardContent className="flex flex-1 flex-col pt-4">
@@ -220,23 +220,7 @@ export function PromptCard({
           ))}
         </div>
 
-        <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/40 pt-3">
-          <RatingDisplay prompt={prompt} />
-          <PriceDisplay price={prompt.price} />
-          <span className="flex items-center gap-1 text-xs text-muted-foreground">
-            {downloadCount > 0 ? (
-              <>
-                <ShoppingBag className="h-3 w-3" />
-                {downloadCount.toLocaleString()} downloads
-              </>
-            ) : (
-              <>
-                <Download className="h-3 w-3" />
-                Instant download
-              </>
-            )}
-          </span>
-        </div>
+        {metaRow}
       </CardContent>
 
       <CardFooter className="border-t border-border/50 pt-4">

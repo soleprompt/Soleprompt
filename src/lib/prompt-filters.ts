@@ -6,6 +6,7 @@ export function parsePromptFilterParams(searchParams: {
   category?: string;
   price?: string;
   rating?: string;
+  model?: string;
 }) {
   const sort = (searchParams.sort as PromptSortOption) || "newest";
   const price = searchParams.price;
@@ -20,5 +21,6 @@ export function parsePromptFilterParams(searchParams: {
       price === "under5" ? 5 : price === "under10" ? 10 : undefined,
     minRating:
       rating && Number.isFinite(rating) && rating > 0 ? rating : undefined,
+    compatibleModel: searchParams.model?.trim() || undefined,
   };
 }

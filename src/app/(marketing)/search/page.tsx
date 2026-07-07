@@ -8,7 +8,9 @@ import { parsePromptFilterParams } from "@/lib/prompt-filters";
 import { SearchBar } from "@/components/landing/SearchBar";
 import {
   getCategoriesWithCounts,
+  getPopularSearchTerms,
   getPublishedPrompts,
+  getTrendingPromptIds,
 } from "@/lib/marketplace";
 
 interface SearchPageProps {
@@ -18,6 +20,7 @@ interface SearchPageProps {
     category?: string;
     price?: string;
     rating?: string;
+    model?: string;
   }>;
 }
 
@@ -25,9 +28,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   const params = await searchParams;
   const query = params.q?.trim() ?? "";
   const filters = parsePromptFilterParams(params);
-  const [prompts, categories] = await Promise.all([
+  const [prompts, categories, suggestions, trendingIds] = await Promise.all([
     getPublishedPrompts(filters),
     getCategoriesWithCounts(),
+    getPopularSearchTerms(12),
+    getTrendingPromptIds(24),
   ]);
 
   return (
@@ -41,7 +46,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         }
       />
       <div className="mb-6">
-        <SearchBar defaultQuery={query} />
+        <SearchBar defaultQuery={query} suggestions={suggestions} />
       </div>
       <Suspense fallback={null}>
         <div className="space-y-4">
@@ -57,7 +62,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {prompts.map((prompt) => (
-            <PromptCard key={prompt.id} prompt={prompt} />
+            <PromptCard
+              key={prompt.id}
+              prompt={prompt}
+              trendingIds={trendingIds}
+            />
           ))}
         </div>
       )}

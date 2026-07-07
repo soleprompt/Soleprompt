@@ -56,6 +56,7 @@ export function mapPromptToListItem(prompt: PromptWithRelations): Prompt {
     difficulty: prompt.difficulty,
     estimatedTimeSaved: prompt.estimatedTimeSaved,
     coverImageUrl: prompt.coverImageUrl,
+    createdAt: prompt.createdAt.toISOString(),
   };
 }
 
@@ -103,6 +104,7 @@ export async function getPublishedPrompts(options?: {
   freeOnly?: boolean;
   maxPrice?: number;
   minRating?: number;
+  compatibleModel?: string;
 }): Promise<Prompt[]> {
   return safeDbRead([], async () => {
     const search = options?.search?.trim();
@@ -159,12 +161,129 @@ export async function getPublishedPrompts(options?: {
       }
     }
 
+    if (options?.compatibleModel) {
+      const needle = options.compatibleModel.toLowerCase();
+      results = results.filter((p) =>
+        p.compatibleModels.some((m) => m.toLowerCase().includes(needle)),
+      );
+      if (options.limit) {
+        results = results.slice(0, options.limit);
+      }
+    }
+
     return results;
   });
 }
 
 export async function getTrendingPrompts(limit = 6): Promise<Prompt[]> {
   return getPublishedPrompts({ sort: "trending", limit });
+}
+
+export async function getTrendingPromptIds(limit = 24): Promise<string[]> {
+  const prompts = await getTrendingPrompts(limit);
+  return prompts.map((p) => p.id);
+}
+
+export async function getRelatedPrompts(
+  promptId: string,
+  categorySlug: string,
+  tags: string[],
+  limit = 4,
+): Promise<Prompt[]> {
+  return safeDbRead([], async () => {
+    const tagFilter =
+      tags.length > 0
+        ? {
+            tags: {
+              some: { tag: { name: { in: tags.slice(0, 3) } } },
+            },
+          }
+        : {};
+
+    const prompts = await prisma.prompt.findMany({
+      where: {
+        status: "published",
+        id: { not: promptId },
+        category: { slug: categorySlug },
+        ...tagFilter,
+      },
+      include: promptInclude,
+      orderBy: [
+        { purchases: { _count: "desc" } },
+        { views: "desc" },
+      ],
+      take: limit,
+    });
+
+    if (prompts.length >= limit) {
+      return prompts.map(mapPromptToListItem);
+    }
+
+    const excludeIds = [promptId, ...prompts.map((p) => p.id)];
+    const more = await prisma.prompt.findMany({
+      where: {
+        status: "published",
+        id: { notIn: excludeIds },
+        category: { slug: categorySlug },
+      },
+      include: promptInclude,
+      orderBy: { createdAt: "desc" },
+      take: limit - prompts.length,
+    });
+
+    return [...prompts, ...more].map(mapPromptToListItem);
+  });
+}
+
+export async function getCustomersAlsoBought(
+  promptId: string,
+  limit = 4,
+): Promise<Prompt[]> {
+  return safeDbRead([], async () => {
+    const buyers = await prisma.purchase.findMany({
+      where: { promptId, status: "completed" },
+      select: { buyerId: true },
+      take: 50,
+    });
+
+    const buyerIds = [...new Set(buyers.map((b) => b.buyerId))];
+    if (buyerIds.length === 0) {
+      return getPublishedPrompts({ sort: "popular", limit });
+    }
+
+    const coPurchases = await prisma.purchase.findMany({
+      where: {
+        buyerId: { in: buyerIds },
+        promptId: { not: promptId },
+        status: "completed",
+      },
+      select: { promptId: true },
+    });
+
+    const counts = new Map<string, number>();
+    for (const row of coPurchases) {
+      counts.set(row.promptId, (counts.get(row.promptId) ?? 0) + 1);
+    }
+
+    const topIds = [...counts.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, limit)
+      .map(([id]) => id);
+
+    if (topIds.length === 0) {
+      return getPublishedPrompts({ sort: "popular", limit });
+    }
+
+    const prompts = await prisma.prompt.findMany({
+      where: { id: { in: topIds }, status: "published" },
+      include: promptInclude,
+    });
+
+    const order = new Map(topIds.map((id, i) => [id, i]));
+    return prompts
+      .sort((a, b) => (order.get(a.id) ?? 99) - (order.get(b.id) ?? 99))
+      .map(mapPromptToListItem);
+  });
 }
 
 export async function getPromptOfTheDay(): Promise<Prompt | null> {

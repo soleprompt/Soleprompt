@@ -5,6 +5,7 @@
 import dotenv from "dotenv";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "../src/generated/prisma/client";
+import { BULK_CATALOG } from "./seed-data/bulk-catalog";
 import { BUNDLES } from "./seed-data/bundles";
 import { REAL_ESTATE_PROMPTS } from "./seed-data/real-estate-prompts";
 import { SALES_PROMPTS } from "./seed-data/sales-prompts";
@@ -26,13 +27,22 @@ const NEW_CATALOG: CatalogEntry[] = [
   ...SALES_PROMPTS,
   ...SOCIAL_MEDIA_PROMPTS,
   ...REAL_ESTATE_PROMPTS,
+  ...BULK_CATALOG,
   ...BUNDLES.filter((b) =>
     ["Sales Closer AI Pack", "Social Media God Bundle"].includes(b.title),
   ),
 ];
 
 const CATEGORIES = [
+  { slug: "productivity", name: "Productivity", description: "Planning, focus, habits, and time management", icon: "Zap" },
+  { slug: "business", name: "Business", description: "Strategy, operations, sales, and leadership", icon: "Briefcase" },
+  { slug: "marketing", name: "Marketing", description: "Ads, campaigns, social media, and growth", icon: "Megaphone" },
+  { slug: "coding", name: "Coding", description: "Code review, debugging, APIs, and dev tools", icon: "Code2" },
+  { slug: "finance", name: "Finance", description: "Budgeting, investing, and financial planning", icon: "Wallet" },
+  { slug: "writing", name: "Writing", description: "Copy, blogs, resumes, and creative writing", icon: "PenLine" },
+  { slug: "education", name: "Education", description: "Lesson plans, assessments, and teaching tools", icon: "GraduationCap" },
   { slug: "sales", name: "Sales", description: "Outreach, proposals, objection handling, and closing", icon: "Target" },
+  { slug: "solar", name: "Solar", description: "ROI calculators, proposals, and solar sales workflows", icon: "Sun" },
   { slug: "social-media", name: "Social Media", description: "Content, audits, profile cleanup, and growth", icon: "Share2" },
   { slug: "real-estate", name: "Real Estate", description: "Listings, market analysis, and client communication", icon: "Home" },
 ] as const;
