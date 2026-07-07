@@ -1,3 +1,5 @@
+import { getGeneratedToolPreviewDataUrl } from "@/lib/tool-preview-svg";
+
 export type ToolCategorySlug =
   | "productivity"
   | "business"
@@ -31,6 +33,18 @@ export const TOOL_COVER_IMAGES: Record<string, string> = {
   "Welcome Pack - 10 Free AI Prompts": "/tools/welcome-pack.svg",
   "Social Scrubbing Suite — Facebook, Instagram & LinkedIn":
     "/tools/social-scrubbing-suite.svg",
+  "Productivity Power Pack": "/tools/productivity-power-pack.svg",
+  "Freelancer Essentials Bundle": "/tools/freelancer-essentials-bundle.svg",
+  "Social Media Growth Bundle": "/tools/social-media-growth-bundle.svg",
+  "Startup Launch Pack": "/tools/startup-launch-pack.svg",
+  "Developer Quick Wins Pack": "/tools/developer-quick-wins-pack.svg",
+  "Personal Finance Toolkit": "/tools/personal-finance-toolkit.svg",
+  "Teacher's Classroom AI Pack": "/tools/teachers-classroom-ai-pack.svg",
+  "LinkedIn Authority Builder": "/tools/linkedin-authority-builder.svg",
+  "Email Marketing Mastery Pack": "/tools/email-marketing-mastery-pack.svg",
+  "Social Media Scrubbing Pack": "/tools/social-media-scrubbing-pack.svg",
+  "Complete AI Starter Mega Pack": "/tools/complete-ai-starter-mega-pack.svg",
+  "Client Proposal Generator": "/tools/client-proposal-generator.svg",
 };
 
 export const CATEGORY_COVER_IMAGES: Record<ToolCategorySlug, string> = {
@@ -51,17 +65,26 @@ export const CATEGORY_HEADER_IMAGES: Partial<Record<ToolCategorySlug, string>> =
     sales: "/categories/sales-header.svg",
     business: "/categories/business-header.svg",
     marketing: "/categories/marketing-header.svg",
+    productivity: "/categories/productivity-header.svg",
+    coding: "/categories/coding-header.svg",
+    finance: "/categories/finance-header.svg",
+    writing: "/categories/writing-header.svg",
+    education: "/categories/education-header.svg",
   };
+
+/** Header images for slugs outside ToolCategorySlug (e.g. social-media). */
+export const CATEGORY_HEADER_ALIASES: Record<string, string> = {
+  "social-media": "/categories/social-media-header.svg",
+};
 
 export function getToolCoverImage(
   title: string,
   categorySlug: ToolCategorySlug,
 ): string {
-  return (
-    TOOL_COVER_IMAGES[title] ??
-    CATEGORY_COVER_IMAGES[categorySlug] ??
-    "/tools/categories/business.svg"
-  );
+  if (TOOL_COVER_IMAGES[title]) {
+    return TOOL_COVER_IMAGES[title];
+  }
+  return getGeneratedToolPreviewDataUrl(title, categorySlug);
 }
 
 export function getCategoryCoverImage(categorySlug: string): string {
@@ -70,13 +93,17 @@ export function getCategoryCoverImage(categorySlug: string): string {
 }
 
 export function getCategoryHeaderImage(categorySlug: string): string | null {
-  const slug = categorySlug.toLowerCase().replace(/\s+/g, "-") as ToolCategorySlug;
-  return CATEGORY_HEADER_IMAGES[slug] ?? null;
+  const slug = categorySlug.toLowerCase().replace(/\s+/g, "-");
+  return (
+    CATEGORY_HEADER_ALIASES[slug] ??
+    CATEGORY_HEADER_IMAGES[slug as ToolCategorySlug] ??
+    null
+  );
 }
 
-/** Next.js image optimization rejects SVG — serve them unoptimized. */
+/** Next.js image optimization rejects SVG and data URLs — serve them unoptimized. */
 export function isSvgImageSrc(src: string): boolean {
-  return /\.svg($|\?)/i.test(src);
+  return src.startsWith("data:") || /\.svg($|\?)/i.test(src);
 }
 
 export function resolvePromptCoverImage(prompt: {
@@ -85,7 +112,7 @@ export function resolvePromptCoverImage(prompt: {
   coverImageUrl: string | null;
 }): string {
   const url = prompt.coverImageUrl;
-  if (url && !url.includes("placehold.co")) {
+  if (url && !url.includes("placehold.co") && !url.startsWith("data:")) {
     return url;
   }
 

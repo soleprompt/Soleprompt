@@ -20,6 +20,7 @@ import {
   formatToolCountDisplay,
   getTrendingPrompts,
   getPromptOfTheDay,
+  getTrustMetrics,
 } from "@/lib/marketplace";
 import { recordToolVisit } from "@/lib/tool-visits";
 import { parseUtmAttribution } from "@/lib/utm";
@@ -33,7 +34,7 @@ export default async function HomePage({
   const utmParams = parseUtmAttribution(await searchParams);
   void recordToolVisit("homepage", user?.id, utmParams);
 
-  const [featuredPrompts, trendingPrompts, promptOfTheDay, categories, stats, suggestions, publishedCount] =
+  const [featuredPrompts, trendingPrompts, promptOfTheDay, categories, stats, suggestions, publishedCount, trustMetrics] =
     await Promise.all([
     getFeaturedPrompts(4),
     getTrendingPrompts(6),
@@ -42,6 +43,7 @@ export default async function HomePage({
     getMarketplaceStats(),
     getPopularSearchTerms(4),
     getPublishedPromptCount(),
+    getTrustMetrics(),
   ]);
 
   const toolCountLabel = formatToolCountDisplay(publishedCount);
@@ -49,7 +51,7 @@ export default async function HomePage({
   return (
     <>
       <Hero suggestions={suggestions} toolCountLabel={toolCountLabel} />
-      <TrustSection toolCountLabel={toolCountLabel} />
+      <TrustSection toolCountLabel={toolCountLabel} metrics={trustMetrics} />
       <BeforeAfterShowcase />
       <FeaturedCollections />
       {promptOfTheDay && <PromptOfTheDay prompt={promptOfTheDay} />}

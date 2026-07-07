@@ -341,6 +341,49 @@ export function formatToolCountDisplay(count: number): string {
   return `${rounded}+`;
 }
 
+export interface TrustMetrics {
+  totalDownloads: number;
+  verifiedBuyers: number;
+  avgRating: number;
+  reviewCount: number;
+  toolCount: number;
+}
+
+export async function getTrustMetrics(): Promise<TrustMetrics> {
+  return safeDbRead(
+    {
+      totalDownloads: 0,
+      verifiedBuyers: 0,
+      avgRating: 0,
+      reviewCount: 0,
+      toolCount: 0,
+    },
+    async () => {
+      const [totalDownloads, verifiedBuyers, reviewAgg, reviewCount, toolCount] =
+        await Promise.all([
+          prisma.purchase.count({ where: { status: "completed" } }),
+          prisma.purchase
+            .groupBy({
+              by: ["buyerId"],
+              where: { status: "completed" },
+            })
+            .then((groups) => groups.length),
+          prisma.review.aggregate({ _avg: { rating: true } }),
+          prisma.review.count(),
+          prisma.prompt.count({ where: { status: "published" } }),
+        ]);
+
+      return {
+        totalDownloads,
+        verifiedBuyers,
+        avgRating: Math.round((reviewAgg._avg.rating ?? 0) * 10) / 10,
+        reviewCount,
+        toolCount,
+      };
+    },
+  );
+}
+
 export async function getMarketplaceStats() {
   return safeDbRead([...EMPTY_MARKETPLACE_STATS], async () => {
     const [promptCount, sellerCount, buyerCount, avgRatingResult] =

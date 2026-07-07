@@ -7,10 +7,13 @@ import {
   ArrowUpRight,
   Download,
   ShoppingBag,
+  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardFooter } from "@/components/ui/Card";
+import { ModelBadge } from "@/components/ui/ModelLogo";
 import { trackClickThrough } from "@/lib/click-throughs/client";
 import {
   getCompatibleModelBadges,
@@ -18,8 +21,11 @@ import {
   getPromptDifficultyTier,
 } from "@/lib/prompt-thumbnails";
 import { isSvgImageSrc, resolvePromptCoverImage } from "@/lib/tool-images";
-import { formatCurrency, formatPurchaseAmount } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import {
+  formatCurrency,
+  formatPurchaseAmount,
+  getCompareAtPrice,
+} from "@/lib/format";
 import type { Prompt } from "@/types";
 
 interface PromptCardProps {
@@ -28,13 +34,6 @@ interface PromptCardProps {
   variant?: "compact" | "rich";
 }
 
-const MODEL_BADGE_STYLES: Record<string, string> = {
-  ChatGPT: "border-emerald-500/25 bg-emerald-500/10 text-emerald-300",
-  Claude: "border-orange-500/25 bg-orange-500/10 text-orange-300",
-  Gemini: "border-sky-500/25 bg-sky-500/10 text-sky-300",
-  Grok: "border-zinc-500/25 bg-zinc-500/10 text-zinc-300",
-};
-
 function PromptThumbnail({
   prompt,
   difficulty,
@@ -42,6 +41,12 @@ function PromptThumbnail({
   prompt: Prompt;
   difficulty: string;
 }) {
+  const isBestseller = prompt.salesCount >= 10;
+  const isNew =
+    prompt.reviews === 0 &&
+    prompt.rating === 0 &&
+    prompt.salesCount < 5;
+
   const difficultyBadge = (
     <Badge
       variant={difficulty === "Pro" ? "electric" : "outline"}
@@ -54,8 +59,26 @@ function PromptThumbnail({
   const thumbnailSrc = resolvePromptCoverImage(prompt);
 
   return (
-    <div className="relative aspect-[16/10] w-full overflow-hidden">
+    <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#0a0a12]">
       {difficultyBadge}
+      {isBestseller && (
+        <Badge
+          variant="electric"
+          className="absolute right-3 top-3 z-10 gap-1 text-[10px] font-semibold backdrop-blur-sm"
+        >
+          <TrendingUp className="h-3 w-3" />
+          Bestseller
+        </Badge>
+      )}
+      {isNew && !isBestseller && (
+        <Badge
+          variant="outline"
+          className="absolute right-3 top-3 z-10 gap-1 border-purple/40 bg-purple/10 text-[10px] font-semibold text-purple-300 backdrop-blur-sm"
+        >
+          <Sparkles className="h-3 w-3" />
+          New
+        </Badge>
+      )}
       <Image
         src={thumbnailSrc}
         alt=""
@@ -65,6 +88,59 @@ function PromptThumbnail({
         sizes="(max-width: 768px) 100vw, 33vw"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
+    </div>
+  );
+}
+
+function PriceDisplay({ price }: { price: number }) {
+  const compareAt = getCompareAtPrice(price);
+
+  if (price <= 0) {
+    return <span className="font-semibold text-emerald-400">Free</span>;
+  }
+
+  return (
+    <div className="flex flex-col items-end gap-0.5">
+      <div className="flex items-baseline gap-2">
+        {compareAt && (
+          <span className="text-sm text-muted-foreground line-through">
+            {formatCurrency(compareAt)}
+          </span>
+        )}
+        <span className="font-semibold text-foreground">
+          {formatPurchaseAmount(price)}
+        </span>
+      </div>
+      {compareAt && (
+        <span className="text-[10px] font-medium text-electric/80">
+          Limited launch pricing
+        </span>
+      )}
+    </div>
+  );
+}
+
+function RatingDisplay({ prompt }: { prompt: Prompt }) {
+  if (prompt.rating > 0) {
+    return (
+      <div className="flex items-center gap-1.5">
+        <Star className="h-3.5 w-3.5 fill-electric text-electric" />
+        <span className="text-sm font-medium text-foreground">
+          {prompt.rating.toFixed(1)}
+        </span>
+        {prompt.reviews > 0 && (
+          <span className="text-xs text-muted-foreground">
+            ({prompt.reviews.toLocaleString()})
+          </span>
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex items-center gap-1.5">
+      <Star className="h-3.5 w-3.5 text-muted-foreground" />
+      <span className="text-sm font-medium text-muted-foreground">New</span>
     </div>
   );
 }
@@ -97,28 +173,15 @@ export function PromptCard({
           <CardContent className="flex flex-1 flex-col pt-4">
             <div className="flex flex-wrap gap-1">
               {modelBadges.slice(0, 2).map((model) => (
-                <span
-                  key={model}
-                  className={cn(
-                    "rounded-full border px-1.5 py-0.5 text-[9px] font-medium",
-                    MODEL_BADGE_STYLES[model] ?? "border-border bg-muted/50 text-muted-foreground",
-                  )}
-                >
-                  {model}
-                </span>
+                <ModelBadge key={model} model={model} size="sm" className="px-1.5 text-[9px]" />
               ))}
             </div>
             <h3 className="mt-2 line-clamp-2 text-base font-semibold text-foreground">
               {prompt.title}
             </h3>
             <div className="mt-auto flex items-center justify-between pt-3">
-              <div className="flex items-center gap-1 text-sm">
-                <Star className="h-3.5 w-3.5 fill-electric text-electric" />
-                <span>{prompt.rating > 0 ? prompt.rating : "—"}</span>
-              </div>
-              <span className="font-semibold text-foreground">
-                {formatPurchaseAmount(prompt.price)}
-              </span>
+              <RatingDisplay prompt={prompt} />
+              <PriceDisplay price={prompt.price} />
             </div>
           </CardContent>
         </Link>
@@ -158,33 +221,13 @@ export function PromptCard({
 
         <div className="mt-3 flex flex-wrap gap-1.5">
           {modelBadges.map((model) => (
-            <span
-              key={model}
-              className={cn(
-                "rounded-full border px-2 py-0.5 text-[10px] font-medium",
-                MODEL_BADGE_STYLES[model] ?? "border-border bg-muted/50 text-muted-foreground",
-              )}
-            >
-              {model}
-            </span>
+            <ModelBadge key={model} model={model} />
           ))}
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/40 pt-3">
-          <div className="flex items-center gap-1.5">
-            <Star className="h-3.5 w-3.5 fill-electric text-electric" />
-            <span className="text-sm font-medium text-foreground">
-              {prompt.rating > 0 ? prompt.rating : "New"}
-            </span>
-            {prompt.reviews > 0 && (
-              <span className="text-xs text-muted-foreground">
-                ({prompt.reviews})
-              </span>
-            )}
-          </div>
-          <span className="text-sm font-semibold text-foreground">
-            {formatPurchaseAmount(prompt.price)}
-          </span>
+          <RatingDisplay prompt={prompt} />
+          <PriceDisplay price={prompt.price} />
           <span className="flex items-center gap-1 text-xs text-muted-foreground">
             {downloadCount > 0 ? (
               <>

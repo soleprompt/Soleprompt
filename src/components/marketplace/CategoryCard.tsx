@@ -13,7 +13,7 @@ interface CategoryCardProps {
 export function CategoryCard({ category, className }: CategoryCardProps) {
   const visual = getCategoryVisual(category.id);
   const Icon = visual.icon;
-  const promptLabel = `${category.count.toLocaleString()} prompt${category.count === 1 ? "" : "s"}`;
+  const promptLabel = `${category.count.toLocaleString()} tool${category.count === 1 ? "" : "s"}`;
 
   return (
     <Link

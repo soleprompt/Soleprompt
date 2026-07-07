@@ -29,7 +29,7 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
               transition={{ duration: 0.5 }}
             >
               <Badge variant="electric" className="mb-6 px-4 py-1.5 text-xs">
-                AI tools for real work
+                AI Tools Marketplace
               </Badge>
             </motion.div>
 
@@ -39,9 +39,9 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
               transition={{ duration: 0.6, delay: 0.1 }}
               className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl"
             >
-              Stop browsing prompts.{" "}
+              The AI Marketplace That{" "}
               <span className="bg-gradient-to-r from-electric via-purple to-electric bg-clip-text text-transparent">
-                Start using AI tools that get work done.
+                Actually Saves You Time
               </span>
             </motion.h1>
 
@@ -51,14 +51,32 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
               transition={{ duration: 0.6, delay: 0.2 }}
               className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-muted-foreground sm:text-xl lg:mx-0"
             >
-              Download ready-to-use AI tools for sales, marketing, business,
-              social media, and productivity — starting at free.
+              Download professional AI tools built for marketers, developers,
+              founders, and sales teams. Ready in seconds. No subscriptions.
             </motion.p>
 
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.25 }}
+              className="mt-6 flex flex-wrap items-center justify-center gap-3 text-sm text-muted-foreground lg:justify-start"
+            >
+              {["Instant download", "No subscription", "Works with ChatGPT & Claude"].map(
+                (tag) => (
+                  <span
+                    key={tag}
+                    className="rounded-full border border-border/60 bg-card/30 px-3 py-1 backdrop-blur-sm"
+                  >
+                    {tag}
+                  </span>
+                ),
+              )}
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
               className="mt-8 flex flex-col items-center justify-center gap-4 sm:flex-row lg:justify-start"
             >
               <Link href="/explore">
@@ -77,7 +95,7 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.3 }}
+              transition={{ duration: 0.6, delay: 0.35 }}
               className="mt-6 hidden sm:block lg:hidden"
             >
               <StartSellingButton size="md" variant="ghost" />
@@ -101,7 +119,7 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
                   />
                 ))}
               </div>
-              <span>{toolCountLabel} tools · Free downloads available</span>
+              <span>{toolCountLabel} tools · Trusted by marketers & founders</span>
             </motion.div>
           </div>
 

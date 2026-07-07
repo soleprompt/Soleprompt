@@ -253,6 +253,153 @@ const THUMBNAILS = {
     <text x="300" y="242" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="12" text-anchor="middle" font-weight="600">Clean your brand across all platforms</text>
     <text x="300" y="260" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">Multi-platform audit & delete prompts</text>
   `)}`),
+
+  "tools/productivity-power-pack.svg": base("#6366f1", `
+  <text x="300" y="85" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="16" font-weight="600" text-anchor="middle">Productivity Power Pack</text>
+  <text x="300" y="105" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle">10 prompts · Planning & focus</text>
+  ${["Daily Plan","Weekly Plan","Focus","Habits","Inbox Zero","Goals"].map((t,i)=>`<rect x="${70+(i%3)*155}" y="${120+Math.floor(i/3)*65}" width="140" height="50" rx="8" fill="${CARD}" stroke="${BORDER}"/><text x="${140+(i%3)*155}" y="${150+Math.floor(i/3)*65}" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">${t}</text>`).join("")}
+  <rect x="200" y="265" width="200" height="30" rx="14" fill="#6366f1" opacity="0.2" stroke="#6366f1"/>
+  <text x="300" y="285" fill="#6366f1" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">10 Tools Included</text>`),
+
+  "tools/freelancer-essentials-bundle.svg": base("#0ea5e9", `
+  ${windowChrome(40, 50, 520, 270, "Freelancer Essentials", `
+    <rect x="70" y="100" width="200" height="70" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="85" y="125" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="10" font-weight="600">Proposal</text>
+    <text x="85" y="145" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9">Scope · Timeline · Pricing</text>
+    <rect x="290" y="100" width="240" height="70" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="305" y="125" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="10" font-weight="600">Cold Outreach</text>
+    <text x="305" y="145" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9">Subject + 3 follow-ups</text>
+    <rect x="70" y="185" width="150" height="50" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="145" y="215" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">Rate Calculator</text>
+    <rect x="235" y="185" width="150" height="50" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="310" y="215" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">SOP Writer</text>
+    <rect x="400" y="185" width="130" height="50" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="465" y="215" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">Invoices</text>
+    <rect x="70" y="250" width="460" height="35" rx="8" fill="${ELECTRIC}" opacity="0.12" stroke="${ELECTRIC}"/>
+    <text x="300" y="273" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">8 Freelancer Tools · $12.99</text>
+  `)}`),
+
+  "tools/social-media-growth-bundle.svg": base("#f97316", `
+  ${windowChrome(40, 50, 520, 270, "Social Growth Bundle", `
+    <text x="300" y="115" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="14" font-weight="600" text-anchor="middle">📱 Content Calendar</text>
+    ${[0,1,2,3,4,5].map(i=>`<rect x="${80+(i%3)*145}" y="${130+Math.floor(i/3)*55}" width="130" height="40" rx="6" fill="#1f2937" stroke="${BORDER}"/>`).join("")}
+    <text x="145" y="155" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9" text-anchor="middle">Mon post</text>
+    <text x="290" y="155" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9" text-anchor="middle">Wed reel</text>
+    <text x="435" y="155" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9" text-anchor="middle">Fri story</text>
+    <rect x="150" y="250" width="300" height="30" rx="8" fill="#f97316" opacity="0.2" stroke="#f97316"/>
+    <text x="300" y="270" fill="#f97316" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">Captions · Hashtags · Analytics</text>
+  `)}`),
+
+  "tools/startup-launch-pack.svg": base("#0ea5e9", `
+  ${windowChrome(40, 50, 520, 270, "Startup Launch Pack", `
+    <rect x="70" y="100" width="130" height="80" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="135" y="130" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle" font-weight="600">Pitch Deck</text>
+    <text x="135" y="150" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="8" text-anchor="middle">Problem · Solution</text>
+    <rect x="220" y="100" width="130" height="80" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="285" y="130" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle" font-weight="600">MVP Scope</text>
+    <rect x="370" y="100" width="160" height="80" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="450" y="130" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle" font-weight="600">Go-to-Market</text>
+    <rect x="70" y="195" width="460" height="55" rx="8" fill="${ELECTRIC}" opacity="0.1" stroke="${ELECTRIC}"/>
+    <text x="300" y="220" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle">Launch checklist · Investor emails · Landing copy</text>
+    <text x="300" y="238" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9" text-anchor="middle">7 startup tools in one pack</text>
+  `)}`),
+
+  "tools/developer-quick-wins-pack.svg": base("#22c55e", `
+  ${windowChrome(40, 50, 520, 270, "Developer Quick Wins", `
+    <rect x="70" y="100" width="460" height="120" rx="8" fill="#0d1117" stroke="${BORDER}"/>
+    <text x="90" y="125" fill="#6b7280" font-family="monospace" font-size="9">// SQL · API docs · Code review</text>
+    <text x="90" y="145" fill="#22c55e" font-family="monospace" font-size="9">SELECT</text>
+    <text x="140" y="145" fill="${TEXT}" font-family="monospace" font-size="9">* FROM users WHERE active = true;</text>
+    <text x="90" y="165" fill="${ELECTRIC}" font-family="monospace" font-size="9">/** @api POST /v1/orders */</text>
+    <rect x="90" y="180" width="100" height="22" rx="4" fill="#22c55e" opacity="0.15" stroke="#22c55e"/>
+    <text x="140" y="195" fill="#22c55e" font-family="monospace" font-size="8" text-anchor="middle">✓ Tests pass</text>
+    <rect x="70" y="235" width="460" height="35" rx="8" fill="#22c55e" opacity="0.12" stroke="#22c55e"/>
+    <text x="300" y="258" fill="#22c55e" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">6 Dev Tools · Ship faster</text>
+  `)}`),
+
+  "tools/personal-finance-toolkit.svg": base("#eab308", `
+  ${windowChrome(40, 50, 520, 270, "Finance Toolkit", `
+    <text x="70" y="110" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="10">Monthly Budget</text>
+    <text x="70" y="135" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="22" font-weight="700">$4,200</text>
+    <rect x="70" y="155" width="200" height="8" rx="4" fill="#1f2937"/>
+    <rect x="70" y="155" width="140" height="8" rx="4" fill="#22c55e"/>
+    <text x="70" y="180" fill="#22c55e" font-family="system-ui,sans-serif" font-size="10">Savings: 18%</text>
+    <rect x="300" y="100" width="230" height="90" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="320" y="125" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9">Categories</text>
+    <text x="320" y="145" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="9">Housing · Food · Transport</text>
+    <text x="320" y="165" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="9">Investments · Emergency fund</text>
+    <rect x="70" y="210" width="460" height="40" rx="8" fill="#eab308" opacity="0.12" stroke="#eab308"/>
+    <text x="300" y="235" fill="#eab308" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">Budget · Forecast · Tax prep</text>
+  `)}`),
+
+  "tools/teachers-classroom-ai-pack.svg": base("#ec4899", `
+  ${windowChrome(40, 50, 520, 270, "Classroom AI Pack", `
+    <rect x="70" y="100" width="200" height="90" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="85" y="125" fill="#ec4899" font-family="system-ui,sans-serif" font-size="10" font-weight="600">Lesson Plan</text>
+    <text x="85" y="145" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9">Objectives · Activities · Assessment</text>
+    <rect x="290" y="100" width="240" height="90" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="305" y="125" fill="#ec4899" font-family="system-ui,sans-serif" font-size="10" font-weight="600">Quiz Generator</text>
+    <text x="305" y="145" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9">10 questions · Answer key · Rubric</text>
+    <rect x="70" y="205" width="460" height="45" rx="8" fill="#ec4899" opacity="0.12" stroke="#ec4899"/>
+    <text x="300" y="233" fill="#ec4899" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">8 teaching tools for K-12 & higher ed</text>
+  `)}`),
+
+  "tools/linkedin-authority-builder.svg": base("#0ea5e9", `
+  ${windowChrome(40, 50, 520, 270, "LinkedIn Authority", `
+    <circle cx="120" cy="130" r="28" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="120" y="136" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="18" text-anchor="middle">in</text>
+    <text x="165" y="120" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="12" font-weight="600">Headline options</text>
+    <text x="165" y="140" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9">3 variants · Keyword optimized</text>
+    <rect x="70" y="175" width="460" height="60" rx="8" fill="#1f2937" stroke="${BORDER}"/>
+    <text x="85" y="200" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="10">About section · Content pillars · Post templates</text>
+    <text x="85" y="218" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9">Build authority in your niche</text>
+  `)}`),
+
+  "tools/email-marketing-mastery-pack.svg": base("#f97316", `
+  ${windowChrome(40, 50, 520, 270, "Email Marketing Pack", `
+    <rect x="70" y="100" width="460" height="130" rx="10" fill="#111118" stroke="${BORDER}"/>
+    <text x="90" y="125" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9">Welcome sequence · Day 1</text>
+    <text x="90" y="148" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="11" font-weight="600">Subject: You're in — here's what's next</text>
+    <rect x="90" y="160" width="380" height="5" rx="2" fill="#374151"/>
+    <rect x="90" y="172" width="320" height="5" rx="2" fill="#374151"/>
+    <rect x="90" y="184" width="350" height="5" rx="2" fill="#374151"/>
+    <text x="90" y="215" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9">+ Nurture · Launch · Re-engagement sequences</text>
+    <rect x="150" y="250" width="300" height="30" rx="8" fill="#f97316" opacity="0.2" stroke="#f97316"/>
+    <text x="300" y="270" fill="#f97316" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">10 email marketing tools</text>
+  `)}`),
+
+  "tools/social-media-scrubbing-pack.svg": base("#0ea5e9", `
+  ${windowChrome(40, 50, 520, 270, "Social Scrubbing Pack", `
+    <rect x="70" y="100" width="140" height="90" rx="8" fill="#1f2937" stroke="#ef4444"/>
+    <text x="140" y="140" fill="#ef4444" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">Before: Risky</text>
+    <text x="300" y="145" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="18" text-anchor="middle">→</text>
+    <rect x="350" y="100" width="180" height="90" rx="8" fill="#1f2937" stroke="#22c55e"/>
+    <text x="440" y="140" fill="#22c55e" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">After: Clean</text>
+    <rect x="70" y="210" width="460" height="45" rx="8" fill="${ELECTRIC}" opacity="0.1" stroke="${ELECTRIC}"/>
+    <text x="300" y="238" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">Multi-platform audit prompts</text>
+  `)}`),
+
+  "tools/complete-ai-starter-mega-pack.svg": base(ELECTRIC, `
+  <text x="300" y="80" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="17" font-weight="700" text-anchor="middle">Complete AI Starter Mega Pack</text>
+  <text x="300" y="100" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle">12 tools · Every category</text>
+  ${["⚡ Productivity","💼 Business","📣 Marketing","✍️ Writing","💰 Finance","💻 Coding"].map((t,i)=>`<rect x="${70+(i%3)*155}" y="${115+Math.floor(i/3)*60}" width="140" height="45" rx="8" fill="${CARD}" stroke="${BORDER}"/><text x="${140+(i%3)*155}" y="${142+Math.floor(i/3)*60}" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="9" text-anchor="middle">${t}</text>`).join("")}
+  <rect x="175" y="250" width="250" height="32" rx="16" fill="${ELECTRIC}" opacity="0.25" stroke="${ELECTRIC}"/>
+  <text x="300" y="271" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="12" text-anchor="middle" font-weight="600">Best value starter pack</text>`),
+
+  "tools/client-proposal-generator.svg": base("#0ea5e9", `
+  ${windowChrome(40, 50, 520, 270, "Proposal Generator", `
+    <rect x="160" y="70" width="280" height="240" rx="6" fill="white" opacity="0.95"/>
+    <rect x="160" y="70" width="280" height="36" rx="6" fill="${ELECTRIC}" opacity="0.9"/>
+    <text x="300" y="94" fill="white" font-family="system-ui,sans-serif" font-size="13" font-weight="600" text-anchor="middle">Client Proposal</text>
+    <text x="180" y="130" fill="#374151" font-family="system-ui,sans-serif" font-size="10" font-weight="600">Executive Summary</text>
+    <rect x="180" y="140" width="240" height="5" rx="2" fill="#e5e7eb"/>
+    <rect x="180" y="152" width="200" height="5" rx="2" fill="#e5e7eb"/>
+    <text x="180" y="180" fill="#374151" font-family="system-ui,sans-serif" font-size="10" font-weight="600">Scope & Timeline</text>
+    <rect x="180" y="190" width="110" height="50" rx="4" fill="#f3f4f6"/>
+    <text x="235" y="218" fill="#22c55e" font-family="system-ui,sans-serif" font-size="12" font-weight="700" text-anchor="middle">$8,500</text>
+    <rect x="300" y="190" width="120" height="50" rx="4" fill="#f3f4f6"/>
+    <text x="360" y="218" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">6 weeks</text>
+  `)}`),
 };
 
 const CATEGORY_THUMBNAILS = {
@@ -283,6 +430,12 @@ const CATEGORY_HEADERS = {
   "categories/sales-header.svg": { accent: "#f43f5e", title: "Sales Tools", sub: "Outreach, objections & closing" },
   "categories/business-header.svg": { accent: "#0ea5e9", title: "Business", sub: "Strategy, ops & growth" },
   "categories/marketing-header.svg": { accent: "#f97316", title: "Marketing", sub: "Campaigns, content & growth" },
+  "categories/productivity-header.svg": { accent: "#6366f1", title: "Productivity", sub: "Planning, focus & habits" },
+  "categories/coding-header.svg": { accent: "#22c55e", title: "Developer Tools", sub: "Code review, SQL & APIs" },
+  "categories/finance-header.svg": { accent: "#eab308", title: "Finance", sub: "Budgets, forecasts & planning" },
+  "categories/writing-header.svg": { accent: "#a855f7", title: "Writing", sub: "Resumes, blogs & copy" },
+  "categories/education-header.svg": { accent: "#ec4899", title: "Education", sub: "Lesson plans & assessments" },
+  "categories/social-media-header.svg": { accent: "#06b6d4", title: "Social Media", sub: "Scrubbing, captions & growth" },
 };
 
 for (const [path, meta] of Object.entries(CATEGORY_HEADERS)) {

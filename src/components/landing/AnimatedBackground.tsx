@@ -2,13 +2,22 @@
 
 import { motion } from "framer-motion";
 
-const PARTICLES = Array.from({ length: 24 }, (_, i) => ({
+const PARTICLES = Array.from({ length: 36 }, (_, i) => ({
   id: i,
   left: `${(i * 17 + 7) % 100}%`,
   top: `${(i * 23 + 11) % 100}%`,
-  size: 2 + (i % 3),
+  size: 1.5 + (i % 4),
   delay: `${(i % 8) * 0.6}s`,
   duration: `${6 + (i % 5) * 1.5}s`,
+}));
+
+const STARS = Array.from({ length: 20 }, (_, i) => ({
+  id: i,
+  left: `${(i * 31 + 5) % 100}%`,
+  top: `${(i * 19 + 3) % 100}%`,
+  size: 1 + (i % 2),
+  delay: `${(i % 6) * 0.8}s`,
+  duration: `${3 + (i % 4)}s`,
 }));
 
 export function AnimatedBackground() {
@@ -54,10 +63,20 @@ export function AnimatedBackground() {
         transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
       />
 
+      <div
+        className="animate-grid-drift absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)`,
+          backgroundSize: "64px 64px",
+        }}
+        aria-hidden
+      />
+
       {PARTICLES.map((particle) => (
         <span
           key={particle.id}
-          className="absolute rounded-full bg-electric/60"
+          className="absolute rounded-full bg-electric/60 shadow-[0_0_6px_rgba(0,102,255,0.5)]"
           style={{
             left: particle.left,
             top: particle.top,
@@ -69,14 +88,23 @@ export function AnimatedBackground() {
         />
       ))}
 
-      <div
-        className="absolute inset-0 opacity-[0.03]"
-        style={{
-          backgroundImage: `linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)`,
-          backgroundSize: "64px 64px",
-        }}
-      />
+      {STARS.map((star) => (
+        <span
+          key={`star-${star.id}`}
+          className="absolute rounded-full bg-white/40"
+          style={{
+            left: star.left,
+            top: star.top,
+            width: star.size,
+            height: star.size,
+            animation: `twinkle ${star.duration}s ease-in-out ${star.delay} infinite`,
+          }}
+          aria-hidden
+        />
+      ))}
+
+      <div className="absolute inset-x-0 top-1/3 h-px bg-gradient-to-r from-transparent via-electric/20 to-transparent" />
+      <div className="absolute inset-x-0 bottom-1/4 h-px bg-gradient-to-r from-transparent via-purple/15 to-transparent" />
     </div>
   );
 }

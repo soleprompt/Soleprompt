@@ -42,7 +42,7 @@ export function SearchBar({
       >
         <Input
           type="search"
-          placeholder="Search premium prompts..."
+          placeholder="Search AI tools..."
           icon={<Search className="h-4 w-4" />}
           className="h-14 flex-1 text-base shadow-lg shadow-electric/5"
           aria-label="Search prompts"

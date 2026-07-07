@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { CategoryFilterChips } from "@/components/marketplace/CategoryFilterChips";
 import { PromptCard } from "@/components/marketplace/PromptCard";
 import { PromptFilters } from "@/components/marketplace/PromptFilters";
+import { SearchQuickFilters } from "@/components/marketplace/SearchQuickFilters";
 import { parsePromptFilterParams } from "@/lib/prompt-filters";
 import { SearchBar } from "@/components/landing/SearchBar";
 import {
@@ -32,11 +33,11 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <PageHeader
-        title={query ? `Results for "${query}"` : "Search Prompts"}
+        title={query ? `Results for "${query}"` : "Search AI Tools"}
         description={
           query
-            ? `${prompts.length} prompt${prompts.length === 1 ? "" : "s"} found`
-            : "Find the perfect prompt for your next project."
+            ? `${prompts.length} tool${prompts.length === 1 ? "" : "s"} found`
+            : "Find calculators, generators, and workflow templates."
         }
       />
       <div className="mb-6">
@@ -44,6 +45,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       </div>
       <Suspense fallback={null}>
         <div className="space-y-4">
+          <SearchQuickFilters basePath="/search" />
           <CategoryFilterChips categories={categories} basePath="/search" />
           <PromptFilters categories={categories} basePath="/search" />
         </div>

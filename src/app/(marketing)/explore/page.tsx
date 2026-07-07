@@ -3,6 +3,7 @@ import { PageHeader } from "@/components/dashboard/PageHeader";
 import { CategoryFilterChips } from "@/components/marketplace/CategoryFilterChips";
 import { PromptCard } from "@/components/marketplace/PromptCard";
 import { PromptFilters } from "@/components/marketplace/PromptFilters";
+import { SearchQuickFilters } from "@/components/marketplace/SearchQuickFilters";
 import { parsePromptFilterParams } from "@/lib/prompt-filters";
 import {
   getCategoriesWithCounts,
@@ -29,11 +30,12 @@ export default async function ExplorePage({ searchParams }: ExplorePageProps) {
   return (
     <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
       <PageHeader
-        title="Explore Prompts"
-        description="Browse all premium prompts in the marketplace."
+        title="Explore AI Tools"
+        description="Browse calculators, generators, and workflow templates built for real work."
       />
       <Suspense fallback={null}>
         <div className="space-y-4">
+          <SearchQuickFilters basePath="/explore" />
           <CategoryFilterChips categories={categories} basePath="/explore" />
           <PromptFilters categories={categories} basePath="/explore" />
         </div>

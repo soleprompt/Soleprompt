@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ChevronsLeftRight } from "lucide-react";
+import { ChevronsLeftRight, Loader2 } from "lucide-react";
 import {
   useCallback,
   useEffect,
@@ -36,6 +36,7 @@ function BeforeAfterCard({
   const [split, setSplit] = useState(DEFAULT_SPLIT);
   const [engaged, setEngaged] = useState(false);
   const [touchAfter, setTouchAfter] = useState(false);
+  const [cardHovered, setCardHovered] = useState(false);
   const [canHover, setCanHover] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
@@ -83,7 +84,11 @@ function BeforeAfterCard({
   }, [canHover, updateSplitFromClientX]);
 
   const effectiveSplit = canHover
-    ? split
+    ? engaged
+      ? split
+      : cardHovered
+        ? 0.72
+        : DEFAULT_SPLIT
     : touchAfter
       ? 0.85
       : 0.15;
@@ -123,9 +128,11 @@ function BeforeAfterCard({
   return (
     <div
       ref={rootRef}
+      onMouseEnter={() => setCardHovered(true)}
+      onMouseLeave={() => setCardHovered(false)}
       className={cn(
         "group relative overflow-hidden rounded-2xl border border-border bg-card/40 p-5 backdrop-blur-sm transition-[border-color,box-shadow] duration-500",
-        engaged && "border-electric/30 shadow-[0_0_40px_-12px_rgba(0,102,255,0.35)]",
+        (engaged || cardHovered) && "border-electric/30 shadow-[0_0_40px_-12px_rgba(0,102,255,0.35)]",
       )}
     >
       <div
@@ -220,6 +227,15 @@ function BeforeAfterCard({
             Tap to toggle · drag to scrub
           </p>
         )}
+
+        {canHover && cardHovered && !engaged && (
+          <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-black/30 backdrop-blur-[1px] transition-opacity duration-300">
+            <div className="flex items-center gap-2 rounded-full border border-electric/40 bg-background/90 px-3 py-1.5 shadow-[0_0_20px_rgba(0,102,255,0.25)]">
+              <Loader2 className="h-3 w-3 animate-spin text-electric" aria-hidden />
+              <span className="text-[10px] font-medium text-electric">AI processing…</span>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -293,6 +309,91 @@ function EmailMockup({ messy }: { messy: boolean }) {
   );
 }
 
+function ResumeMockup({ messy }: { messy: boolean }) {
+  return messy ? (
+    <div className="text-[10px] text-muted-foreground">
+      <p className="font-medium text-red-300/80">ATS Score: 58%</p>
+      <p className="mt-1">• Managed stuff at company</p>
+      <p>• Did things well</p>
+      <p className="text-red-400/70">Missing keywords</p>
+    </div>
+  ) : (
+    <div className="text-[10px] text-emerald-100/90">
+      <p className="font-medium text-emerald-300">ATS Score: 94%</p>
+      <p className="mt-1">• Led 12-person team, +34% revenue</p>
+      <p>• Reduced costs $2.1M via automation</p>
+      <p className="text-emerald-400/80">✓ All keywords matched</p>
+    </div>
+  );
+}
+
+function PackMockup({ messy }: { messy: boolean }) {
+  return messy ? (
+    <div className="text-[10px] text-muted-foreground">
+      <p className="font-medium text-foreground">Scattered prompts</p>
+      <p className="mt-1">47 tabs open...</p>
+      <p>Copy-pasting from Notion</p>
+      <p className="text-red-400/70">No structure</p>
+    </div>
+  ) : (
+    <div className="text-[10px] text-emerald-100/90">
+      <p className="font-medium text-emerald-300">10 Prompt Cards</p>
+      <p className="mt-1">✓ Welcome sequence</p>
+      <p>✓ Sales outreach pack</p>
+      <p>✓ Content templates</p>
+    </div>
+  );
+}
+
+function MarketingMockup({ messy }: { messy: boolean }) {
+  return messy ? (
+    <div className="text-[10px] text-muted-foreground">
+      <p className="font-medium text-foreground">Campaign data</p>
+      <p className="mt-1 text-lg font-bold text-red-400">ROAS: 0.8x</p>
+      <p className="text-red-400/70">↓ 12% conversions</p>
+    </div>
+  ) : (
+    <div className="text-[10px]">
+      <p className="font-medium text-emerald-300">Analytics Dashboard</p>
+      <p className="mt-1 text-lg font-bold text-emerald-400">ROAS: 4.2x</p>
+      <p className="text-emerald-200/70">↑ 127% conversions</p>
+    </div>
+  );
+}
+
+const SHOWCASE_ITEMS = [
+  {
+    title: "X Account Checker",
+    before: <TweetMockup messy />,
+    after: <TweetMockup messy={false} />,
+  },
+  {
+    title: "Solar ROI Calculator",
+    before: <BillMockup messy />,
+    after: <BillMockup messy={false} />,
+  },
+  {
+    title: "Cold Email Generator",
+    before: <EmailMockup messy />,
+    after: <EmailMockup messy={false} />,
+  },
+  {
+    title: "Resume Optimizer",
+    before: <ResumeMockup messy />,
+    after: <ResumeMockup messy={false} />,
+  },
+  {
+    title: "Prompt Pack",
+    before: <PackMockup messy />,
+    after: <PackMockup messy={false} />,
+  },
+  {
+    title: "Marketing Pack",
+    before: <MarketingMockup messy />,
+    after: <MarketingMockup messy={false} />,
+  },
+] as const;
+
 export function BeforeAfterShowcase() {
   return (
     <section className="border-y border-border bg-muted/20 py-24 sm:py-32">
@@ -300,52 +401,27 @@ export function BeforeAfterShowcase() {
         <SectionHeading
           eyebrow="See the difference"
           title="From messy input to polished output"
-          description="Every tool is designed to turn real-world inputs into work-ready results."
+          description="Hover any card to watch AI transform your input — or drag to compare before and after."
         />
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.45 }}
-          >
-            <BeforeAfterCard
-              title="X Account Checker"
-              beforeLabel="Before"
-              afterLabel="After"
-              before={<TweetMockup messy />}
-              after={<TweetMockup messy={false} />}
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.45, delay: 0.1 }}
-          >
-            <BeforeAfterCard
-              title="Solar ROI Calculator"
-              beforeLabel="Before"
-              afterLabel="After"
-              before={<BillMockup messy />}
-              after={<BillMockup messy={false} />}
-            />
-          </motion.div>
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.45, delay: 0.2 }}
-          >
-            <BeforeAfterCard
-              title="Cold Email Generator"
-              beforeLabel="Before"
-              afterLabel="After"
-              before={<EmailMockup messy />}
-              after={<EmailMockup messy={false} />}
-            />
-          </motion.div>
+        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {SHOWCASE_ITEMS.map((item, index) => (
+            <motion.div
+              key={item.title}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.45, delay: index * 0.08 }}
+            >
+              <BeforeAfterCard
+                title={item.title}
+                beforeLabel="Before"
+                afterLabel="After"
+                before={item.before}
+                after={item.after}
+              />
+            </motion.div>
+          ))}
         </div>
       </div>
     </section>

@@ -55,7 +55,7 @@ export function CategoryBanner({
             </div>
             {count !== undefined && (
               <p className="mt-1 text-sm text-white/70">
-                {count.toLocaleString()} premium prompt{count === 1 ? "" : "s"}
+                {count.toLocaleString()} AI tool{count === 1 ? "" : "s"}
               </p>
             )}
           </div>
@@ -94,7 +94,7 @@ export function CategoryBanner({
           </div>
           {count !== undefined && (
             <p className="mt-1 text-sm text-muted-foreground">
-              {count.toLocaleString()} premium prompt{count === 1 ? "" : "s"}
+              {count.toLocaleString()} AI tool{count === 1 ? "" : "s"}
             </p>
           )}
         </div>
