@@ -321,6 +321,18 @@ export function generateToolPreviewSvg(
 </svg>`;
 }
 
+export function getGeneratedToolPreviewUrl(
+  title: string,
+  categorySlug: ToolCategorySlug,
+): string {
+  const params = new URLSearchParams({
+    title,
+    category: categorySlug,
+  });
+  return `/api/tool-preview?${params.toString()}`;
+}
+
+/** @deprecated Use getGeneratedToolPreviewUrl — data URLs break next/image on some cards. */
 export function getGeneratedToolPreviewDataUrl(
   title: string,
   categorySlug: ToolCategorySlug,

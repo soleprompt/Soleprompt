@@ -48,7 +48,12 @@ export type BundleDefinition = Omit<StarterPromptDefinition, "price"> & {
 export type CatalogEntry = StarterPromptDefinition | BundleDefinition;
 
 export function coverImageUrl(categorySlug: CategorySlug, title: string): string {
-  return getToolCoverImage(title, categorySlug);
+  const image = getToolCoverImage(title, categorySlug);
+  // Only persist static assets in the DB; generated previews resolve at render time.
+  if (image.startsWith("/tools/") || image.startsWith("/categories/")) {
+    return image;
+  }
+  return "";
 }
 
 export function pickCompatibleModels(title: string): string[] {

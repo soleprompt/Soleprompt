@@ -1,4 +1,4 @@
-import { getGeneratedToolPreviewDataUrl } from "@/lib/tool-preview-svg";
+import { getGeneratedToolPreviewUrl } from "@/lib/tool-preview-svg";
 
 export type ToolCategorySlug =
   | "productivity"
@@ -84,7 +84,7 @@ export function getToolCoverImage(
   if (TOOL_COVER_IMAGES[title]) {
     return TOOL_COVER_IMAGES[title];
   }
-  return getGeneratedToolPreviewDataUrl(title, categorySlug);
+  return getGeneratedToolPreviewUrl(title, categorySlug);
 }
 
 export function getCategoryCoverImage(categorySlug: string): string {
@@ -101,9 +101,21 @@ export function getCategoryHeaderImage(categorySlug: string): string | null {
   );
 }
 
-/** Next.js image optimization rejects SVG and data URLs — serve them unoptimized. */
+/** Next.js image optimization rejects SVG and dynamic previews — serve them unoptimized. */
 export function isSvgImageSrc(src: string): boolean {
-  return src.startsWith("data:") || /\.svg($|\?)/i.test(src);
+  return (
+    src.startsWith("data:") ||
+    src.includes("/api/tool-preview") ||
+    /\.svg($|\?)/i.test(src)
+  );
+}
+
+function isPersistedCoverUrl(url: string): boolean {
+  return (
+    url.startsWith("/tools/") ||
+    url.startsWith("/categories/") ||
+    (url.startsWith("https://") && !url.includes("placehold.co"))
+  );
 }
 
 export function resolvePromptCoverImage(prompt: {
@@ -111,8 +123,8 @@ export function resolvePromptCoverImage(prompt: {
   category: string;
   coverImageUrl: string | null;
 }): string {
-  const url = prompt.coverImageUrl;
-  if (url && !url.includes("placehold.co") && !url.startsWith("data:")) {
+  const url = prompt.coverImageUrl?.trim();
+  if (url && isPersistedCoverUrl(url)) {
     return url;
   }
 
