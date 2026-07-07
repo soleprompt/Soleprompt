@@ -10,6 +10,7 @@ import {
   Users,
 } from "lucide-react";
 import type { TrustMetrics } from "@/lib/marketplace";
+import { SectionGlow } from "@/components/brand/SectionGlow";
 
 interface TrustSectionProps {
   toolCountLabel: string;
@@ -70,7 +71,8 @@ export function TrustSection({ toolCountLabel, metrics }: TrustSectionProps) {
 
   return (
     <section className="relative border-y border-border/60 bg-muted/30 py-6 sm:py-8">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+      <SectionGlow variant="section" />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6 sm:gap-4">
           {items.map((item, index) => {
             const Icon = item.icon;

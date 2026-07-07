@@ -5,6 +5,8 @@ import { DollarSign, Users, TrendingUp, Shield } from "lucide-react";
 import { StartSellingButton } from "@/components/dashboard/StartSellingButton";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
+import { SectionGlow } from "@/components/brand/SectionGlow";
+import { BrandWatermark } from "@/components/brand/BrandWatermark";
 
 const BENEFITS = [
   {
@@ -31,9 +33,15 @@ const BENEFITS = [
 
 export function BecomeSeller() {
   return (
-    <section id="sell" className="py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section id="sell" className="relative py-24 sm:py-32">
+      <SectionGlow variant="cta" />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-electric/5 via-background to-purple/5 p-8 sm:p-12 lg:p-16">
+          <BrandWatermark
+            src="/brand/brand-showcase.png"
+            opacity={0.05}
+            className="rounded-3xl"
+          />
           <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-electric/10 blur-3xl" />
           <div className="pointer-events-none absolute -bottom-20 -left-20 h-64 w-64 rounded-full bg-purple/10 blur-3xl" />
 
@@ -49,7 +57,7 @@ export function BecomeSeller() {
               </Badge>
               <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl lg:text-5xl">
                 Turn your prompts into{" "}
-                <span className="bg-gradient-to-r from-electric to-purple bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-cyan-400 via-electric to-purple bg-clip-text text-transparent">
                   passive income
                 </span>
               </h2>

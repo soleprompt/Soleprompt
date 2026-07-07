@@ -105,6 +105,40 @@ export function AnimatedBackground() {
 
       <div className="absolute inset-x-0 top-1/3 h-px bg-gradient-to-r from-transparent via-electric/20 to-transparent" />
       <div className="absolute inset-x-0 bottom-1/4 h-px bg-gradient-to-r from-transparent via-purple/15 to-transparent" />
+
+      <svg
+        className="absolute bottom-0 left-0 h-[45%] w-full opacity-25 dark:opacity-35"
+        viewBox="0 0 1440 400"
+        fill="none"
+        preserveAspectRatio="none"
+        aria-hidden
+      >
+        <path
+          d="M-40 320 C180 180 360 360 580 260 C800 160 1020 340 1240 220 C1360 150 1420 120 1480 100"
+          stroke="url(#trail-cyan)"
+          strokeWidth="2"
+          strokeLinecap="round"
+        />
+        <path
+          d="M-20 360 C220 240 420 380 640 300 C860 220 1080 360 1300 280 C1380 250 1420 230 1500 210"
+          stroke="url(#trail-purple)"
+          strokeWidth="1.5"
+          strokeLinecap="round"
+          strokeOpacity="0.7"
+        />
+        <defs>
+          <linearGradient id="trail-cyan" x1="0" y1="0" x2="1440" y2="0">
+            <stop stopColor="#22d3ee" stopOpacity="0" />
+            <stop offset="0.4" stopColor="#22d3ee" />
+            <stop offset="1" stopColor="#0066ff" stopOpacity="0.2" />
+          </linearGradient>
+          <linearGradient id="trail-purple" x1="0" y1="0" x2="1440" y2="0">
+            <stop stopColor="#0066ff" stopOpacity="0.1" />
+            <stop offset="0.5" stopColor="#a855f7" />
+            <stop offset="1" stopColor="#c084fc" stopOpacity="0" />
+          </linearGradient>
+        </defs>
+      </svg>
     </div>
   );
 }

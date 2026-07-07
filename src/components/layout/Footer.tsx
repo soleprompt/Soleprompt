@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Sparkles } from "lucide-react";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { SITE, NAV_LINKS, SOCIAL_LINKS } from "@/lib/constants";
 
 const FOOTER_LINKS = {
@@ -30,21 +30,24 @@ const FOOTER_LINKS = {
 
 export function Footer() {
   return (
-    <footer className="border-t border-border bg-background">
-      <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+    <footer className="relative border-t border-border bg-background">
+      <div className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div
+          className="absolute inset-0 opacity-40"
+          style={{
+            background:
+              "radial-gradient(ellipse 60% 80% at 50% 100%, rgba(0,102,255,0.06) 0%, transparent 60%)",
+          }}
+          aria-hidden
+        />
+      </div>
+      <div className="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-6">
           <div className="sm:col-span-2">
-            <Link href="/" className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-electric to-purple">
-                <Sparkles className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-lg font-semibold text-foreground">
-                {SITE.name}
-              </span>
-            </Link>
+            <BrandLogo />
             <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              {SITE.tagline}. Download AI tools for sales, marketing, business,
-              and productivity — starting at free.
+              Better prompts. Better results. {SITE.tagline} — for business,
+              marketing, productivity, and everyday tasks.
             </p>
           </div>
 

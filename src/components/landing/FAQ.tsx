@@ -4,11 +4,13 @@ import { motion } from "framer-motion";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Accordion } from "@/components/ui/Accordion";
 import { FAQ_ITEMS } from "@/lib/constants";
+import { SectionGlow } from "@/components/brand/SectionGlow";
 
 export function FAQ() {
   return (
-    <section id="faq" className="border-t border-border bg-muted/30 py-24 sm:py-32">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+    <section id="faq" className="relative border-t border-border bg-muted/30 py-24 sm:py-32">
+      <SectionGlow variant="section" />
+      <div className="relative mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="FAQ"
           title="Frequently asked questions"

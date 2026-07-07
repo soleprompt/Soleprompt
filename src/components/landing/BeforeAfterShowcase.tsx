@@ -10,6 +10,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from "react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { SectionGlow } from "@/components/brand/SectionGlow";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_SPLIT = 0.32;
@@ -396,8 +397,9 @@ const SHOWCASE_ITEMS = [
 
 export function BeforeAfterShowcase() {
   return (
-    <section className="border-y border-border bg-muted/20 py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="relative border-y border-border bg-muted/20 py-24 sm:py-32">
+      <SectionGlow variant="section" />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="See the difference"
           title="From messy input to polished output"

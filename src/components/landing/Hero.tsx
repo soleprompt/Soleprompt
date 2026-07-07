@@ -9,6 +9,7 @@ import { StartSellingButton } from "@/components/dashboard/StartSellingButton";
 import { SearchBar } from "@/components/landing/SearchBar";
 import { AnimatedBackground } from "@/components/landing/AnimatedBackground";
 import { HeroMockup } from "@/components/landing/HeroMockup";
+import { BrandWatermark } from "@/components/brand/BrandWatermark";
 
 interface HeroProps {
   suggestions?: string[];
@@ -19,6 +20,7 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
   return (
     <section className="relative flex min-h-[90vh] items-center overflow-hidden pt-16">
       <AnimatedBackground />
+      <BrandWatermark opacity={0.045} />
 
       <div className="relative z-10 mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8 lg:py-20">
         <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
@@ -29,7 +31,7 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
               transition={{ duration: 0.5 }}
             >
               <Badge variant="electric" className="mb-6 px-4 py-1.5 text-xs">
-                AI Tools Marketplace
+                Better Prompts · Better Results
               </Badge>
             </motion.div>
 
@@ -40,7 +42,7 @@ export function Hero({ suggestions = [], toolCountLabel = "500+" }: HeroProps) {
               className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl lg:text-6xl"
             >
               The AI Marketplace That{" "}
-              <span className="bg-gradient-to-r from-electric via-purple to-electric bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-cyan-400 via-electric to-purple bg-clip-text text-transparent">
                 Actually Saves You Time
               </span>
             </motion.h1>

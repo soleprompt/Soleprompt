@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import { SectionHeading } from "@/components/ui/SectionHeading";
+import { SectionGlow } from "@/components/brand/SectionGlow";
 import { cn } from "@/lib/utils";
 import type { Category } from "@/types";
 
@@ -73,8 +74,9 @@ export function FeaturedCollections({ categories = [] }: FeaturedCollectionsProp
   const countBySlug = Object.fromEntries(categories.map((c) => [c.id, c.count]));
 
   return (
-    <section className="py-24 sm:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="relative py-24 sm:py-32">
+      <SectionGlow variant="section" />
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           eyebrow="Featured Collections"
           title="Start with a collection that fits your work"

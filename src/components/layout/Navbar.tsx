@@ -3,16 +3,17 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, Sparkles } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import {
   SignInButton,
   SignUpButton,
   UserButton,
   useAuth,
 } from "@clerk/nextjs";
+import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
-import { NAV_LINKS, SITE } from "@/lib/constants";
+import { NAV_LINKS } from "@/lib/constants";
 import { getDashboardPath } from "@/lib/auth";
 import type { UserRole } from "@/types/user";
 import { cn } from "@/lib/utils";
@@ -67,14 +68,7 @@ export function Navbar() {
       )}
     >
       <nav className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        <Link href="/" className="group flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-electric to-purple">
-            <Sparkles className="h-4 w-4 text-white" />
-          </div>
-          <span className="text-lg font-semibold tracking-tight text-foreground">
-            {SITE.name}
-          </span>
-        </Link>
+        <BrandLogo />
 
         <div className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((link) => (
