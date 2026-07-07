@@ -334,6 +334,8 @@ export async function getCreatorByUsername(username: string) {
       username: user.username,
       displayName: user.sellerProfile.displayName,
       bio: user.sellerProfile.bio,
+      verified: user.sellerProfile.verified,
+      creatorStatus: user.sellerProfile.creatorStatus,
       salesCount: user.sellerProfile.salesCount,
       totalEarnings: user.sellerProfile.totalEarnings,
       promptCount: user._count.prompts,
@@ -846,12 +848,17 @@ const EMPTY_SELLER_EARNINGS = {
   availableBalance: 0,
   pending: 0,
   lifetimeEarnings: 0,
+  paidOut: 0,
+  minPayoutAmount: 25,
+  creatorCommissionPercent: 70,
   payouts: [] as {
     id: string;
     amount: number;
     date: string;
-    status: "processing" | "paid";
+    status: "processing" | "paid" | "failed";
     method: string;
+    note: string | null;
+    adminNote: string | null;
   }[],
 };
 
@@ -981,32 +988,8 @@ export async function getSellerEarnings(clerkUserId: string) {
       return EMPTY_SELLER_EARNINGS;
     }
 
-    const purchases = await prisma.purchase.findMany({
-      where: { prompt: { sellerId: user.id } },
-      orderBy: { createdAt: "desc" },
-    });
-
-    const completed = purchases.filter((p) => p.status === "completed");
-    const pending = purchases.filter((p) => p.status === "pending");
-
-    const lifetimeEarnings = completed.reduce((sum, p) => sum + p.amount, 0);
-    const pendingAmount = pending.reduce((sum, p) => sum + p.amount, 0);
-    const availableBalance = lifetimeEarnings * 0.85;
-
-    const payouts = completed.slice(0, 4).map((p, i) => ({
-      id: p.id,
-      amount: p.amount * 0.85,
-      date: p.createdAt.toISOString(),
-      status: i === 0 && pendingAmount > 0 ? ("processing" as const) : ("paid" as const),
-      method: i % 2 === 0 ? "PayPal" : "Bank Transfer",
-    }));
-
-    return {
-      availableBalance,
-      pending: pendingAmount,
-      lifetimeEarnings,
-      payouts,
-    };
+    const { getCreatorEarnings } = await import("@/lib/creator-program");
+    return getCreatorEarnings(user.id);
   });
 }
 

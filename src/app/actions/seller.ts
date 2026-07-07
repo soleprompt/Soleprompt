@@ -48,6 +48,7 @@ export async function becomeSeller(): Promise<void> {
     create: {
       userId: updatedUser.id,
       displayName: fields.username,
+      creatorStatus: "pending",
     },
     update: {
       displayName: fields.username,

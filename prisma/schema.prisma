@@ -39,6 +39,32 @@ enum TransactionStatus {
   refunded
 }
 
+enum CreatorStatus {
+  pending
+  approved
+  rejected
+  suspended
+}
+
+enum AffiliateStatus {
+  pending
+  approved
+  rejected
+  suspended
+}
+
+enum PayoutStatus {
+  pending
+  approved
+  paid
+  rejected
+}
+
+enum PayoutKind {
+  creator
+  affiliate
+}
+
 enum SocialPlatform {
   x
   facebook
@@ -77,6 +103,8 @@ model User {
   clickThroughs       ClickThrough[]
   xConnections        XConnection[]
   socialConnections   SocialConnection[]
+  payoutRequests      PayoutRequest[]
+  affiliate           Affiliate?
 }
 
 model XConnection {
@@ -111,16 +139,21 @@ model SocialConnection {
 }
 
 model SellerProfile {
-  id            String   @id @default(cuid())
-  userId        String   @unique
-  user          User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  displayName   String
-  bio           String?
-  salesCount         Int      @default(0)
-  freeDownloadCount  Int      @default(0)
-  totalEarnings      Float    @default(0)
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  id                 String        @id @default(cuid())
+  userId             String        @unique
+  user               User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  displayName        String
+  bio                String?
+  salesCount         Int           @default(0)
+  freeDownloadCount  Int           @default(0)
+  totalEarnings      Float         @default(0)
+  creatorStatus      CreatorStatus @default(approved)
+  verified           Boolean       @default(false)
+  verifiedAt         DateTime?
+  payoutEmail        String?
+  payoutMethod       String?
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
 }
 
 model Category {
@@ -190,24 +223,32 @@ model Purchase {
 }
 
 model Transaction {
-  id              String            @id @default(cuid())
-  purchaseId      String            @unique
-  purchase        Purchase          @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
-  stripeSessionId String?           @unique
-  stripePaymentId String?           @unique
-  currency        String            @default("usd")
-  amount          Float
-  status          TransactionStatus @default(completed)
-  buyerId         String
-  buyer           User              @relation("BuyerTransactions", fields: [buyerId], references: [id], onDelete: Cascade)
-  sellerId        String
-  seller          User              @relation("SellerTransactions", fields: [sellerId], references: [id], onDelete: Cascade)
-  promptId        String
-  prompt          Prompt            @relation(fields: [promptId], references: [id], onDelete: Cascade)
-  createdAt       DateTime          @default(now())
+  id                  String            @id @default(cuid())
+  purchaseId          String            @unique
+  purchase            Purchase          @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  stripeSessionId     String?           @unique
+  stripePaymentId     String?           @unique
+  currency            String            @default("usd")
+  amount              Float
+  creatorShare        Float             @default(0)
+  platformFee         Float             @default(0)
+  affiliateCommission Float             @default(0)
+  affiliateId         String?
+  affiliate           Affiliate?        @relation(fields: [affiliateId], references: [id], onDelete: SetNull)
+  referralCode        String?
+  status              TransactionStatus @default(completed)
+  buyerId             String
+  buyer               User              @relation("BuyerTransactions", fields: [buyerId], references: [id], onDelete: Cascade)
+  sellerId            String
+  seller              User              @relation("SellerTransactions", fields: [sellerId], references: [id], onDelete: Cascade)
+  promptId            String
+  prompt              Prompt            @relation(fields: [promptId], references: [id], onDelete: Cascade)
+  affiliateReferral   AffiliateReferral?
+  createdAt           DateTime          @default(now())
 
   @@index([sellerId, createdAt])
   @@index([buyerId, createdAt])
+  @@index([affiliateId, createdAt])
 }
 
 model AuditLog {
@@ -352,6 +393,80 @@ model EngageReplyDraft {
 
   @@index([postId])
   @@index([status])
+}
+
+model PlatformSettings {
+  id                         String   @id @default("default")
+  creatorCommissionPercent   Float    @default(70)
+  affiliateCommissionPercent Float    @default(10)
+  minPayoutAmount            Float    @default(25)
+  updatedAt                  DateTime @updatedAt
+}
+
+model PayoutRequest {
+  id            String       @id @default(cuid())
+  userId        String
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind          PayoutKind
+  amount        Float
+  status        PayoutStatus @default(pending)
+  payoutEmail   String?
+  payoutMethod  String?
+  note          String?
+  adminNote     String?
+  processedAt   DateTime?
+  processedById String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([userId, kind, status])
+  @@index([status, createdAt])
+}
+
+model Affiliate {
+  id               String          @id @default(cuid())
+  userId           String          @unique
+  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  code             String          @unique
+  status           AffiliateStatus @default(pending)
+  totalClicks      Int             @default(0)
+  totalConversions Int             @default(0)
+  totalEarnings    Float           @default(0)
+  pendingBalance   Float           @default(0)
+  paidBalance      Float           @default(0)
+  payoutEmail      String?
+  payoutMethod     String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  clicks      ReferralClick[]
+  referrals   AffiliateReferral[]
+  transactions Transaction[]
+}
+
+model ReferralClick {
+  id          String    @id @default(cuid())
+  affiliateId String
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  landingPath String?
+  referrerCode String
+  createdAt   DateTime  @default(now())
+
+  @@index([affiliateId, createdAt])
+}
+
+model AffiliateReferral {
+  id            String       @id @default(cuid())
+  affiliateId   String
+  affiliate     Affiliate    @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  transactionId String?      @unique
+  transaction   Transaction? @relation(fields: [transactionId], references: [id], onDelete: SetNull)
+  purchaseId    String?
+  commission    Float
+  status        PayoutStatus @default(pending)
+  createdAt     DateTime     @default(now())
+
+  @@index([affiliateId, createdAt])
 }
 
 model SocialReply {

@@ -21,9 +21,13 @@ import {
   getSellerOverviewStats,
   getSellerSales,
 } from "@/lib/marketplace";
+import { getCreatorProfile } from "@/lib/creator-program";
+import { syncClerkUser } from "@/lib/user";
 
 export default async function SellerOverviewPage() {
   const user = await currentUser();
+  const dbUser = user ? await syncClerkUser(user) : null;
+  const creatorProfile = dbUser ? await getCreatorProfile(dbUser.id) : null;
   const stats = user
     ? await getSellerOverviewStats(user.id)
     : { totalSales: 0, freeDownloads: 0, activePrompts: 0, avgRating: 0, totalEarnings: 0 };
@@ -32,9 +36,16 @@ export default async function SellerOverviewPage() {
   return (
     <>
       <PageHeader
-        title="Seller Overview"
-        description="Track your prompt performance and earnings at a glance."
+        title="Creator Dashboard"
+        description="Upload tools, track downloads, and manage your revenue."
       />
+
+      {creatorProfile?.creatorStatus === "pending" && (
+        <div className="mb-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200">
+          Your creator application is pending review. You can upload tools now;
+          listings go live after admin approval.
+        </div>
+      )}
 
       <div className="mb-6 flex flex-wrap gap-3">
         <Link href="/seller/upload">

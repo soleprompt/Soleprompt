@@ -23,6 +23,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
 
   const promptId = session.metadata?.promptId;
   const buyerId = session.metadata?.buyerId;
+  const referralCode = session.metadata?.referralCode ?? null;
 
   if (!promptId || !buyerId) {
     console.error("[stripe] checkout.session.completed missing metadata");
@@ -45,6 +46,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
     stripePaymentId: getStripePaymentId(session),
     purchasedAt: new Date(session.created * 1000),
     actorId: null,
+    referralCode,
   });
 }
 

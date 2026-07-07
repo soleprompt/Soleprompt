@@ -2,10 +2,11 @@ import { currentUser } from "@clerk/nextjs/server";
 import { DollarSign } from "lucide-react";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StatCard } from "@/components/dashboard/StatCard";
+import { CreatorPayoutForm } from "@/components/dashboard/CreatorPayoutForm";
 import { Badge } from "@/components/ui/Badge";
-import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { formatCurrency, formatDate, getSellerEarnings } from "@/lib/marketplace";
+import { getPlatformSettings } from "@/lib/commissions";
 
 function payoutStatusBadge(status: "paid" | "processing" | "failed") {
   switch (status) {
@@ -20,15 +21,24 @@ function payoutStatusBadge(status: "paid" | "processing" | "failed") {
 
 export default async function SellerEarningsPage() {
   const user = await currentUser();
-  const earnings = user
-    ? await getSellerEarnings(user.id)
-    : { availableBalance: 0, pending: 0, lifetimeEarnings: 0, payouts: [] };
+  const [earnings, settings] = await Promise.all([
+    user ? getSellerEarnings(user.id) : Promise.resolve({
+      availableBalance: 0,
+      pending: 0,
+      lifetimeEarnings: 0,
+      paidOut: 0,
+      minPayoutAmount: 25,
+      creatorCommissionPercent: 70,
+      payouts: [],
+    }),
+    getPlatformSettings(),
+  ]);
 
   return (
     <>
       <PageHeader
-        title="Earnings"
-        description="Track your revenue and payout history."
+        title="Revenue"
+        description={`You keep ${settings.creatorCommissionPercent}% of every sale. Request manual payouts when you're ready.`}
       />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">
@@ -38,9 +48,9 @@ export default async function SellerEarningsPage() {
           icon={<DollarSign className="h-4 w-4 text-electric" />}
         />
         <StatCard
-          label="Pending"
+          label="Pending Payouts"
           value={formatCurrency(earnings.pending)}
-          change="Clears in 7 days"
+          change="Awaiting admin review"
           trend="neutral"
         />
         <StatCard
@@ -49,26 +59,29 @@ export default async function SellerEarningsPage() {
         />
       </div>
 
-      <div className="mb-6 flex flex-wrap gap-3">
-        <Button variant="primary" size="sm">
-          Request Payout
-        </Button>
-        <Button variant="outline" size="sm">
-          Update Payout Method
-        </Button>
-      </div>
+      <Card className="mb-6">
+        <CardHeader>
+          <h2 className="text-lg font-semibold">Request payout</h2>
+        </CardHeader>
+        <CardContent className="pt-0">
+          <CreatorPayoutForm
+            availableBalance={earnings.availableBalance}
+            minPayoutAmount={earnings.minPayoutAmount}
+          />
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
           <h2 className="text-lg font-semibold">Payout History</h2>
           <p className="text-sm text-muted-foreground">
-            {earnings.payouts.length} payouts on record
+            {earnings.payouts.length} requests on record
           </p>
         </CardHeader>
         <CardContent className="pt-0">
           {earnings.payouts.length === 0 ? (
             <p className="py-8 text-center text-muted-foreground">
-              No payouts yet.
+              No payout requests yet.
             </p>
           ) : (
             <div className="overflow-x-auto">

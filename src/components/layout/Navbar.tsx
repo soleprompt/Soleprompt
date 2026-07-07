@@ -13,6 +13,7 @@ import {
 import { BrandLogo } from "@/components/brand/BrandLogo";
 import { Button } from "@/components/ui/Button";
 import { ThemeToggle } from "@/components/layout/ThemeToggle";
+import { BecomeCreatorButton } from "@/components/dashboard/BecomeCreatorButton";
 import { NAV_LINKS } from "@/lib/constants";
 import { getDashboardPath } from "@/lib/auth";
 import type { UserRole } from "@/types/user";
@@ -83,6 +84,7 @@ export function Navbar() {
         </div>
 
         <div className="hidden items-center gap-3 md:flex">
+          <BecomeCreatorButton size="sm" variant="outline" />
           <ThemeToggle />
           {showAuth && !isSignedIn && (
             <>

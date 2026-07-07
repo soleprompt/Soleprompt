@@ -4,6 +4,7 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { completePurchase } from "@/lib/purchase-fulfillment";
+import { getReferralCodeFromCookies } from "@/lib/referral";
 import { recordClickThrough } from "@/lib/click-throughs";
 import {
   getCheckoutSessionAmount,
@@ -71,11 +72,13 @@ export async function startPurchase(
   }
 
   if (prompt.price <= 0) {
+    const referralCode = await getReferralCodeFromCookies();
     const result = await completePurchase({
       promptId: prompt.id,
       buyerId: buyer.id,
       amount: 0,
       actorId: buyer.id,
+      referralCode,
     });
 
     return { url: `/purchase/success?purchase_id=${result.purchaseId}` };
@@ -89,6 +92,8 @@ export async function startPurchase(
   }
 
   const stripe = getStripe();
+
+  const referralCode = await getReferralCodeFromCookies();
 
   const session = await stripe.checkout.sessions.create({
     mode: "payment",
@@ -108,6 +113,7 @@ export async function startPurchase(
     metadata: {
       promptId: prompt.id,
       buyerId: buyer.id,
+      ...(referralCode ? { referralCode } : {}),
     },
     success_url: STRIPE_CHECKOUT_SUCCESS_URL,
     cancel_url: STRIPE_CHECKOUT_CANCEL_URL,
@@ -222,6 +228,7 @@ export async function fulfillPurchase(
       stripePaymentId: getStripePaymentId(session),
       purchasedAt: new Date(session.created * 1000),
       actorId: buyer.id,
+      referralCode: session.metadata?.referralCode ?? null,
     });
 
     return {

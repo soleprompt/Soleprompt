@@ -7,6 +7,7 @@ import {
   FileText,
   User,
 } from "lucide-react";
+import { VerifiedBadge } from "@/components/ui/VerifiedBadge";
 import { PageHeader } from "@/components/dashboard/PageHeader";
 import { PromptCard } from "@/components/marketplace/PromptCard";
 import { Card, CardContent } from "@/components/ui/Card";
@@ -44,9 +45,10 @@ export default async function CreatorPage({ params }: CreatorPageProps) {
               title={creator.displayName}
               description={creator.bio ?? `Creator on SolePrompt`}
             />
-            <p className="mt-1 text-sm text-muted-foreground">
-              @{creator.username}
-            </p>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <p className="text-sm text-muted-foreground">@{creator.username}</p>
+              {creator.verified && <VerifiedBadge />}
+            </div>
             <div className="mt-4 flex flex-wrap gap-6 text-sm">
               <span className="flex items-center gap-1.5 text-muted-foreground">
                 <FileText className="h-4 w-4 text-electric" />

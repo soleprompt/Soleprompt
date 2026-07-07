@@ -6,6 +6,10 @@ import {
   createPrompt,
   type PromptFormState,
 } from "@/app/actions/prompts";
+import {
+  CREATOR_PRICE_PRESETS,
+  SUPPORTED_AI_MODELS,
+} from "@/lib/creator-program";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
@@ -101,15 +105,53 @@ export function PromptUploadForm({ categories }: PromptUploadFormProps) {
                   <label htmlFor="price" className="mb-1.5 block text-sm font-medium">
                     Price (USD)
                   </label>
+                  <div className="mb-2 flex flex-wrap gap-2">
+                    {CREATOR_PRICE_PRESETS.map((preset) => (
+                      <button
+                        key={preset.label}
+                        type="button"
+                        className="rounded-full border border-border px-3 py-1 text-xs transition-colors hover:border-electric hover:text-electric"
+                        onClick={() => {
+                          const input = document.getElementById(
+                            "price",
+                          ) as HTMLInputElement | null;
+                          if (input) input.value = String(preset.value);
+                        }}
+                      >
+                        {preset.label}
+                      </button>
+                    ))}
+                  </div>
                   <Input
                     id="price"
                     name="price"
                     type="number"
                     required
-                    placeholder="24.99"
+                    placeholder="9.99"
                     min="0"
                     step="0.01"
                   />
+                </div>
+              </div>
+
+              <div>
+                <p className="mb-2 text-sm font-medium">Compatible AI models</p>
+                <div className="flex flex-wrap gap-3">
+                  {SUPPORTED_AI_MODELS.map((model) => (
+                    <label
+                      key={model}
+                      className="flex items-center gap-2 rounded-full border border-border px-3 py-1.5 text-xs"
+                    >
+                      <input
+                        type="checkbox"
+                        name="compatibleModels"
+                        value={model}
+                        defaultChecked={["ChatGPT", "Claude", "Gemini", "Cursor"].includes(model)}
+                        className="accent-electric"
+                      />
+                      {model}
+                    </label>
+                  ))}
                 </div>
               </div>
 
@@ -142,16 +184,18 @@ export function PromptUploadForm({ categories }: PromptUploadFormProps) {
               </div>
 
               <div>
-                <label className="mb-1.5 block text-sm font-medium">Cover Image</label>
-                <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-muted/30 px-6 py-10 text-center">
-                  <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-purple/10">
-                    <ImagePlus className="h-6 w-6 text-purple" />
-                  </div>
-                  <p className="text-sm font-medium">Coming soon</p>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    Image uploads will be available in a future release.
-                  </p>
-                </div>
+                <label htmlFor="coverImageUrl" className="mb-1.5 block text-sm font-medium">
+                  Preview image URL
+                </label>
+                <Input
+                  id="coverImageUrl"
+                  name="coverImageUrl"
+                  type="url"
+                  placeholder="https://example.com/your-tool-preview.png"
+                />
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Paste a direct image URL for your listing thumbnail (square works best).
+                </p>
               </div>
 
               <div className="flex flex-wrap gap-3 pt-2">

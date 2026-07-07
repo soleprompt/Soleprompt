@@ -64,6 +64,20 @@ export async function createDashboardLayout(
     );
   }
 
+  if (section === "affiliate") {
+    const userName =
+      user.fullName ||
+      user.username ||
+      user.primaryEmailAddress?.emailAddress ||
+      "User";
+
+    return (
+      <DashboardShell section="affiliate" userName={userName}>
+        {children}
+      </DashboardShell>
+    );
+  }
+
   const extraNavItems: DashboardNavItem[] = [...(options?.extraNavItems ?? [])];
 
   if (section === "buyer") {

@@ -61,6 +61,8 @@ export async function createPrompt(
   const priceRaw = formData.get("price") as string;
   const tagsRaw = formData.get("tags") as string;
   const status = (formData.get("status") as PromptStatus) || "review";
+  const coverImageUrl = (formData.get("coverImageUrl") as string)?.trim() || null;
+  const modelsRaw = formData.getAll("compatibleModels") as string[];
 
   if (!title || !description || !content || !categoryId || !priceRaw) {
     return { error: "Please fill in all required fields." };
@@ -77,8 +79,20 @@ export async function createPrompt(
 
   const preview =
     content.length > 180 ? `${content.slice(0, 177)}…` : content;
-  const compatibleModels = ["GPT-4o", "Claude 3.5 Sonnet", "Gemini 2.0"];
+  const compatibleModels =
+    modelsRaw.length > 0
+      ? modelsRaw
+      : ["ChatGPT", "Claude", "Gemini", "Cursor"];
   const sampleOutput = `Sample output for "${title}": structured results based on your inputs, ready to copy and deploy.`;
+
+  const resolvedStatus =
+    dbUser.role === "admin"
+      ? status === "draft"
+        ? "draft"
+        : status
+      : status === "draft"
+        ? "draft"
+        : "review";
 
   await prisma.prompt.create({
     data: {
@@ -88,8 +102,9 @@ export async function createPrompt(
       preview,
       compatibleModels,
       sampleOutput,
+      coverImageUrl,
       price,
-      status: status === "draft" ? "draft" : "review",
+      status: resolvedStatus,
       sellerId: dbUser.id,
       categoryId,
       tags: {
@@ -125,6 +140,8 @@ export async function updatePrompt(
   const priceRaw = formData.get("price") as string;
   const tagsRaw = formData.get("tags") as string;
   const status = formData.get("status") as PromptStatus;
+  const coverImageUrl = (formData.get("coverImageUrl") as string)?.trim() || null;
+  const modelsRaw = formData.getAll("compatibleModels") as string[];
 
   if (!title || !description || !content || !categoryId || !priceRaw) {
     return { error: "Please fill in all required fields." };
@@ -137,6 +154,17 @@ export async function updatePrompt(
 
   const tags = parseTags(tagsRaw ?? "");
   const tagIds = await getOrCreateTags(tags);
+  const compatibleModels =
+    modelsRaw.length > 0
+      ? modelsRaw
+      : existing.compatibleModels;
+
+  const resolvedStatus =
+    dbUser.role === "admin"
+      ? status || existing.status
+      : status === "published"
+        ? existing.status
+        : status || existing.status;
 
   await prisma.promptTag.deleteMany({ where: { promptId } });
 
@@ -148,8 +176,10 @@ export async function updatePrompt(
       content,
       preview: content.length > 180 ? `${content.slice(0, 177)}…` : content,
       sampleOutput: existing.sampleOutput || `Sample output for "${title}".`,
+      compatibleModels,
+      coverImageUrl: coverImageUrl ?? existing.coverImageUrl,
       price,
-      status: status || existing.status,
+      status: resolvedStatus,
       categoryId,
       tags: {
         create: tagIds.map((tagId) => ({ tagId })),

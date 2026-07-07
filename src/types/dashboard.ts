@@ -1,1 +1,1 @@
-export type DashboardSection = "buyer" | "seller" | "admin";
+export type DashboardSection = "buyer" | "seller" | "admin" | "affiliate";

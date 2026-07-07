@@ -8,6 +8,13 @@ import {
 } from "@/lib/email";
 import { getAppUrl } from "@/lib/stripe";
 
+import {
+  calculateCommissionSplit,
+  getPlatformSettings,
+  roundMoney,
+} from "@/lib/commissions";
+import { getAffiliateByCode } from "@/lib/affiliate-program";
+
 export type CompletePurchaseInput = {
   promptId: string;
   buyerId: string;
@@ -18,6 +25,7 @@ export type CompletePurchaseInput = {
   actorId?: string | null;
   purchasedAt?: Date;
   quiet?: boolean;
+  referralCode?: string | null;
 };
 
 export type CompletePurchaseResult = {
@@ -72,6 +80,7 @@ async function incrementSellerStats(
   tx: Prisma.TransactionClient,
   sellerId: string,
   amount: number,
+  creatorShare: number,
 ) {
   if (isFreePurchase(amount)) {
     await tx.sellerProfile.updateMany({
@@ -85,9 +94,85 @@ async function incrementSellerStats(
     where: { userId: sellerId },
     data: {
       salesCount: { increment: 1 },
-      totalEarnings: { increment: amount },
+      totalEarnings: { increment: creatorShare },
     },
   });
+}
+
+async function createTransactionWithSplits(
+  tx: Prisma.TransactionClient,
+  params: {
+    purchaseId: string;
+    amount: number;
+    currency: string;
+    purchasedAt: Date;
+    buyerId: string;
+    sellerId: string;
+    promptId: string;
+    stripeSessionId?: string | null;
+    stripePaymentId?: string | null;
+    referralCode?: string | null;
+  },
+) {
+  const settings = await getPlatformSettings();
+  const affiliate = params.referralCode
+    ? await getAffiliateByCode(params.referralCode)
+    : null;
+  const split = calculateCommissionSplit(
+    params.amount,
+    settings,
+    Boolean(affiliate),
+  );
+
+  const created = await tx.transaction.create({
+    data: {
+      purchaseId: params.purchaseId,
+      stripeSessionId: params.stripeSessionId ?? null,
+      stripePaymentId: params.stripePaymentId ?? null,
+      amount: params.amount,
+      creatorShare: split.creatorShare,
+      platformFee: split.platformFee,
+      affiliateCommission: split.affiliateCommission,
+      affiliateId: affiliate?.id ?? null,
+      referralCode: affiliate ? params.referralCode ?? null : null,
+      currency: params.currency,
+      status: "completed",
+      buyerId: params.buyerId,
+      sellerId: params.sellerId,
+      promptId: params.promptId,
+      createdAt: params.purchasedAt,
+    },
+  });
+
+  await incrementSellerStats(
+    tx,
+    params.sellerId,
+    params.amount,
+    split.creatorShare,
+  );
+
+  if (affiliate && split.affiliateCommission > 0) {
+    await tx.affiliateReferral.create({
+      data: {
+        affiliateId: affiliate.id,
+        transactionId: created.id,
+        purchaseId: params.purchaseId,
+        commission: split.affiliateCommission,
+        status: "pending",
+      },
+    });
+
+    await tx.affiliate.update({
+      where: { id: affiliate.id },
+      data: {
+        totalConversions: { increment: 1 },
+        totalEarnings: { increment: split.affiliateCommission },
+        pendingBalance: { increment: split.affiliateCommission },
+      },
+    });
+  }
+
+  return { created, split };
 }
 
 async function repairExistingPurchase(
@@ -144,40 +229,54 @@ async function repairExistingPurchase(
     }
 
     if (transaction) {
+      const settings = await getPlatformSettings();
+      const affiliate = input.referralCode
+        ? await getAffiliateByCode(input.referralCode)
+        : null;
+      const split = calculateCommissionSplit(
+        resolvedAmount,
+        settings,
+        Boolean(affiliate),
+      );
+
       await tx.transaction.update({
         where: { id: transaction.id },
         data: {
           amount: resolvedAmount,
+          creatorShare: split.creatorShare,
+          platformFee: split.platformFee,
+          affiliateCommission: split.affiliateCommission,
           currency,
           ...(input.stripeSessionId ? { stripeSessionId: input.stripeSessionId } : {}),
           ...(input.stripePaymentId ? { stripePaymentId: input.stripePaymentId } : {}),
           status: "completed",
         },
       });
-    } else {
-      await tx.transaction.create({
-        data: {
-          purchaseId: purchase.id,
-          stripeSessionId: input.stripeSessionId ?? null,
-          stripePaymentId: input.stripePaymentId ?? null,
-          amount: resolvedAmount,
-          currency,
-          status: "completed",
-          buyerId: purchase.buyerId,
-          sellerId: purchase.prompt.sellerId,
-          promptId: purchase.promptId,
-          createdAt: purchasedAt,
-        },
+    } else if (needsTransaction) {
+      await createTransactionWithSplits(tx, {
+        purchaseId: purchase.id,
+        amount: resolvedAmount,
+        currency,
+        purchasedAt,
+        buyerId: purchase.buyerId,
+        sellerId: purchase.prompt.sellerId,
+        promptId: purchase.promptId,
+        stripeSessionId: input.stripeSessionId,
+        stripePaymentId: input.stripePaymentId,
+        referralCode: input.referralCode,
       });
     }
 
-    if (needsTransaction) {
-      await incrementSellerStats(tx, purchase.prompt.sellerId, resolvedAmount);
-    } else if (earningsDelta !== 0 && !isFreePurchase(resolvedAmount)) {
+    if (
+      !needsTransaction &&
+      earningsDelta !== 0 &&
+      !isFreePurchase(resolvedAmount)
+    ) {
+      const creatorDelta = roundMoney(earningsDelta * 0.7);
       await tx.sellerProfile.updateMany({
         where: { userId: purchase.prompt.sellerId },
         data: {
-          totalEarnings: { increment: earningsDelta },
+          totalEarnings: { increment: creatorDelta },
         },
       });
     }
@@ -334,22 +433,18 @@ export async function completePurchase(
       },
     });
 
-    await tx.transaction.create({
-      data: {
-        purchaseId: createdPurchase.id,
-        stripeSessionId: input.stripeSessionId ?? null,
-        stripePaymentId: input.stripePaymentId ?? null,
-        amount,
-        currency,
-        status: "completed",
-        buyerId: buyer.id,
-        sellerId: prompt.sellerId,
-        promptId: prompt.id,
-        createdAt: purchasedAt,
-      },
+    await createTransactionWithSplits(tx, {
+      purchaseId: createdPurchase.id,
+      amount,
+      currency,
+      purchasedAt,
+      buyerId: buyer.id,
+      sellerId: prompt.sellerId,
+      promptId: prompt.id,
+      stripeSessionId: input.stripeSessionId,
+      stripePaymentId: input.stripePaymentId,
+      referralCode: input.referralCode,
     });
-
-    await incrementSellerStats(tx, prompt.sellerId, amount);
 
     await tx.auditLog.create({
       data: {

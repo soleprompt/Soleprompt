@@ -20,13 +20,22 @@ export const BUYER_SOCIAL_TOOLS_NAV: DashboardNavItem = {
   icon: "Users",
 };
 
+export const AFFILIATE_NAV: DashboardNavItem[] = [
+  { label: "Overview", href: "/affiliate", icon: "LayoutDashboard" },
+  { label: "Earnings", href: "/affiliate/earnings", icon: "DollarSign" },
+  { label: "Referrals", href: "/affiliate/referrals", icon: "Share2" },
+  { label: "Leaderboard", href: "/affiliate/leaderboard", icon: "Star" },
+  { label: "Marketing Assets", href: "/affiliate/assets", icon: "FileText" },
+  { label: "Settings", href: "/affiliate/settings", icon: "Settings" },
+];
+
 export const SELLER_NAV: DashboardNavItem[] = [
   { label: "Overview", href: "/seller", icon: "LayoutDashboard" },
-  { label: "Upload Prompt", href: "/seller/upload", icon: "Upload" },
-  { label: "My Prompts", href: "/seller/prompts", icon: "FileText" },
+  { label: "Upload Tool", href: "/seller/upload", icon: "Upload" },
+  { label: "My Products", href: "/seller/prompts", icon: "FileText" },
   { label: "Sales", href: "/seller/sales", icon: "TrendingUp" },
   { label: "Analytics", href: "/seller/analytics", icon: "BarChart3" },
-  { label: "Earnings", href: "/seller/earnings", icon: "DollarSign" },
+  { label: "Revenue", href: "/seller/earnings", icon: "DollarSign" },
   { label: "Reviews", href: "/seller/reviews", icon: "Star" },
   { label: "Settings", href: "/seller/settings", icon: "Settings" },
 ];
@@ -46,12 +55,16 @@ export const ADMIN_NAV: DashboardNavItem[] = [
   { label: "Purchases", href: "/admin/purchases", icon: "ShoppingBag" },
   { label: "Sales", href: "/admin/sales", icon: "TrendingUp" },
   { label: "Reports", href: "/admin/reports", icon: "Flag" },
+  { label: "Creators", href: "/admin/creators", icon: "Users" },
+  { label: "Affiliates", href: "/admin/affiliates", icon: "Share2" },
+  { label: "Payouts", href: "/admin/payouts", icon: "DollarSign" },
+  { label: "Program Settings", href: "/admin/settings", icon: "Settings" },
   { label: "Categories", href: "/admin/categories", icon: "Tags" },
   { label: "Social", href: "/admin/social", icon: "Share2" },
 ];
 
 export function getNavForRole(
-  role: UserRole,
+  role: UserRole | "affiliate",
   extraItems: DashboardNavItem[] = [],
 ): DashboardNavItem[] {
   switch (role) {
@@ -59,17 +72,21 @@ export function getNavForRole(
       return ADMIN_NAV;
     case "seller":
       return SELLER_NAV;
+    case "affiliate":
+      return AFFILIATE_NAV;
     default:
       return [...BUYER_NAV.slice(0, 1), ...extraItems, ...BUYER_NAV.slice(1)];
   }
 }
 
-export function getRoleLabel(role: UserRole): string {
+export function getRoleLabel(role: UserRole | "affiliate"): string {
   switch (role) {
     case "admin":
       return "Admin";
     case "seller":
-      return "Seller";
+      return "Creator";
+    case "affiliate":
+      return "Affiliate";
     default:
       return "Buyer";
   }

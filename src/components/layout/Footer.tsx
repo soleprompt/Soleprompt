@@ -16,6 +16,7 @@ const FOOTER_LINKS = {
     { label: "For Creators", href: "/academy/creators" },
     { label: "Free X Checker", href: "/tools/x-checker" },
     { label: "Become a Creator", href: "/seller" },
+    { label: "Affiliate Program", href: "/affiliate" },
     { label: "FAQ", href: "/#faq" },
   ],
   Community: [
