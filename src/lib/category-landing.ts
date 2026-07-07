@@ -408,6 +408,7 @@ export const CATEGORY_LANDING: Record<string, CategoryLandingConfig> = {
       "Social media AI tools: multi-platform scrubbing, caption generators, and brand safety audits. Protect and grow your online presence.",
     featuredTitles: [
       "Social Scrubbing Suite — Facebook, Instagram & LinkedIn",
+      "Social Media God Bundle",
       "Social Media Growth Bundle",
       "Instagram Caption Writer",
     ],
@@ -425,12 +426,53 @@ export const CATEGORY_LANDING: Record<string, CategoryLandingConfig> = {
         description: "Captions, hashtags, calendars, and engagement tools.",
         filter: {
           type: "keyword",
-          terms: ["caption", "hashtag", "instagram", "growth", "calendar"],
+          terms: ["caption", "hashtag", "instagram", "growth", "calendar", "tiktok", "reels"],
         },
+      },
+      {
+        title: "Social bundles",
+        description: "Complete packs for creators and social managers.",
+        filter: { type: "bundle", minPrice: 9 },
+        columns: 2,
       },
     ],
     crossSellSlug: "marketing",
     crossSellLabel: "More marketing tools",
+  },
+
+  "real-estate": {
+    slug: "real-estate",
+    tagline:
+      "Listing descriptions, CMA presentations, buyer scripts, and rental ROI analyzers — AI tools built for agents, brokers, and investors.",
+    seoTitle: "Real Estate AI Tools — Listings, CMAs & Buyer Scripts",
+    seoDescription:
+      "AI tools for real estate agents: MLS listing copy, open house follow-ups, CMA outlines, offer strategy, and rental ROI analysis.",
+    featuredTitles: [
+      "Listing Description Writer",
+      "CMA Presentation Outline",
+      "Buyer Consultation Script",
+      "Rental Property ROI Analyzer",
+    ],
+    sections: [
+      {
+        title: "Listings & sellers",
+        description: "Descriptions, staging, and seller presentations.",
+        filter: {
+          type: "keyword",
+          terms: ["listing", "cma", "staging", "seller", "mls"],
+        },
+      },
+      {
+        title: "Buyers & investors",
+        description: "Consultations, offers, showings, and ROI analysis.",
+        filter: {
+          type: "keyword",
+          terms: ["buyer", "offer", "showing", "rental", "investor", "roi"],
+        },
+      },
+    ],
+    crossSellSlug: "sales",
+    crossSellLabel: "Sales tools for agents",
   },
 };
 

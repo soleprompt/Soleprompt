@@ -28,6 +28,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/buyer/social-tools/linkedin/callback(.*)",
   "/api/webhooks(.*)",
   "/api/stripe/webhook",
+  "/api/tool-preview(.*)",
 ]);
 
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);

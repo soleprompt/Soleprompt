@@ -412,6 +412,8 @@ const CATEGORY_THUMBNAILS = {
   finance: { accent: "#eab308", icon: "💰", label: "Finance", sub: "Money & planning" },
   writing: { accent: "#a855f7", icon: "✍️", label: "Writing", sub: "Copy & content" },
   education: { accent: "#ec4899", icon: "🎓", label: "Education", sub: "Teaching tools" },
+  "social-media": { accent: "#06b6d4", icon: "📱", label: "Social Media", sub: "Content & growth" },
+  "real-estate": { accent: "#14b8a6", icon: "🏠", label: "Real Estate", sub: "Listings & deals" },
 };
 
 for (const [slug, meta] of Object.entries(CATEGORY_THUMBNAILS)) {
@@ -436,6 +438,7 @@ const CATEGORY_HEADERS = {
   "categories/writing-header.svg": { accent: "#a855f7", title: "Writing", sub: "Resumes, blogs & copy" },
   "categories/education-header.svg": { accent: "#ec4899", title: "Education", sub: "Lesson plans & assessments" },
   "categories/social-media-header.svg": { accent: "#06b6d4", title: "Social Media", sub: "Scrubbing, captions & growth" },
+  "categories/real-estate-header.svg": { accent: "#14b8a6", title: "Real Estate", sub: "Listings, CMAs & buyer tools" },
 };
 
 for (const [path, meta] of Object.entries(CATEGORY_HEADERS)) {

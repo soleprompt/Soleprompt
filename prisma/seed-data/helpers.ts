@@ -16,6 +16,8 @@ export type CategorySlug =
   | "marketing"
   | "sales"
   | "solar"
+  | "social-media"
+  | "real-estate"
   | "coding"
   | "finance"
   | "writing"

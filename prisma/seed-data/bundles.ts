@@ -688,4 +688,56 @@ Achievement-driven bullets with metrics and ATS keywords.
 10–15 diverse ideas with top 3 rationale and validation next steps.`,
     4,
   ),
+
+  bundlePrompt(
+    "Sales Closer AI Pack",
+    "sales",
+    ["Bundle", "Sales", "Outreach", "Closing"],
+    14.99,
+    "intermediate",
+    "6+ hours",
+    "Eight sales tools in one pack: cold email sequences, discovery scripts, proposal writer, objection handlers, demo scripts, and closing templates — modeled after top PromptBase business sellers.",
+    `# Sales Closer AI Pack — 8 Prompts
+
+---
+
+## 1. Cold Email Sequence Generator
+4-email outreach sequence with subject lines.
+
+## 2. Discovery Call Question Bank
+BANT-style discovery with next-step close.
+
+## 3. Sales Proposal Writer
+Executive summary, scope, timeline, pricing tiers.
+
+## 4. Objection Handler Playbook
+Top objections with acknowledge → reframe → proof.
+
+## 5. LinkedIn Sales DM Writer
+Connection note + follow-ups that book meetings.
+
+## 6. Demo Script Builder
+30-minute demo tied to buyer pain points.
+
+## 7. Follow-Up Email Sequence
+Post-meeting recap through 14-day nudge.
+
+## 8. Closing Email Templates
+Assumptive, summary, urgency, and final offer closes.`,
+    1,
+  ),
+
+  bundlePrompt(
+    "Social Media God Bundle",
+    "social-media",
+    ["Bundle", "Social Media", "Content", "Growth"],
+    12.99,
+    "intermediate",
+    "5+ hours",
+    "Ten social tools: captions, hooks, content calendar, hashtags, Reels scripts, bios, carousels, YouTube titles, audits, and crisis response — inspired by PromptBase's top social sellers.",
+    `# Social Media God Bundle — 10 Prompts
+
+Instagram captions, TikTok hooks, 30-day calendar, hashtag strategy, influencer DMs, Reels scripts, bio optimizer, carousel planner, YouTube titles, and social audit checklist.`,
+    2,
+  ),
 ];

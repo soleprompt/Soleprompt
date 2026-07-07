@@ -20,6 +20,8 @@ const CATEGORY_ACCENTS: Record<ToolCategorySlug, string> = {
   marketing: "#f97316",
   sales: "#f43f5e",
   solar: "#fbbf24",
+  "social-media": "#06b6d4",
+  "real-estate": "#14b8a6",
   coding: "#34d399",
   finance: "#facc15",
   writing: "#c084fc",
@@ -78,8 +80,11 @@ function detectPreviewType(title: string, category: ToolCategorySlug): PreviewTy
   if (/plan|focus|habit|goal|priorit|productiv|task/.test(t)) {
     return "productivity";
   }
+  if (/listing|property|real estate|mls|realtor|rental|mortgage/.test(t)) {
+    return "analytics";
+  }
 
-  const categoryMap: Record<ToolCategorySlug, PreviewType> = {
+  const categoryMap: Record<string, PreviewType> = {
     productivity: "productivity",
     business: "analytics",
     marketing: "analytics",
@@ -89,6 +94,8 @@ function detectPreviewType(title: string, category: ToolCategorySlug): PreviewTy
     finance: "finance",
     writing: "writing",
     education: "education",
+    "social-media": "social-audit",
+    "real-estate": "analytics",
   };
 
   return categoryMap[category] ?? "analytics";

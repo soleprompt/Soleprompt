@@ -8,6 +8,9 @@ import { WELCOME_PACK } from "./seed-data/welcome-pack";
 import { X_SCRUBBING_TOOL } from "./seed-data/x-scrubbing-tool";
 import { SOCIAL_SCRUBBING_SUITE } from "./seed-data/social-scrubbing-suite";
 import { SOLAR_PROMPTS } from "./seed-data/solar-prompts";
+import { SALES_PROMPTS } from "./seed-data/sales-prompts";
+import { SOCIAL_MEDIA_PROMPTS } from "./seed-data/social-media-prompts";
+import { REAL_ESTATE_PROMPTS } from "./seed-data/real-estate-prompts";
 import type { CatalogEntry } from "./seed-data/helpers";
 
 dotenv.config({ path: ".env.local" });
@@ -116,6 +119,9 @@ const CATALOG: CatalogEntry[] = [
   ...SCRUBBING_PROMPTS,
   ...STARTER_PROMPTS,
   ...SOLAR_PROMPTS,
+  ...SALES_PROMPTS,
+  ...SOCIAL_MEDIA_PROMPTS,
+  ...REAL_ESTATE_PROMPTS,
   ...BUNDLES,
 ];
 

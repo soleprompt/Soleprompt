@@ -6,6 +6,8 @@ export type ToolCategorySlug =
   | "marketing"
   | "sales"
   | "solar"
+  | "social-media"
+  | "real-estate"
   | "coding"
   | "finance"
   | "writing"
@@ -53,6 +55,8 @@ export const CATEGORY_COVER_IMAGES: Record<ToolCategorySlug, string> = {
   marketing: "/tools/categories/marketing.svg",
   sales: "/tools/categories/sales.svg",
   solar: "/tools/categories/solar.svg",
+  "social-media": "/tools/categories/social-media.svg",
+  "real-estate": "/tools/categories/real-estate.svg",
   coding: "/tools/categories/coding.svg",
   finance: "/tools/categories/finance.svg",
   writing: "/tools/categories/writing.svg",
@@ -75,6 +79,7 @@ export const CATEGORY_HEADER_IMAGES: Partial<Record<ToolCategorySlug, string>> =
 /** Header images for slugs outside ToolCategorySlug (e.g. social-media). */
 export const CATEGORY_HEADER_ALIASES: Record<string, string> = {
   "social-media": "/categories/social-media-header.svg",
+  "real-estate": "/categories/real-estate-header.svg",
 };
 
 export function getToolCoverImage(

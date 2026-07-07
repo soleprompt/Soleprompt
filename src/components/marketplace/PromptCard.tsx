@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import {
   Star,
   ArrowUpRight,
@@ -20,7 +19,7 @@ import {
   getPromptBenefit,
   getPromptDifficultyTier,
 } from "@/lib/prompt-thumbnails";
-import { isSvgImageSrc, resolvePromptCoverImage } from "@/lib/tool-images";
+import { resolvePromptCoverImage } from "@/lib/tool-images";
 import {
   formatCurrency,
   formatPurchaseAmount,
@@ -47,20 +46,16 @@ function PromptThumbnail({
     prompt.rating === 0 &&
     prompt.salesCount < 5;
 
-  const difficultyBadge = (
-    <Badge
-      variant={difficulty === "Pro" ? "electric" : "outline"}
-      className="absolute left-3 top-3 z-10 text-[10px] font-semibold backdrop-blur-sm"
-    >
-      {difficulty}
-    </Badge>
-  );
-
   const thumbnailSrc = resolvePromptCoverImage(prompt);
 
   return (
     <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#0a0a12]">
-      {difficultyBadge}
+      <Badge
+        variant={difficulty === "Pro" ? "electric" : "outline"}
+        className="absolute left-3 top-3 z-10 text-[10px] font-semibold backdrop-blur-sm"
+      >
+        {difficulty}
+      </Badge>
       {isBestseller && (
         <Badge
           variant="electric"
@@ -79,13 +74,13 @@ function PromptThumbnail({
           New
         </Badge>
       )}
-      <Image
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
         src={thumbnailSrc}
         alt=""
-        fill
-        unoptimized={isSvgImageSrc(thumbnailSrc)}
-        className="object-cover transition-transform duration-300 group-hover:scale-105"
-        sizes="(max-width: 768px) 100vw, 33vw"
+        className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+        loading="lazy"
+        decoding="async"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
     </div>
