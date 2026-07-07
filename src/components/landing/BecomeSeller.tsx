@@ -33,7 +33,7 @@ const BENEFITS = [
 
 export function BecomeSeller() {
   return (
-    <section id="sell" className="relative py-24 sm:py-32">
+    <section id="sell" className="relative scroll-mt-20 py-24 sm:py-32">
       <SectionGlow variant="cta" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="relative overflow-hidden rounded-3xl border border-border bg-gradient-to-br from-electric/5 via-background to-purple/5 p-8 sm:p-12 lg:p-16">

@@ -18,8 +18,8 @@ export const NAV_LINKS = [
   { label: "Academy", href: "/academy" },
   { label: "Categories", href: "/categories" },
   { label: "Free X Checker", href: "/tools/x-checker" },
-  { label: "Sell", href: "#sell" },
-  { label: "FAQ", href: "#faq" },
+  { label: "Sell", href: "/#sell" },
+  { label: "FAQ", href: "/#faq" },
 ] as const;
 
 export const TESTIMONIALS: Testimonial[] = [

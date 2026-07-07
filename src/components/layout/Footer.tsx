@@ -16,12 +16,12 @@ const FOOTER_LINKS = {
     { label: "For Creators", href: "/academy/creators" },
     { label: "Free X Checker", href: "/tools/x-checker" },
     { label: "Become a Creator", href: "/seller" },
-    { label: "FAQ", href: "#faq" },
+    { label: "FAQ", href: "/#faq" },
   ],
   Community: [
     { label: "Discord", href: SOCIAL_LINKS.discord },
     { label: "X / Twitter", href: SOCIAL_LINKS.twitter },
-    { label: "Become a Seller", href: "#sell" },
+    { label: "Become a Seller", href: "/#sell" },
   ],
   Legal: [
     { label: "Privacy", href: "/privacy" },
