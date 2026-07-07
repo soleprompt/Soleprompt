@@ -115,12 +115,15 @@ export function isSvgImageSrc(src: string): boolean {
   );
 }
 
+/** Paths we know exist under /public — do not trust arbitrary /tools/ DB values. */
+const KNOWN_COVER_PATHS = new Set(Object.values(TOOL_COVER_IMAGES));
+
+function categoryNameToSlug(name: string): ToolCategorySlug {
+  return name.toLowerCase().replace(/\s+/g, "-") as ToolCategorySlug;
+}
+
 function isPersistedCoverUrl(url: string): boolean {
-  return (
-    url.startsWith("/tools/") ||
-    url.startsWith("/categories/") ||
-    (url.startsWith("https://") && !url.includes("placehold.co"))
-  );
+  return KNOWN_COVER_PATHS.has(url);
 }
 
 export function resolvePromptCoverImage(prompt: {
@@ -133,6 +136,6 @@ export function resolvePromptCoverImage(prompt: {
     return url;
   }
 
-  const slug = prompt.category.toLowerCase().replace(/\s+/g, "-") as ToolCategorySlug;
+  const slug = categoryNameToSlug(prompt.category);
   return getToolCoverImage(prompt.title, slug);
 }

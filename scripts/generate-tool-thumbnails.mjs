@@ -14,6 +14,14 @@ const BORDER = "rgba(255,255,255,0.08)";
 const MUTED = "#6b7280";
 const TEXT = "#e5e7eb";
 
+function escapeXml(text) {
+  return String(text)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 function base(accent, body) {
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 375" fill="none">
   <defs>
@@ -40,6 +48,7 @@ function base(accent, body) {
 }
 
 function windowChrome(x, y, w, h, title, content) {
+  const safeTitle = escapeXml(title);
   return `
   <rect x="${x}" y="${y}" width="${w}" height="${h}" rx="12" fill="${CARD}" stroke="${BORDER}" stroke-width="1"/>
   <rect x="${x}" y="${y}" width="${w}" height="32" rx="12" fill="#111118"/>
@@ -47,7 +56,7 @@ function windowChrome(x, y, w, h, title, content) {
   <circle cx="${x + 18}" cy="${y + 16}" r="4" fill="#ef4444" opacity="0.7"/>
   <circle cx="${x + 32}" cy="${y + 16}" r="4" fill="#f59e0b" opacity="0.7"/>
   <circle cx="${x + 46}" cy="${y + 16}" r="4" fill="#22c55e" opacity="0.7"/>
-  <text x="${x + w / 2}" y="${y + 20}" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">${title}</text>
+  <text x="${x + w / 2}" y="${y + 20}" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">${safeTitle}</text>
   ${content}`;
 }
 
@@ -94,7 +103,7 @@ const THUMBNAILS = {
   ${windowChrome(40, 50, 520, 270, "Lead Qualifier Script", `
     <circle cx="90" cy="115" r="20" fill="${ELECTRIC}" opacity="0.2" stroke="${ELECTRIC}" stroke-width="1.5"/>
     <path d="M85 115 L88 118 L95 110" stroke="${ELECTRIC}" stroke-width="2" fill="none" stroke-linecap="round"/>
-    <text x="120" y="112" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="13" font-weight="500">Roof age & condition?</text>
+    <text x="120" y="112" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="13" font-weight="500">Roof age &amp; condition?</text>
     <text x="120" y="130" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="10">Qualification checklist</text>
     <line x1="70" y1="145" x2="530" y2="145" stroke="${BORDER}"/>
     <circle cx="90" cy="170" r="20" fill="#22c55e" opacity="0.15" stroke="#22c55e" stroke-width="1.5"/>
@@ -103,7 +112,7 @@ const THUMBNAILS = {
     <text x="120" y="185" fill="#22c55e" font-family="system-ui,sans-serif" font-size="10">Green light ✓</text>
     <circle cx="90" cy="220" r="20" fill="#1f2937" stroke="${BORDER}" stroke-width="1.5"/>
     <text x="90" y="225" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="14" text-anchor="middle">3</text>
-    <text x="120" y="217" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="13">Homeowner & timeline?</text>
+    <text x="120" y="217" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="13">Homeowner &amp; timeline?</text>
     <rect x="70" y="250" width="460" height="36" rx="8" fill="${ELECTRIC}" opacity="0.15" stroke="${ELECTRIC}" stroke-width="1"/>
     <text x="300" y="273" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="12" text-anchor="middle" font-weight="600">📞 60-sec opener script</text>
   `)}`),
@@ -152,7 +161,7 @@ const THUMBNAILS = {
   <rect x="60" y="260" width="220" height="55" rx="8" fill="${CARD}" stroke="${BORDER}"/>
   <text x="170" y="292" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle">Site Visit Prep</text>
   <rect x="300" y="260" width="220" height="55" rx="8" fill="${CARD}" stroke="${BORDER}"/>
-  <text x="410" y="292" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle">Close & Contract</text>
+  <text x="410" y="292" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle">Close &amp; Contract</text>
   <rect x="230" y="325" width="140" height="28" rx="14" fill="${ELECTRIC}" opacity="0.2" stroke="${ELECTRIC}"/>
   <text x="300" y="344" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">8 Prompts Included</text>`),
 
@@ -204,7 +213,7 @@ const THUMBNAILS = {
     <rect x="70" y="182" width="350" height="6" rx="2" fill="#374151"/>
     <rect x="70" y="194" width="380" height="6" rx="2" fill="#374151"/>
     <rect x="70" y="220" width="200" height="6" rx="2" fill="${ELECTRIC}" opacity="0.4"/>
-    <text x="70" y="250" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="10">+ Follow-up at day 3 & 7</text>
+    <text x="70" y="250" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="10">+ Follow-up at day 3 &amp; 7</text>
     <rect x="400" y="240" width="100" height="32" rx="8" fill="#22c55e" opacity="0.2" stroke="#22c55e"/>
     <text x="450" y="261" fill="#22c55e" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">Send</text>
   `)}`),
@@ -251,12 +260,12 @@ const THUMBNAILS = {
     <text x="480" y="155" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="20" text-anchor="middle">📷</text>
     <rect x="70" y="220" width="460" height="50" rx="8" fill="${ELECTRIC}" opacity="0.1" stroke="${ELECTRIC}"/>
     <text x="300" y="242" fill="${ELECTRIC}" font-family="system-ui,sans-serif" font-size="12" text-anchor="middle" font-weight="600">Clean your brand across all platforms</text>
-    <text x="300" y="260" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">Multi-platform audit & delete prompts</text>
+    <text x="300" y="260" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">Multi-platform audit &amp; delete prompts</text>
   `)}`),
 
   "tools/productivity-power-pack.svg": base("#6366f1", `
   <text x="300" y="85" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="16" font-weight="600" text-anchor="middle">Productivity Power Pack</text>
-  <text x="300" y="105" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle">10 prompts · Planning & focus</text>
+  <text x="300" y="105" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle">10 prompts · Planning &amp; focus</text>
   ${["Daily Plan","Weekly Plan","Focus","Habits","Inbox Zero","Goals"].map((t,i)=>`<rect x="${70+(i%3)*155}" y="${120+Math.floor(i/3)*65}" width="140" height="50" rx="8" fill="${CARD}" stroke="${BORDER}"/><text x="${140+(i%3)*155}" y="${150+Math.floor(i/3)*65}" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="10" text-anchor="middle">${t}</text>`).join("")}
   <rect x="200" y="265" width="200" height="30" rx="14" fill="#6366f1" opacity="0.2" stroke="#6366f1"/>
   <text x="300" y="285" fill="#6366f1" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">10 Tools Included</text>`),
@@ -341,7 +350,7 @@ const THUMBNAILS = {
     <text x="305" y="125" fill="#ec4899" font-family="system-ui,sans-serif" font-size="10" font-weight="600">Quiz Generator</text>
     <text x="305" y="145" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="9">10 questions · Answer key · Rubric</text>
     <rect x="70" y="205" width="460" height="45" rx="8" fill="#ec4899" opacity="0.12" stroke="#ec4899"/>
-    <text x="300" y="233" fill="#ec4899" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">8 teaching tools for K-12 & higher ed</text>
+    <text x="300" y="233" fill="#ec4899" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">8 teaching tools for K-12 &amp; higher ed</text>
   `)}`),
 
   "tools/linkedin-authority-builder.svg": base("#0ea5e9", `
@@ -394,7 +403,7 @@ const THUMBNAILS = {
     <text x="180" y="130" fill="#374151" font-family="system-ui,sans-serif" font-size="10" font-weight="600">Executive Summary</text>
     <rect x="180" y="140" width="240" height="5" rx="2" fill="#e5e7eb"/>
     <rect x="180" y="152" width="200" height="5" rx="2" fill="#e5e7eb"/>
-    <text x="180" y="180" fill="#374151" font-family="system-ui,sans-serif" font-size="10" font-weight="600">Scope & Timeline</text>
+    <text x="180" y="180" fill="#374151" font-family="system-ui,sans-serif" font-size="10" font-weight="600">Scope &amp; Timeline</text>
     <rect x="180" y="190" width="110" height="50" rx="4" fill="#f3f4f6"/>
     <text x="235" y="218" fill="#22c55e" font-family="system-ui,sans-serif" font-size="12" font-weight="700" text-anchor="middle">$8,500</text>
     <rect x="300" y="190" width="120" height="50" rx="4" fill="#f3f4f6"/>
@@ -417,11 +426,14 @@ const CATEGORY_THUMBNAILS = {
 };
 
 for (const [slug, meta] of Object.entries(CATEGORY_THUMBNAILS)) {
+  const label = escapeXml(meta.label);
+  const sub = escapeXml(meta.sub);
+  const icon = escapeXml(meta.icon);
   THUMBNAILS[`tools/categories/${slug}.svg`] = base(meta.accent, `
   ${windowChrome(60, 55, 480, 250, meta.label, `
-    <text x="300" y="130" font-size="36" text-anchor="middle">${meta.icon}</text>
-    <text x="300" y="175" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="20" font-weight="600" text-anchor="middle">${meta.label}</text>
-    <text x="300" y="200" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="12" text-anchor="middle">${meta.sub}</text>
+    <text x="300" y="130" font-size="36" text-anchor="middle">${icon}</text>
+    <text x="300" y="175" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="20" font-weight="600" text-anchor="middle">${label}</text>
+    <text x="300" y="200" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="12" text-anchor="middle">${sub}</text>
     <rect x="200" y="220" width="200" height="36" rx="8" fill="${meta.accent}" opacity="0.2" stroke="${meta.accent}"/>
     <text x="300" y="243" fill="${meta.accent}" font-family="system-ui,sans-serif" font-size="11" text-anchor="middle" font-weight="600">AI Prompt Tool</text>
   `)}`);
@@ -442,6 +454,8 @@ const CATEGORY_HEADERS = {
 };
 
 for (const [path, meta] of Object.entries(CATEGORY_HEADERS)) {
+  const title = escapeXml(meta.title);
+  const sub = escapeXml(meta.sub);
   THUMBNAILS[path] = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 320" fill="none">
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="320" gradientUnits="userSpaceOnUse">
@@ -453,8 +467,8 @@ for (const [path, meta] of Object.entries(CATEGORY_HEADERS)) {
   <circle cx="1000" cy="80" r="120" fill="${meta.accent}" opacity="0.15"/>
   <circle cx="150" cy="280" r="80" fill="${ELECTRIC}" opacity="0.1"/>
   ${windowChrome(80, 60, 500, 200, meta.title, `
-    <text x="330" y="130" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="22" font-weight="700" text-anchor="middle">${meta.title}</text>
-    <text x="330" y="160" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="13" text-anchor="middle">${meta.sub}</text>
+    <text x="330" y="130" fill="${TEXT}" font-family="system-ui,sans-serif" font-size="22" font-weight="700" text-anchor="middle">${title}</text>
+    <text x="330" y="160" fill="${MUTED}" font-family="system-ui,sans-serif" font-size="13" text-anchor="middle">${sub}</text>
     <rect x="230" y="180" width="200" height="32" rx="8" fill="${meta.accent}" opacity="0.25" stroke="${meta.accent}"/>
     <text x="330" y="201" fill="${meta.accent}" font-family="system-ui,sans-serif" font-size="12" text-anchor="middle" font-weight="600">Explore tools →</text>
   `)}

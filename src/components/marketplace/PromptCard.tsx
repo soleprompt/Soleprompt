@@ -17,8 +17,8 @@ import {
   getCompatibleModelBadges,
   getPromptBenefit,
 } from "@/lib/prompt-thumbnails";
+import { PromptCoverImage } from "@/components/marketplace/PromptCoverImage";
 import { BADGE_STYLES, getPromptBadges } from "@/lib/prompt-badges";
-import { resolvePromptCoverImage } from "@/lib/tool-images";
 import {
   formatCurrency,
   formatPurchaseAmount,
@@ -32,19 +32,21 @@ interface PromptCardProps {
   href?: string;
   variant?: "compact" | "rich";
   trendingIds?: string[];
+  priorityImage?: boolean;
 }
 
 function PromptThumbnail({
   prompt,
   trendingIds,
+  priorityImage,
 }: {
   prompt: Prompt;
   trendingIds?: string[];
+  priorityImage?: boolean;
 }) {
   const badges = getPromptBadges(prompt, {
     trendingIds: trendingIds ? new Set(trendingIds) : undefined,
   });
-  const thumbnailSrc = resolvePromptCoverImage(prompt);
 
   return (
     <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#0a0a12]">
@@ -61,13 +63,12 @@ function PromptThumbnail({
           </span>
         ))}
       </div>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={thumbnailSrc}
-        alt=""
-        className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-        loading="lazy"
-        decoding="async"
+      <PromptCoverImage
+        title={prompt.title}
+        category={prompt.category}
+        coverImageUrl={prompt.coverImageUrl}
+        priority={priorityImage}
+        className="transition-transform duration-300 group-hover:scale-105"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent" />
     </div>
@@ -123,6 +124,7 @@ export function PromptCard({
   href = `/prompts/${prompt.id}`,
   variant = "rich",
   trendingIds,
+  priorityImage = false,
 }: PromptCardProps) {
   const benefit = getPromptBenefit(prompt.description, prompt.estimatedTimeSaved);
   const modelBadges = getCompatibleModelBadges(prompt.compatibleModels);
@@ -167,7 +169,7 @@ export function PromptCard({
     return (
       <Card hover className="group flex h-full flex-col overflow-hidden">
         <Link href={href} className="flex flex-1 flex-col" onClick={handleClick}>
-          <PromptThumbnail prompt={prompt} trendingIds={trendingIds} />
+          <PromptThumbnail prompt={prompt} trendingIds={trendingIds} priorityImage={priorityImage} />
           <CardContent className="flex flex-1 flex-col pt-3">
             <div className="flex flex-wrap gap-1">
               {modelBadges.slice(0, 2).map((model) => (
@@ -187,7 +189,7 @@ export function PromptCard({
   return (
     <Card hover className="group flex h-full flex-col overflow-hidden">
       <Link href={href} className="block" onClick={handleClick}>
-        <PromptThumbnail prompt={prompt} trendingIds={trendingIds} />
+        <PromptThumbnail prompt={prompt} trendingIds={trendingIds} priorityImage={priorityImage} />
       </Link>
 
       <CardContent className="flex flex-1 flex-col pt-4">

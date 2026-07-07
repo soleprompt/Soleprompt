@@ -1,4 +1,4 @@
-import { resolvePromptCoverImage } from "@/lib/tool-images";
+import { PromptCoverImage } from "@/components/marketplace/PromptCoverImage";
 import { BADGE_STYLES, getPromptBadges } from "@/lib/prompt-badges";
 import type { Prompt } from "@/types";
 import { cn } from "@/lib/utils";
@@ -14,7 +14,6 @@ export function ProductHeroImage({
   trendingIds,
   className,
 }: ProductHeroImageProps) {
-  const src = resolvePromptCoverImage(prompt);
   const badges = getPromptBadges(prompt, {
     trendingIds: trendingIds ? new Set(trendingIds) : undefined,
   });
@@ -26,12 +25,12 @@ export function ProductHeroImage({
         className,
       )}
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        src={src}
-        alt=""
-        className="h-full w-full object-cover"
-        decoding="async"
+      <PromptCoverImage
+        title={prompt.title}
+        category={prompt.category}
+        coverImageUrl={prompt.coverImageUrl}
+        priority
+        className="rounded-2xl"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
       <div className="absolute left-4 top-4 flex flex-wrap gap-2">

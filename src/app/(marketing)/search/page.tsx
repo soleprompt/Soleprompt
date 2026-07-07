@@ -61,11 +61,12 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
         </p>
       ) : (
         <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {prompts.map((prompt) => (
+          {prompts.map((prompt, index) => (
             <PromptCard
               key={prompt.id}
               prompt={prompt}
               trendingIds={trendingIds}
+              priorityImage={index < 6}
             />
           ))}
         </div>
