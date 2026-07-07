@@ -84,7 +84,7 @@ export function DashboardShell({
 
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-border bg-card transition-transform lg:static lg:translate-x-0",
+          "fixed inset-y-0 left-0 z-50 flex w-64 min-h-0 flex-col overflow-hidden border-r border-border bg-card transition-transform lg:static lg:translate-x-0",
           sidebarOpen ? "translate-x-0" : "-translate-x-full",
         )}
       >
@@ -112,9 +112,10 @@ export function DashboardShell({
           <p className="mt-1 truncate text-sm text-foreground">{userName}</p>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto p-3">
+        <nav className="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
           {navItems.map((item) => {
-            const Icon = ICON_MAP[item.icon as keyof typeof ICON_MAP];
+            const Icon =
+              ICON_MAP[item.icon as keyof typeof ICON_MAP] ?? Sparkles;
             const isActive =
               pathname === item.href ||
               (pathname.startsWith(item.href + "/") &&

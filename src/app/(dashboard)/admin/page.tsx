@@ -216,6 +216,9 @@ export default async function AdminOverviewPage() {
             <Link href="/admin/users" className="text-electric hover:underline">
               Manage users
             </Link>
+            <Link href="/admin/anime-ad" className="text-electric hover:underline">
+              Anime Ad Generator
+            </Link>
           </CardContent>
         </Card>
       </div>

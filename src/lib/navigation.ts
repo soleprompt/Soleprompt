@@ -59,9 +59,9 @@ export const ADMIN_NAV: DashboardNavItem[] = [
   { label: "Affiliates", href: "/admin/affiliates", icon: "Share2" },
   { label: "Payouts", href: "/admin/payouts", icon: "DollarSign" },
   { label: "Program Settings", href: "/admin/settings", icon: "Settings" },
+  { label: "Anime Ads", href: "/admin/anime-ad", icon: "Star" },
   { label: "Categories", href: "/admin/categories", icon: "Tags" },
   { label: "Social", href: "/admin/social", icon: "Share2" },
-  { label: "Anime Ads", href: "/admin/anime-ad", icon: "Star" },
 ];
 
 export function getNavForRole(
