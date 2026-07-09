@@ -8,6 +8,7 @@ import { StudioUpgradeBanner } from "@/components/studio/StudioUpgradeBanner";
 import { StudioBrandPill, StudioPageHeader } from "@/components/studio/studio-ui";
 import { Button } from "@/components/ui/Button";
 import { listYouTubePackagesForUser } from "@/lib/studio/data";
+import { getStudioAccess } from "@/lib/studio/subscription";
 import { recordToolVisit } from "@/lib/tool-visits";
 import { syncCurrentUser } from "@/lib/user";
 
@@ -23,6 +24,7 @@ export default async function StudioPage() {
 
   const dbUser = await syncCurrentUser();
   const packages = dbUser ? await listYouTubePackagesForUser(dbUser.id) : [];
+  const access = dbUser ? await getStudioAccess(dbUser.id) : null;
 
   return (
     <>
@@ -50,7 +52,7 @@ export default async function StudioPage() {
       />
 
       <div className="space-y-8">
-        <StudioUpgradeBanner />
+        {access && <StudioUpgradeBanner access={access} />}
         <StudioForm />
         <StudioHistory packages={packages} />
       </div>

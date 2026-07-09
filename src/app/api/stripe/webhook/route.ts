@@ -4,6 +4,11 @@ import type Stripe from "stripe";
 import { prisma } from "@/lib/db";
 import { completePurchase } from "@/lib/purchase-fulfillment";
 import {
+  handleStudioSubscriptionCheckoutCompleted,
+  handleStudioSubscriptionDeleted,
+  handleStudioSubscriptionUpdated,
+} from "@/lib/studio/subscription-webhook";
+import {
   getCheckoutSessionAmount,
   getCheckoutSessionCurrency,
   getStripe,
@@ -19,6 +24,11 @@ function getWebhookSecret(): string | null {
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
+  if (session.metadata?.type === "studio_subscription") {
+    await handleStudioSubscriptionCheckoutCompleted(session);
+    return;
+  }
+
   if (session.payment_status !== "paid") return;
 
   const promptId = session.metadata?.promptId;
@@ -86,6 +96,21 @@ export async function POST(request: Request) {
   try {
     if (event.type === "checkout.session.completed") {
       await handleCheckoutCompleted(event.data.object as Stripe.Checkout.Session);
+    }
+
+    if (
+      event.type === "customer.subscription.updated" ||
+      event.type === "customer.subscription.created"
+    ) {
+      await handleStudioSubscriptionUpdated(
+        event.data.object as Stripe.Subscription,
+      );
+    }
+
+    if (event.type === "customer.subscription.deleted") {
+      await handleStudioSubscriptionDeleted(
+        event.data.object as Stripe.Subscription,
+      );
     }
   } catch (error) {
     console.error("[stripe] Webhook handler failed:", error);

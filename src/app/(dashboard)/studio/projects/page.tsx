@@ -9,6 +9,7 @@ import { StudioUpgradeBanner } from "@/components/studio/StudioUpgradeBanner";
 import { StudioBrandPill, StudioPageHeader } from "@/components/studio/studio-ui";
 import { Button } from "@/components/ui/Button";
 import { listStudioProjectsForUser } from "@/lib/studio/projects/data";
+import { getStudioAccess } from "@/lib/studio/subscription";
 import { recordToolVisit } from "@/lib/tool-visits";
 import { syncCurrentUser } from "@/lib/user";
 
@@ -24,6 +25,7 @@ export default async function StudioProjectsPage() {
 
   const dbUser = await syncCurrentUser();
   const projects = dbUser ? await listStudioProjectsForUser(dbUser.id) : [];
+  const access = dbUser ? await getStudioAccess(dbUser.id) : null;
 
   return (
     <>
@@ -31,10 +33,10 @@ export default async function StudioProjectsPage() {
         badge={
           <StudioBrandPill>
             <Layers className="h-3.5 w-3.5" />
-            Production workspace
+            SolePrompt Studio
           </StudioBrandPill>
         }
-        title="Studio Projects"
+        title="SolePrompt Studio Projects"
         description="Type one idea — research, script, storyboard, thumbnails, and SEO generated in under a minute."
         action={
           <Link href="/studio">
@@ -52,9 +54,12 @@ export default async function StudioProjectsPage() {
       />
 
       <div className="space-y-8">
-        <StudioUpgradeBanner />
+        {access && <StudioUpgradeBanner access={access} />}
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start">
-          <StudioProjectForm />
+          <StudioProjectForm
+            canCreateProject={access?.canCreateProject ?? true}
+            remainingProjects={access?.remainingProjects ?? null}
+          />
           <StudioProductionFlow mode="demo" className="lg:sticky lg:top-6" />
         </div>
         <StudioProjectList projects={projects} />

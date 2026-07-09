@@ -2,6 +2,10 @@ import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import { createMvpStudioProject, runFullMvpWorkflow } from "@/lib/studio/projects/mvp-workflow";
 import { listStudioProjectsForUser } from "@/lib/studio/projects/data";
+import {
+  assertCanCreateStudioProject,
+  StudioProjectLimitError,
+} from "@/lib/studio/subscription";
 import { validateStudioGenerateInput } from "@/lib/studio/validation";
 import { syncCurrentUser } from "@/lib/user";
 
@@ -41,6 +45,23 @@ export async function POST(request: Request) {
   const validation = validateStudioGenerateInput(body);
   if (!validation.ok) {
     return NextResponse.json({ error: validation.error }, { status: 400 });
+  }
+
+  try {
+    await assertCanCreateStudioProject(dbUser.id);
+  } catch (error) {
+    if (error instanceof StudioProjectLimitError) {
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: error.code,
+          projectsThisMonth: error.projectsThisMonth,
+          monthlyLimit: error.monthlyLimit,
+        },
+        { status: 402 },
+      );
+    }
+    throw error;
   }
 
   try {

@@ -1,9 +1,20 @@
-import { Crown, Sparkles } from "lucide-react";
-import { Badge } from "@/components/ui/Badge";
+import { Crown } from "lucide-react";
+import { StudioUpgradeActions } from "@/components/studio/StudioUpgradeActions";
 import { StudioGlassCard } from "@/components/studio/studio-ui";
-import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import type { StudioAccessSnapshot } from "@/lib/studio/subscription-catalog";
+import { STUDIO_FREE_MONTHLY_PROJECT_LIMIT } from "@/lib/studio/subscription-catalog";
 
-export function StudioUpgradeBanner() {
+type StudioUpgradeBannerProps = {
+  access: StudioAccessSnapshot;
+};
+
+export function StudioUpgradeBanner({ access }: StudioUpgradeBannerProps) {
+  const usageLabel =
+    access.monthlyLimit === null
+      ? `${access.projectsThisMonth} projects this month`
+      : `${access.projectsThisMonth} / ${access.monthlyLimit} free projects this month`;
+
   return (
     <StudioGlassCard
       glow
@@ -13,38 +24,43 @@ export function StudioUpgradeBanner() {
         aria-hidden
         className="pointer-events-none absolute inset-0 bg-gradient-to-r from-purple/10 via-transparent to-electric/10"
       />
-      <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="purple">Beta access</Badge>
-            <Badge variant="electric">3 free packages / month</Badge>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple/30 to-electric/20 text-purple">
-              <Crown className="h-5 w-5" strokeWidth={1.5} />
+      <div className="relative space-y-5">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge variant="purple">{access.tierName} plan</Badge>
+              <Badge variant="electric">{usageLabel}</Badge>
+              {access.isPaid && access.cancelAtPeriodEnd && (
+                <Badge variant="outline">Cancels at period end</Badge>
+              )}
             </div>
-            <div>
-              <h2 className="text-lg font-semibold tracking-tight">
-                SolePrompt Studio Pro — coming soon
-              </h2>
-              <p className="mt-1 max-w-xl text-sm leading-relaxed text-muted-foreground">
-                Unlimited YouTube packages, batch generation, and channel
-                templates will unlock with Studio Pro. You&apos;re on the free
-                beta tier for now.
-              </p>
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-purple/30 to-electric/20 text-purple">
+                <Crown className="h-5 w-5" strokeWidth={1.5} />
+              </div>
+              <div>
+                <h2 className="text-lg font-semibold tracking-tight">
+                  {access.isPaid
+                    ? "You're on SolePrompt Studio paid access"
+                    : "Upgrade SolePrompt Studio for unlimited projects"}
+                </h2>
+                <p className="mt-1 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                  {access.isPaid
+                    ? "Your subscription unlocks unlimited SolePrompt Studio projects, templates, and the full MVP production workflow."
+                    : `Free includes ${STUDIO_FREE_MONTHLY_PROJECT_LIMIT} projects per month. Creator ($19), Pro ($49), and Agency ($99) unlock unlimited production.`}
+                </p>
+              </div>
             </div>
           </div>
+
+          {!access.isPaid && (
+            <div className="shrink-0">
+              <StudioUpgradeActions access={access} compact />
+            </div>
+          )}
         </div>
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          disabled
-          className="shrink-0 border-white/[0.1] bg-white/[0.02]"
-        >
-          <Sparkles className="h-4 w-4" />
-          Upgrade (soon)
-        </Button>
+
+        {!access.isPaid && <StudioUpgradeActions access={access} />}
       </div>
     </StudioGlassCard>
   );
