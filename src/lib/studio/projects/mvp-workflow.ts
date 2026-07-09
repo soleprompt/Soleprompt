@@ -20,6 +20,7 @@ import {
 } from "@/lib/studio/storyboard/data";
 import { runStoryboardEngine } from "@/lib/studio/storyboard/run";
 import type { StudioGeneratedContent } from "@/lib/studio/types";
+import { getProjectVoiceoverState } from "@/lib/studio/voiceover/generate";
 
 function toRecord(value: unknown): Record<string, unknown> | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) {
@@ -200,6 +201,7 @@ export async function getMvpProjectState(
         : null;
 
   const scenes = await listStoryboardScenesForProject(projectId, userId);
+  const voiceover = await getProjectVoiceoverState(projectId, userId);
 
   return {
     projectId: project.id,
@@ -222,6 +224,7 @@ export async function getMvpProjectState(
       isPrimary: thumb.isPrimary,
     })),
     seo,
+    voiceover,
     packageId: project.packageId,
   };
 }
