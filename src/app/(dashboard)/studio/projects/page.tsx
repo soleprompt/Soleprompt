@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { StudioProjectForm } from "@/components/studio/StudioProjectForm";
 import { StudioProjectList } from "@/components/studio/StudioProjectList";
 import { StudioProductionFlow } from "@/components/studio/StudioProductionFlow";
+import { StudioPlanCheckoutPrompt } from "@/components/studio/StudioPlanCheckoutPrompt";
 import { StudioUpgradeBanner } from "@/components/studio/StudioUpgradeBanner";
 import { StudioBrandPill, StudioPageHeader } from "@/components/studio/studio-ui";
 import { Button } from "@/components/ui/Button";
@@ -15,7 +16,16 @@ import { syncCurrentUser } from "@/lib/user";
 
 export const dynamic = "force-dynamic";
 
-export default async function StudioProjectsPage() {
+type StudioProjectsPageProps = {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+export default async function StudioProjectsPage({
+  searchParams,
+}: StudioProjectsPageProps) {
+  const params = await searchParams;
+  const planParam = params.plan;
+  const plan = typeof planParam === "string" ? planParam : undefined;
   const user = await currentUser();
   if (!user) {
     redirect("/sign-in");
@@ -54,6 +64,7 @@ export default async function StudioProjectsPage() {
       />
 
       <div className="space-y-8">
+        <StudioPlanCheckoutPrompt plan={plan} isPaid={access?.isPaid ?? false} />
         {access && <StudioUpgradeBanner access={access} />}
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start">
           <StudioProjectForm

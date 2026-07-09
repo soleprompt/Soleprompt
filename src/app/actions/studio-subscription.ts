@@ -4,9 +4,14 @@ import { currentUser } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { getAppUrl } from "@/lib/app-url";
 import {
+  areStudioPriceIdsConfigured,
   getStudioPriceIdForTier,
   type StudioTierId,
 } from "@/lib/studio/subscription-catalog";
+import {
+  getOrCreateStudioSubscription,
+  getStudioAccess,
+} from "@/lib/studio/subscription";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { syncClerkUser } from "@/lib/user";
 
@@ -43,6 +48,18 @@ export async function startStudioSubscriptionCheckout(
     };
   }
 
+  if (!areStudioPriceIdsConfigured()) {
+    return {
+      error:
+        "SolePrompt Studio price IDs are not fully configured. Set STRIPE_STUDIO_CREATOR_PRICE_ID, STRIPE_STUDIO_PRO_PRICE_ID, and STRIPE_STUDIO_AGENCY_PRICE_ID.",
+    };
+  }
+
+  const access = await getStudioAccess(buyer.id);
+  if (access.isPaid) {
+    return { error: "You already have an active SolePrompt Studio subscription." };
+  }
+
   const priceId = getStudioPriceIdForTier(tier);
   if (!priceId) {
     return {
@@ -50,6 +67,7 @@ export async function startStudioSubscriptionCheckout(
     };
   }
 
+  const existingSubscription = await getOrCreateStudioSubscription(buyer.id);
   const appUrl = getAppUrl();
   const stripe = getStripe();
 
@@ -57,6 +75,11 @@ export async function startStudioSubscriptionCheckout(
     mode: "subscription",
     payment_method_types: ["card"],
     line_items: [{ price: priceId, quantity: 1 }],
+    ...(existingSubscription.stripeCustomerId
+      ? { customer: existingSubscription.stripeCustomerId }
+      : buyer.email
+        ? { customer_email: buyer.email }
+        : {}),
     metadata: {
       type: "studio_subscription",
       userId: buyer.id,

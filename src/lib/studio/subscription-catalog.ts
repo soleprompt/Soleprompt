@@ -79,6 +79,12 @@ export function getStudioPriceIdForTier(tier: StudioTierId): string | null {
   return process.env[definition.stripePriceEnvKey]?.trim() || null;
 }
 
+export function areStudioPriceIdsConfigured(): boolean {
+  return STUDIO_TIER_CATALOG.filter((tier) => tier.stripePriceEnvKey).every(
+    (tier) => Boolean(process.env[tier.stripePriceEnvKey!]?.trim()),
+  );
+}
+
 export function resolveTierFromPriceId(priceId: string): StudioTierId | null {
   for (const tier of STUDIO_TIER_CATALOG) {
     if (!tier.stripePriceEnvKey) continue;

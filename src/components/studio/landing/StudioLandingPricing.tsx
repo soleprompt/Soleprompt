@@ -70,7 +70,7 @@ function PricingCard({
   const signUpUrl =
     tierId === "free"
       ? "/sign-up?redirect_url=/studio/projects"
-      : `/sign-up?redirect_url=/studio/projects&plan=${tierId}`;
+      : `/sign-up?redirect_url=${encodeURIComponent(`/studio/projects?plan=${tierId}`)}`;
 
   return (
     <StudioGlassCard
