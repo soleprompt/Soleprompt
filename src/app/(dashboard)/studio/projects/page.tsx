@@ -4,6 +4,7 @@ import { ArrowLeft, Layers } from "lucide-react";
 import { redirect } from "next/navigation";
 import { StudioProjectForm } from "@/components/studio/StudioProjectForm";
 import { StudioProjectList } from "@/components/studio/StudioProjectList";
+import { StudioProductionFlow } from "@/components/studio/StudioProductionFlow";
 import { StudioUpgradeBanner } from "@/components/studio/StudioUpgradeBanner";
 import { StudioBrandPill, StudioPageHeader } from "@/components/studio/studio-ui";
 import { Button } from "@/components/ui/Button";
@@ -34,7 +35,7 @@ export default async function StudioProjectsPage() {
           </StudioBrandPill>
         }
         title="Studio Projects"
-        description="Create a project and get research, script, storyboard, thumbnail concepts, and SEO — all in one dashboard."
+        description="Type one idea — research, script, storyboard, thumbnails, and SEO generated in under a minute."
         action={
           <Link href="/studio">
             <Button
@@ -52,7 +53,10 @@ export default async function StudioProjectsPage() {
 
       <div className="space-y-8">
         <StudioUpgradeBanner />
-        <StudioProjectForm />
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,340px)] lg:items-start">
+          <StudioProjectForm />
+          <StudioProductionFlow mode="demo" className="lg:sticky lg:top-6" />
+        </div>
         <StudioProjectList projects={projects} />
       </div>
     </>

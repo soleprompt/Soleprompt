@@ -13,6 +13,7 @@ import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StudioMvpProgress } from "@/components/studio/StudioMvpProgress";
 import { StudioMvpSection } from "@/components/studio/StudioMvpSection";
+import { StudioProductionFlow } from "@/components/studio/StudioProductionFlow";
 import { StudioStoryboardTimeline } from "@/components/studio/StudioStoryboardTimeline";
 import {
   StudioAlert,
@@ -346,7 +347,17 @@ export function StudioMvpDashboard({ initialState }: StudioMvpDashboardProps) {
 
       {mvp.error && <StudioAlert variant="error">{mvp.error}</StudioAlert>}
 
-      <StudioMvpProgress progress={mvp.mvpProgress} activeStep={mvp.activeStep} />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,280px)] lg:items-start">
+        <StudioMvpProgress progress={mvp.mvpProgress} activeStep={mvp.activeStep} />
+        <StudioProductionFlow
+          mode="live"
+          progress={mvp.mvpProgress}
+          activeStep={mvp.activeStep}
+          topic={mvp.topic}
+          compact
+          className="lg:sticky lg:top-6"
+        />
+      </div>
 
       <div className="space-y-6">
         <StudioMvpSection

@@ -1,6 +1,7 @@
 "use client";
 
 import { Check, Loader2 } from "lucide-react";
+import { getNarrativeHeadline } from "@/lib/studio/projects/mvp-narrative";
 import {
   MVP_STEP_LABELS,
   MVP_STEPS,
@@ -46,11 +47,7 @@ export function StudioMvpProgress({ progress, activeStep }: StudioMvpProgressPro
               Production pipeline
             </p>
             <p className="mt-1.5 text-2xl font-semibold tracking-[-0.02em]">
-              {completedCount === MVP_STEPS.length
-                ? "Package complete"
-                : activeStep
-                  ? `Generating ${MVP_STEP_LABELS[activeStep].toLowerCase()}…`
-                  : "Building your package"}
+              {getNarrativeHeadline(progress, activeStep)}
             </p>
           </div>
           <div className="flex items-baseline gap-1">
