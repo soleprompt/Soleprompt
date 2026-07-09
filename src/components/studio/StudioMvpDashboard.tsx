@@ -15,6 +15,7 @@ import { StudioMvpProgress } from "@/components/studio/StudioMvpProgress";
 import { StudioProductionFlow } from "@/components/studio/StudioProductionFlow";
 import { StudioMvpSection } from "@/components/studio/StudioMvpSection";
 import { StudioStoryboardTimeline } from "@/components/studio/StudioStoryboardTimeline";
+import { StudioVideoPanel } from "@/components/studio/StudioVideoPanel";
 import {
   StudioAlert,
   StudioBrandPill,
@@ -471,6 +472,14 @@ export function StudioMvpDashboard({ initialState }: StudioMvpDashboardProps) {
             />
           )}
         </StudioMvpSection>
+
+        <StudioVideoPanel
+          projectId={mvp.projectId}
+          storyboardComplete={mvp.mvpProgress.storyboard === "completed"}
+          hasScript={Boolean(mvp.script)}
+          initialVideo={mvp.video}
+          onUpdate={(video) => setMvp((current) => ({ ...current, video }))}
+        />
 
         <StudioMvpSection
           id="thumbnail"

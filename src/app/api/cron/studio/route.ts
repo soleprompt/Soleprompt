@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { processStudioQueue } from "@/lib/studio/pipeline/worker";
+import { processVideoQueue } from "@/lib/studio/video/worker";
 
 export async function GET(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
@@ -20,6 +21,7 @@ export async function GET(request: Request) {
   const maxJobs = Number(url.searchParams.get("maxJobs") ?? "5");
   const workerId = request.headers.get("x-worker-id") ?? "cron-worker";
 
-  const result = await processStudioQueue(workerId, maxJobs);
-  return NextResponse.json(result);
+  const pipelineResult = await processStudioQueue(workerId, maxJobs);
+  const videoResult = await processVideoQueue(`${workerId}-video`, maxJobs);
+  return NextResponse.json({ pipeline: pipelineResult, video: videoResult });
 }
