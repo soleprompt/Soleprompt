@@ -80,6 +80,14 @@ enum SocialPostStatus {
   failed
 }
 
+enum SocialPostType {
+  original
+  demo_video
+  customer_win
+  ai_tip
+  youtube_example
+}
+
 model User {
   id                    String    @id @default(cuid())
   clerkUserId           String    @unique
@@ -333,6 +341,7 @@ model ClickThrough {
 model SocialPost {
   id          String           @id @default(cuid())
   platform    SocialPlatform   @default(x)
+  postType    SocialPostType   @default(original)
   content     String
   status      SocialPostStatus @default(draft)
   scheduledAt DateTime?
@@ -343,6 +352,7 @@ model SocialPost {
   updatedAt   DateTime         @updatedAt
 
   @@index([status, scheduledAt])
+  @@index([postType, createdAt])
 }
 
 model EngageTargetAccount {

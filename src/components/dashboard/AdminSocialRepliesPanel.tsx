@@ -566,7 +566,7 @@ export function AdminSocialRepliesPanel({
             <div>
               <h2 className="text-lg font-semibold">Reply limits</h2>
               <p className="text-sm text-muted-foreground">
-                Shared cap: up to 10 tweets per UTC day (posts + replies combined),
+                Shared cap: up to 12 tweets per UTC day (posts + replies combined),
                 at least 30 minutes apart. Auto-approve is on — cron publishes
                 approved content.
               </p>

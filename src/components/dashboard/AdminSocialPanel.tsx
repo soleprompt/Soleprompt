@@ -16,7 +16,8 @@ import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent, CardHeader } from "@/components/ui/Card";
 import { Input } from "@/components/ui/Input";
-import type { SocialPost, SocialPostStatus } from "@/generated/prisma/client";
+import type { SocialPost, SocialPostStatus, SocialPostType } from "@/generated/prisma/client";
+import { AUTO_POST_TYPE_LABELS } from "@/lib/social/auto-post-types";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All statuses" },
@@ -187,17 +188,30 @@ export function AdminSocialPanel({
           method: "POST",
         });
         const data = (await response.json()) as {
-          count?: number;
+          generated?: number;
+          byType?: Partial<Record<SocialPostType, number>>;
           autoApproved?: boolean;
+          skipped?: boolean;
           error?: string;
         };
         if (!response.ok) {
           throw new Error(data.error ?? "Failed to generate tweets.");
         }
+        const count = data.generated ?? 0;
+        const typeSummary =
+          data.byType && Object.keys(data.byType).length > 0
+            ? ` (${Object.entries(data.byType)
+                .map(([type, n]) => `${n} ${AUTO_POST_TYPE_LABELS[type as SocialPostType].toLowerCase()}`)
+                .join(", ")})`
+            : "";
         setMessage(
-          data.autoApproved
-            ? `Generated and auto-approved ${data.count ?? 0} tweet${data.count === 1 ? "" : "s"}. Cron will publish when within daily limits.`
-            : `Generated ${data.count ?? 0} draft tweet ideas.`,
+          data.skipped
+            ? "Auto-approve is off — enable SOCIAL_AUTO_APPROVE to generate the daily mix."
+            : count === 0
+              ? "Daily content mix is already complete for today."
+              : data.autoApproved
+                ? `Generated and auto-approved ${count} tweet${count === 1 ? "" : "s"}${typeSummary}. Cron will publish when within daily limits.`
+                : `Generated ${count} draft tweet${count === 1 ? "" : "s"}${typeSummary}.`,
         );
         await refreshPosts();
       } catch (err) {
@@ -428,7 +442,7 @@ export function AdminSocialPanel({
             <div>
               <h2 className="text-lg font-semibold">Posting limits</h2>
               <p className="text-sm text-muted-foreground">
-                Shared cap: up to 10 tweets per UTC day (posts + replies combined),
+                Shared cap: up to 12 tweets per UTC day (posts + replies combined),
                 at least 30 minutes apart. Auto-approve is on — cron publishes
                 approved posts.
               </p>
@@ -464,10 +478,10 @@ export function AdminSocialPanel({
         <CardHeader>
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-lg font-semibold">Generate tweet ideas</h2>
+              <h2 className="text-lg font-semibold">Generate daily content mix</h2>
               <p className="text-sm text-muted-foreground">
-                Template-based tweets auto-approve and publish via cron within
-                daily limits. No DMs, likes, or follows.
+                3–5 originals plus demo video, customer wins, AI tips, and
+                YouTube examples. Auto-approves and publishes via cron.
               </p>
             </div>
             <Button
@@ -482,7 +496,7 @@ export function AdminSocialPanel({
               ) : (
                 <Sparkles className="h-4 w-4" />
               )}
-              Generate tweet ideas
+              Generate daily mix
             </Button>
           </div>
         </CardHeader>
@@ -524,6 +538,11 @@ export function AdminSocialPanel({
                 >
                   <div className="mb-3 flex flex-wrap items-center gap-2">
                     <Badge variant={badge.variant}>{badge.label}</Badge>
+                    {post.postType !== "original" && (
+                      <Badge variant="outline">
+                        {AUTO_POST_TYPE_LABELS[post.postType]}
+                      </Badge>
+                    )}
                     <span className="text-xs text-muted-foreground">
                       {post.content.length}/280 chars
                     </span>

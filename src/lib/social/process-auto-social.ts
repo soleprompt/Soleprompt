@@ -1,10 +1,13 @@
 import { prisma } from "@/lib/db";
+import { ensureDailyAutoPosts } from "@/lib/social/auto-post-scheduler";
+import type { EnsureDailyAutoPostsResult } from "@/lib/social/auto-post-scheduler";
 import { isSocialAutoApproveEnabled } from "@/lib/social/auto-social-config";
 import { pickBestReplyOption } from "@/lib/social/auto-select";
 import { canTweetNow } from "@/lib/social/tweet-limits";
 import { postReplyToX, postToX } from "@/lib/social/post-to-x";
 
 export type ProcessAutoSocialResult = {
+  dailyContent: EnsureDailyAutoPostsResult;
   scheduledPosts: { processed: number; posted: number; failed: number; deferred: number };
   approvedPosts: { processed: number; posted: number; failed: number; deferred: number };
   approvedReplies: { processed: number; posted: number; failed: number; deferred: number };
@@ -384,6 +387,7 @@ async function publishEngageDraft(
 }
 
 export async function processAutoSocial(): Promise<ProcessAutoSocialResult> {
+  const dailyContent = await ensureDailyAutoPosts();
   const autoApproved = await autoApprovePendingDrafts();
 
   const [scheduledPosts, approvedPosts, approvedReplies, approvedEngageDrafts] =
@@ -401,6 +405,7 @@ export async function processAutoSocial(): Promise<ProcessAutoSocialResult> {
     ]);
 
   return {
+    dailyContent,
     scheduledPosts,
     approvedPosts,
     approvedReplies,

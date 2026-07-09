@@ -26,7 +26,7 @@ export default async function AdminSocialPage({
     <>
       <PageHeader
         title="Social — Posts"
-        description="Generate promotional X posts for getsoleprompt.com. Auto-approved posts publish via cron (up to 10 tweets/day across posts and replies)."
+        description="Generate and auto-publish a daily X content mix: 3–5 originals, demo video, customer wins, AI tips, and YouTube examples (up to 12 tweets/day across posts and replies)."
       />
       <AdminSocialNav />
       <AdminSocialPanel initialPosts={posts} statusFilter={statusFilter} />

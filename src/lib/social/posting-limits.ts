@@ -6,7 +6,7 @@ import {
 } from "@/lib/social/tweet-limits";
 
 /** @deprecated Use tweet-limits — kept for API compatibility. */
-export const MAX_DAILY_X_POSTS = 10;
+export const MAX_DAILY_X_POSTS = 12;
 
 /** @deprecated Cooldown is unified in tweet-limits. */
 export const MIN_HOURS_BETWEEN_X_POSTS = 0.5;
