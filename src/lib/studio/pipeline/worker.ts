@@ -78,8 +78,8 @@ export async function processNextStudioJob(workerId: string) {
     });
 
     const metadata = toMetadataRecord(project.metadata);
-    const module = getPipelineModule(stepId);
-    const result = await module.execute({
+    const stepModule = getPipelineModule(stepId);
+    const result = await stepModule.execute({
       projectId: project.id,
       userId: project.userId,
       input: getProjectInput(project.metadata),

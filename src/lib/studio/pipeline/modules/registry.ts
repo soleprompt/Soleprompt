@@ -37,11 +37,11 @@ export function getModuleRegistry(): ModuleRegistry {
 }
 
 export function getPipelineModule(stepId: PipelineStepId) {
-  const module = getModuleRegistry()[stepId];
-  if (!module) {
+  const stepModule = getModuleRegistry()[stepId];
+  if (!stepModule) {
     throw new Error(`No module registered for step: ${stepId}`);
   }
-  return module;
+  return stepModule;
 }
 
 export function setModuleRegistry(customRegistry: ModuleRegistry) {
