@@ -31,6 +31,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/affiliate/click(.*)",
   "/api/stripe/webhook",
   "/api/tool-preview(.*)",
+  "/studio/welcome(.*)",
 ]);
 
 const isAuthRoute = createRouteMatcher(["/sign-in(.*)", "/sign-up(.*)"]);
