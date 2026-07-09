@@ -256,19 +256,26 @@ export function AdminSocialRepliesPanel({
           batchId?: string;
           category?: string;
           replies?: SocialReply[];
+          autoApproved?: boolean;
           error?: string;
         };
         if (!response.ok) {
           throw new Error(data.error ?? "Failed to generate reply options.");
         }
-        setGeneratedBatch({
-          summary: data.summary ?? "",
-          batchId: data.batchId ?? "",
-          category: data.category ?? "",
-          options: data.replies ?? [],
-        });
+        setGeneratedBatch(
+          data.autoApproved
+            ? null
+            : {
+                summary: data.summary ?? "",
+                batchId: data.batchId ?? "",
+                category: data.category ?? "",
+                options: data.replies ?? [],
+              },
+        );
         setMessage(
-          `Generated 5 reply options${data.category ? ` (${data.category})` : ""}. Pick one to continue.`,
+          data.autoApproved
+            ? `Auto-approved reply${data.category ? ` (${data.category})` : ""}. Cron will publish when within daily limits.`
+            : `Generated 5 reply options${data.category ? ` (${data.category})` : ""}. Pick one to continue.`,
         );
         setTweetUrl("");
         setTargetSnippet("");
@@ -404,7 +411,7 @@ export function AdminSocialRepliesPanel({
   function handlePostNow(replyId: string) {
     if (
       !confirm(
-        "Post this reply to X now? Only approved replies are published — no auto-reply.",
+        "Post this reply to X now? Cron also auto-publishes approved replies within daily limits.",
       )
     ) {
       return;
@@ -559,8 +566,9 @@ export function AdminSocialRepliesPanel({
             <div>
               <h2 className="text-lg font-semibold">Reply limits</h2>
               <p className="text-sm text-muted-foreground">
-                Safe caps: up to 10 replies per UTC day, at least 30 minutes
-                apart. Admin approval required — no auto-reply.
+                Shared cap: up to 10 tweets per UTC day (posts + replies combined),
+                at least 30 minutes apart. Auto-approve is on — cron publishes
+                approved content.
               </p>
             </div>
             <div className="text-sm">
@@ -575,7 +583,7 @@ export function AdminSocialRepliesPanel({
                     <span className="font-medium">
                       {replyLimits.dailyCount}/{replyLimits.dailyLimit}
                     </span>{" "}
-                    replies today (UTC)
+                    replies today (UTC, shared with posts)
                   </p>
                   {!replyLimits.allowed && replyLimits.nextAvailableAt && (
                     <p className="text-amber-600 dark:text-amber-400">
@@ -596,8 +604,8 @@ export function AdminSocialRepliesPanel({
               <div>
                 <h2 className="text-lg font-semibold">Add tweet to reply to</h2>
                 <p className="text-sm text-muted-foreground">
-                  Paste an X status URL or tweet ID. Generates a summary plus 5
-                  styled reply options — template-based, no OpenAI.
+                  Paste an X status URL or tweet ID. Auto mode picks the best
+                  helpful reply and queues it for cron publishing.
                 </p>
               </div>
               <Button

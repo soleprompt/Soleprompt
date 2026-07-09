@@ -188,12 +188,17 @@ export function AdminSocialPanel({
         });
         const data = (await response.json()) as {
           count?: number;
+          autoApproved?: boolean;
           error?: string;
         };
         if (!response.ok) {
           throw new Error(data.error ?? "Failed to generate tweets.");
         }
-        setMessage(`Generated ${data.count ?? 0} draft tweet ideas.`);
+        setMessage(
+          data.autoApproved
+            ? `Generated and auto-approved ${data.count ?? 0} tweet${data.count === 1 ? "" : "s"}. Cron will publish when within daily limits.`
+            : `Generated ${data.count ?? 0} draft tweet ideas.`,
+        );
         await refreshPosts();
       } catch (err) {
         setError(err instanceof Error ? err.message : "Something went wrong.");
@@ -423,8 +428,9 @@ export function AdminSocialPanel({
             <div>
               <h2 className="text-lg font-semibold">Posting limits</h2>
               <p className="text-sm text-muted-foreground">
-                Safe caps for X publishing: up to 3 posts per UTC day, at least 4
-                hours apart.
+                Shared cap: up to 10 tweets per UTC day (posts + replies combined),
+                at least 30 minutes apart. Auto-approve is on — cron publishes
+                approved posts.
               </p>
             </div>
             <div className="text-sm">
@@ -439,7 +445,7 @@ export function AdminSocialPanel({
                     <span className="font-medium">
                       {postingLimits.dailyCount}/{postingLimits.dailyLimit}
                     </span>{" "}
-                    posts today (UTC)
+                    tweets today (UTC, shared with replies)
                   </p>
                   {!postingLimits.allowed && postingLimits.nextAvailableAt && (
                     <p className="text-amber-600 dark:text-amber-400">
@@ -460,7 +466,8 @@ export function AdminSocialPanel({
             <div>
               <h2 className="text-lg font-semibold">Generate tweet ideas</h2>
               <p className="text-sm text-muted-foreground">
-                Template-based drafts only — no auto-posting, DMs, likes, or follows.
+                Template-based tweets auto-approve and publish via cron within
+                daily limits. No DMs, likes, or follows.
               </p>
             </div>
             <Button

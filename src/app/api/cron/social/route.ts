@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { processScheduledPosts } from "@/lib/social/process-scheduled-posts";
+import { processAutoSocial } from "@/lib/social/process-auto-social";
 
 export async function GET(request: Request) {
   const cronSecret = process.env.CRON_SECRET;
@@ -16,6 +16,6 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await processScheduledPosts();
+  const result = await processAutoSocial();
   return NextResponse.json(result);
 }

@@ -227,7 +227,11 @@ export function AdminSocialEngagePanel({
         return;
       }
 
-      setMessage("Generated 3 reply drafts.");
+      setMessage(
+        data.autoApproved
+          ? "Auto-approved best reply draft. Cron will publish when within daily limits."
+          : "Generated 3 reply drafts.",
+      );
       await refreshPosts();
     } finally {
       setActionId(null);
@@ -420,7 +424,7 @@ export function AdminSocialEngagePanel({
       <div className="mb-6 grid gap-4 md:grid-cols-2">
         <Card>
           <CardHeader className="pb-2">
-            <h3 className="text-sm font-medium">Reply rate limits</h3>
+            <h3 className="text-sm font-medium">Tweet rate limits</h3>
           </CardHeader>
           <CardContent className="text-sm text-muted-foreground">
             {limitsLoading ? (
@@ -431,7 +435,8 @@ export function AdminSocialEngagePanel({
             ) : replyLimits ? (
               <div className="space-y-1">
                 <p>
-                  Replies today: {replyLimits.dailyCount} / {replyLimits.dailyLimit}
+                  Tweets today (posts + replies): {replyLimits.dailyCount} /{" "}
+                  {replyLimits.dailyLimit}
                 </p>
                 {replyLimits.allowed ? (
                   <p className="text-electric">Ready to post</p>

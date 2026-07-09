@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { isAdminUser } from "@/lib/admin";
 import { prisma } from "@/lib/db";
 import { formatDbReadError } from "@/lib/safe-db";
+import { isSocialAutoApproveEnabled } from "@/lib/social/auto-social-config";
+import { pickBestReplyOption } from "@/lib/social/auto-select";
 import { generateEngageDrafts } from "@/lib/social/engage-draft-generator";
 import type { EngageTopicId } from "@/lib/social/engage-topics";
 
@@ -75,6 +77,28 @@ export async function POST(_request: Request, { params }: RouteContext) {
         { error: "Generated draft exceeds 280 characters." },
         { status: 422 },
       );
+    }
+
+    const autoApprove = isSocialAutoApproveEnabled();
+
+    if (autoApprove) {
+      const best = pickBestReplyOption(options);
+      const draft = await prisma.engageReplyDraft.create({
+        data: {
+          postId: post.id,
+          style: best.style,
+          content: best.content,
+          status: "approved",
+          includesLink: best.includesLink,
+          taglineKey: best.taglineKey,
+        },
+      });
+
+      return NextResponse.json({
+        drafts: [draft],
+        postId: post.id,
+        autoApproved: true,
+      });
     }
 
     const drafts = await prisma.$transaction(

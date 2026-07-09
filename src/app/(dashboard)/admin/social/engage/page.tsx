@@ -27,7 +27,7 @@ export default async function AdminSocialEngagePage({
     <>
       <PageHeader
         title="Engage"
-        description="Monitor large X accounts for relevant posts, generate reply drafts, and post only after admin approval."
+        description="Monitor large X accounts for relevant posts and generate replies. Auto-approved drafts publish via cron (up to 10 tweets/day)."
       />
       <AdminSocialEngagePanel
         initialAccounts={accounts}

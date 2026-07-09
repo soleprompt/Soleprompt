@@ -8,6 +8,8 @@ import {
   summarizePost,
 } from "@/lib/social/reply-generator";
 import type { ReplyCategory } from "@/lib/social/reply-templates";
+import { isSocialAutoApproveEnabled } from "@/lib/social/auto-social-config";
+import { pickBestReplyOption } from "@/lib/social/auto-select";
 import {
   detectCategoryFromText,
   REPLY_CATEGORIES,
@@ -118,6 +120,44 @@ export async function POST(request: Request) {
       { error: "Generated reply exceeds 280 characters." },
       { status: 422 },
     );
+  }
+
+  const autoApprove = isSocialAutoApproveEnabled();
+
+  if (autoApprove) {
+    const best = pickBestReplyOption(
+      options.map((option) => ({ ...option, replyStyle: option.style })),
+    );
+
+    const reply = await prisma.socialReply.create({
+      data: {
+        targetTweetId: parsed.tweetId,
+        targetTweetUrl: parsed.tweetUrl,
+        targetAuthor: author,
+        targetSnippet: snippet,
+        postSummary: summary,
+        replyStyle: best.style,
+        content: best.content,
+        status: "approved",
+        includesLink: best.includesLink,
+        taglineKey: best.taglineKey,
+      },
+    });
+
+    return NextResponse.json({
+      summary,
+      category,
+      autoApproved: true,
+      options: [
+        {
+          id: reply.id,
+          style: reply.replyStyle,
+          content: reply.content,
+          includesLink: reply.includesLink,
+        },
+      ],
+      replies: [reply],
+    });
   }
 
   const parentBatchId = createBatchId();

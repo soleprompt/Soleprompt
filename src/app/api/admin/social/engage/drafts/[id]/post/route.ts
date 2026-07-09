@@ -51,7 +51,7 @@ export async function POST(_request: Request, { params }: RouteContext) {
     const updated = await prisma.engageReplyDraft.update({
       where: { id },
       data: {
-        status: "failed",
+        status: "approved",
         error: limits.reason,
       },
     });

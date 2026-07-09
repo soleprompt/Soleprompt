@@ -20,7 +20,7 @@ export default async function AdminSocialRepliesPage({
     <>
       <PageHeader
         title={REPLY_ASSISTANT_LABEL}
-        description="Find relevant X posts, generate helpful reply drafts, and post only after admin approval. No auto-reply."
+        description="Find relevant X posts and generate helpful replies. Auto-approved replies publish via cron (up to 10 tweets/day across posts and replies)."
       />
       <AdminSocialRepliesPanel
         initialReplies={replies}
