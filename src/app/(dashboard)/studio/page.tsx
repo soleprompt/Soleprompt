@@ -1,11 +1,11 @@
-import { currentUser } from "@clerk/nextjs/server";
 import Link from "next/link";
+import { currentUser } from "@clerk/nextjs/server";
+import { Layers } from "lucide-react";
 import { redirect } from "next/navigation";
-import { Rocket } from "lucide-react";
-import { PageHeader } from "@/components/dashboard/PageHeader";
 import { StudioForm } from "@/components/studio/StudioForm";
 import { StudioHistory } from "@/components/studio/StudioHistory";
 import { StudioUpgradeBanner } from "@/components/studio/StudioUpgradeBanner";
+import { StudioBrandPill, StudioPageHeader } from "@/components/studio/studio-ui";
 import { Button } from "@/components/ui/Button";
 import { listYouTubePackagesForUser } from "@/lib/studio/data";
 import { recordToolVisit } from "@/lib/tool-visits";
@@ -26,13 +26,23 @@ export default async function StudioPage() {
 
   return (
     <>
-      <PageHeader
+      <StudioPageHeader
+        badge={
+          <StudioBrandPill>
+            <Layers className="h-3.5 w-3.5" />
+            SolePrompt Studio
+          </StudioBrandPill>
+        }
         title="SolePrompt Studio"
         description="Generate a complete YouTube video package from one topic — titles, script, description, tags, and more."
         action={
           <Link href="/studio/projects">
-            <Button type="button" variant="secondary" size="sm">
-              <Rocket className="h-4 w-4" />
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="shadow-[0_0_24px_rgba(139,92,246,0.2)]"
+            >
               Full production
             </Button>
           </Link>

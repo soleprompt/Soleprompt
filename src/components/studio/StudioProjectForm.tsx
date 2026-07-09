@@ -1,8 +1,15 @@
 "use client";
 
-import { Loader2, Rocket } from "lucide-react";
+import { Loader2, Rocket, Wand2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  StudioAlert,
+  StudioGlassCard,
+  studioChip,
+  studioInput,
+  studioLabel,
+} from "@/components/studio/studio-ui";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { parseApiError } from "@/lib/api-error";
@@ -77,22 +84,23 @@ export function StudioProjectForm() {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="rounded-2xl border border-border bg-card/50 p-5 sm:p-6"
-    >
-      <div className="mb-5 space-y-1">
-        <h2 className="text-lg font-semibold">Full production pipeline</h2>
-        <p className="text-sm text-muted-foreground">
-          One topic in — research, script, storyboard, assets, voice, video, SEO,
-          and publish prep out.
-        </p>
+    <StudioGlassCard glow className="p-5 sm:p-7 animate-studio-fade-in-up">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-purple/25 to-purple/5 text-purple">
+          <Wand2 className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">Create project</h2>
+          <p className="text-sm text-muted-foreground">
+            Research, script, storyboard, thumbnails & SEO — one click
+          </p>
+        </div>
       </div>
 
-      <div className="space-y-5">
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label htmlFor="project-topic" className="text-sm font-medium">
-            Video topic <span className="text-electric">*</span>
+          <label htmlFor="project-topic" className={studioLabel}>
+            Video topic <span className="text-purple">*</span>
           </label>
           <Input
             id="project-topic"
@@ -102,11 +110,12 @@ export function StudioProjectForm() {
             maxLength={200}
             disabled={loading}
             required
+            className="border-white/[0.08] bg-black/30 focus:border-purple/40 focus:ring-purple/20"
           />
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="project-niche" className="text-sm font-medium">
+          <label htmlFor="project-niche" className={studioLabel}>
             Niche
           </label>
           <Input
@@ -116,11 +125,12 @@ export function StudioProjectForm() {
             onChange={(event) => setNiche(event.target.value)}
             maxLength={120}
             disabled={loading}
+            className="border-white/[0.08] bg-black/30 focus:border-purple/40 focus:ring-purple/20"
           />
         </div>
 
         <div className="space-y-2">
-          <span className="text-sm font-medium">Video type</span>
+          <span className={studioLabel}>Video type</span>
           <div className="flex flex-wrap gap-2">
             {STUDIO_VIDEO_TYPES.map((type) => (
               <button
@@ -128,12 +138,7 @@ export function StudioProjectForm() {
                 type="button"
                 disabled={loading}
                 onClick={() => setVideoType(type)}
-                className={cn(
-                  "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-                  videoType === type
-                    ? "border-purple bg-purple/10 text-purple"
-                    : "border-border text-muted-foreground hover:border-purple/40 hover:text-foreground",
-                )}
+                className={studioChip(videoType === type)}
               >
                 {STUDIO_VIDEO_TYPE_LABELS[type]}
               </button>
@@ -142,7 +147,7 @@ export function StudioProjectForm() {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="project-tone" className="text-sm font-medium">
+          <label htmlFor="project-tone" className={studioLabel}>
             Tone
           </label>
           <select
@@ -150,7 +155,7 @@ export function StudioProjectForm() {
             value={tone}
             onChange={(event) => setTone(event.target.value as StudioTone)}
             disabled={loading}
-            className="flex h-12 w-full rounded-full border border-border bg-background/80 px-4 text-sm text-foreground backdrop-blur-sm transition-all duration-200 focus:border-purple/50 focus:outline-none focus:ring-2 focus:ring-purple/20"
+            className={cn(studioInput, "h-12 rounded-full px-4")}
           >
             {STUDIO_TONES.map((option) => (
               <option key={option} value={option}>
@@ -160,32 +165,28 @@ export function StudioProjectForm() {
           </select>
         </div>
 
-        {error && (
-          <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {error}
-          </p>
-        )}
+        {error && <StudioAlert variant="error">{error}</StudioAlert>}
 
         <Button
           type="submit"
           variant="secondary"
           size="lg"
-          className="w-full sm:w-auto"
+          className="w-full shadow-[0_0_32px_rgba(139,92,246,0.25)] sm:w-auto"
           disabled={loading}
         >
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
-              Starting production…
+              Creating project…
             </>
           ) : (
             <>
               <Rocket className="h-4 w-4" />
-              Start YouTube Production
+              Create Project
             </>
           )}
         </Button>
-      </div>
-    </form>
+      </form>
+    </StudioGlassCard>
   );
 }

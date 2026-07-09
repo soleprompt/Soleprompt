@@ -12,6 +12,12 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
+import {
+  StudioAlert,
+  StudioEmptyState,
+  studioInput,
+  studioLabel,
+} from "@/components/studio/studio-ui";
 import { parseApiError } from "@/lib/api-error";
 import type { StoryboardSceneRecord } from "@/lib/studio/storyboard/types";
 import { STORYBOARD_SCENE_FIELDS } from "@/lib/studio/storyboard/types";
@@ -47,14 +53,12 @@ function SceneField({
 }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-        {label}
-      </span>
+      <span className={studioLabel}>{label}</span>
       <textarea
         value={value}
         onChange={(event) => onChange(event.target.value)}
         rows={rows}
-        className="w-full rounded-xl border border-border bg-background/80 px-3 py-2 text-sm leading-relaxed focus:border-purple/50 focus:outline-none focus:ring-2 focus:ring-purple/20"
+        className={studioInput}
       />
     </label>
   );
@@ -217,9 +221,11 @@ export function StudioStoryboardTimeline({
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Clapperboard className="h-5 w-5 text-purple" />
-          <h2 className="text-lg font-semibold">Storyboard Timeline</h2>
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple/15 text-purple">
+            <Clapperboard className="h-4 w-4" />
+          </div>
+          <h2 className="text-lg font-semibold tracking-tight">Storyboard Timeline</h2>
           {isComplete && (
             <Badge variant="electric">{scenes.length} scenes</Badge>
           )}
@@ -250,11 +256,7 @@ export function StudioStoryboardTimeline({
         </div>
       </div>
 
-      {error && (
-        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          {error}
-        </p>
-      )}
+      {error && <StudioAlert variant="error">{error}</StudioAlert>}
 
       {!hasScript && (
         <p className="text-sm text-muted-foreground">
@@ -263,18 +265,18 @@ export function StudioStoryboardTimeline({
       )}
 
       {scenes.length === 0 && hasScript && !isGeneratingStatus && (
-        <div className="rounded-2xl border border-dashed border-border bg-background/40 px-6 py-10 text-center">
-          <Film className="mx-auto h-8 w-8 text-muted-foreground" />
-          <p className="mt-3 text-sm text-muted-foreground">
-            No storyboard yet. Generate scenes from your completed script.
-          </p>
-        </div>
+        <StudioEmptyState
+          icon={Film}
+          variant="purple"
+          title="No storyboard yet"
+          description="Generate scenes from your completed script."
+        />
       )}
 
       {scenes.length > 0 && (
         <>
-          <div className="overflow-hidden rounded-2xl border border-border bg-[#0d0d12]">
-            <div className="flex items-center justify-between border-b border-white/10 px-4 py-2 text-xs text-muted-foreground">
+          <div className="overflow-hidden rounded-2xl border border-white/[0.08] bg-[#08080c]/90 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-sm">
+            <div className="flex items-center justify-between border-b border-white/[0.06] px-4 py-2.5 text-xs text-muted-foreground">
               <span>Timeline — {formatTime(totalDuration)} total</span>
               <span className="flex items-center gap-3">
                 <span className="inline-flex items-center gap-1">
@@ -369,10 +371,10 @@ export function StudioStoryboardTimeline({
           </div>
 
           {draft && (
-            <div className="rounded-2xl border border-border bg-card/50 p-4 sm:p-6">
+            <div className="rounded-2xl border border-white/[0.08] bg-white/[0.02] p-4 backdrop-blur-sm sm:p-6">
               <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <h3 className="text-base font-semibold">
+                  <h3 className="text-base font-semibold tracking-tight">
                     Scene {draft.sceneNumber}: {draft.title}
                   </h3>
                   <p className="text-sm text-muted-foreground">
@@ -381,13 +383,16 @@ export function StudioStoryboardTimeline({
                 </div>
                 <div className="flex items-center gap-2">
                   {saveMessage && (
-                    <span className="text-sm text-electric">{saveMessage}</span>
+                    <span className="text-sm text-electric animate-studio-fade-in">
+                      {saveMessage}
+                    </span>
                   )}
                   <Button
                     type="button"
                     size="sm"
                     disabled={saving}
                     onClick={handleSave}
+                    className="shadow-[0_0_20px_rgba(0,102,255,0.2)]"
                   >
                     {saving ? (
                       <>
@@ -409,9 +414,7 @@ export function StudioStoryboardTimeline({
                   rows={1}
                 />
                 <label className="block space-y-1.5">
-                  <span className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                    Duration (seconds)
-                  </span>
+                  <span className={studioLabel}>Duration (seconds)</span>
                   <input
                     type="number"
                     min={1}
@@ -422,7 +425,7 @@ export function StudioStoryboardTimeline({
                         estimatedDurationSec: Number(event.target.value) || 1,
                       })
                     }
-                    className="w-full rounded-xl border border-border bg-background/80 px-3 py-2 text-sm focus:border-purple/50 focus:outline-none focus:ring-2 focus:ring-purple/20"
+                    className={studioInput}
                   />
                 </label>
 

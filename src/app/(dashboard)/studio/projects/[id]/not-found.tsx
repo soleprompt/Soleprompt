@@ -1,21 +1,34 @@
 import Link from "next/link";
-import { PageHeader } from "@/components/dashboard/PageHeader";
+import { FolderX } from "lucide-react";
+import {
+  StudioEmptyState,
+  StudioGlassCard,
+  StudioPageHeader,
+} from "@/components/studio/studio-ui";
 import { Button } from "@/components/ui/Button";
 
 export default function StudioProjectNotFound() {
   return (
     <>
-      <PageHeader
+      <StudioPageHeader
         title="Project not found"
         description="This production project doesn't exist or you don't have access to it."
       />
-      <div className="rounded-2xl border border-border bg-card/50 p-8 text-center">
-        <Link href="/studio/projects">
-          <Button type="button" variant="primary">
-            Back to projects
-          </Button>
-        </Link>
-      </div>
+      <StudioGlassCard>
+        <StudioEmptyState
+          icon={FolderX}
+          variant="purple"
+          title="Project unavailable"
+          description="The project may have been deleted or you may not have permission to view it."
+        />
+        <div className="border-t border-white/[0.06] px-6 pb-8 text-center">
+          <Link href="/studio/projects">
+            <Button type="button" variant="secondary">
+              Back to projects
+            </Button>
+          </Link>
+        </div>
+      </StudioGlassCard>
     </>
   );
 }

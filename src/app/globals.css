@@ -9,6 +9,7 @@
   --border: #e4e4e7;
   --electric: #0066ff;
   --purple: #7c3aed;
+  --studio-glow: rgba(124, 58, 237, 0.15);
 }
 
 .dark {
@@ -20,6 +21,7 @@
   --border: #27272a;
   --electric: #0066ff;
   --purple: #8b5cf6;
+  --studio-glow: rgba(139, 92, 246, 0.18);
 }
 
 @theme inline {
@@ -121,4 +123,134 @@ body {
 
 .animate-float-badge {
   animation: float-badge 4s ease-in-out infinite;
+}
+
+/* Studio premium animations */
+@keyframes studio-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+@keyframes studio-fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes studio-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes studio-progress-shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(200%);
+  }
+}
+
+@keyframes studio-glow-pulse {
+  0%,
+  100% {
+    opacity: 0.35;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.65;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes studio-orbit {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes studio-step-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--purple) 40%, transparent);
+  }
+  50% {
+    box-shadow: 0 0 0 6px transparent;
+  }
+}
+
+.animate-studio-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    color-mix(in srgb, var(--foreground) 8%, transparent) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: studio-shimmer 1.8s ease-in-out infinite;
+}
+
+.animate-studio-fade-in-up {
+  animation: studio-fade-in-up 0.45s ease-out forwards;
+}
+
+.animate-studio-fade-in {
+  animation: studio-fade-in 0.35s ease-out forwards;
+}
+
+.animate-studio-glow-pulse {
+  animation: studio-glow-pulse 3s ease-in-out infinite;
+}
+
+.animate-studio-step-pulse {
+  animation: studio-step-pulse 2s ease-in-out infinite;
+}
+
+.animate-studio-orbit {
+  animation: studio-orbit 3s linear infinite;
+}
+
+.studio-progress-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    color-mix(in srgb, white 25%, transparent),
+    transparent
+  );
+  animation: studio-progress-shimmer 2s ease-in-out infinite;
+}
+
+.studio-stagger-1 {
+  animation-delay: 0.05s;
+}
+.studio-stagger-2 {
+  animation-delay: 0.1s;
+}
+.studio-stagger-3 {
+  animation-delay: 0.15s;
+}
+.studio-stagger-4 {
+  animation-delay: 0.2s;
+}
+.studio-stagger-5 {
+  animation-delay: 0.25s;
 }

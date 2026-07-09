@@ -2,6 +2,12 @@
 
 import { Loader2, Search } from "lucide-react";
 import { CopySection } from "@/components/studio/CopySection";
+import {
+  StudioAlert,
+  StudioEmptyState,
+  StudioGlassCard,
+  StudioLoadingState,
+} from "@/components/studio/studio-ui";
 import { Badge } from "@/components/ui/Badge";
 import { RESEARCH_STATUS_LABELS } from "@/lib/studio/research/types";
 import type { StudioResearchRecord } from "@/lib/studio/research/types";
@@ -48,14 +54,14 @@ function formatThumbnailPsychology(
 export function StudioResearchPanel({ research }: StudioResearchPanelProps) {
   if (!research) {
     return (
-      <div className="rounded-2xl border border-dashed border-border bg-card/30 px-6 py-10 text-center">
-        <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-purple/10">
-          <Search className="h-5 w-5 text-purple" />
-        </div>
-        <p className="mt-3 text-sm text-muted-foreground">
-          AI research will appear here once the pipeline reaches the Research step.
-        </p>
-      </div>
+      <StudioGlassCard>
+        <StudioEmptyState
+          icon={Search}
+          variant="purple"
+          title="Research pending"
+          description="AI research will appear here once the pipeline reaches the Research step."
+        />
+      </StudioGlassCard>
     );
   }
 
@@ -65,9 +71,11 @@ export function StudioResearchPanel({ research }: StudioResearchPanelProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Search className="h-5 w-5 text-purple" />
-          <h2 className="text-lg font-semibold">AI Research</h2>
+        <div className="flex items-center gap-2.5">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-purple/15 text-purple">
+            <Search className="h-4 w-4" />
+          </div>
+          <h2 className="text-lg font-semibold tracking-tight">AI Research</h2>
         </div>
         <Badge
           variant={
@@ -83,17 +91,13 @@ export function StudioResearchPanel({ research }: StudioResearchPanelProps) {
         </Badge>
       </div>
 
-      {research.error && (
-        <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-          {research.error}
-        </p>
-      )}
+      {research.error && <StudioAlert variant="error">{research.error}</StudioAlert>}
 
       {isLoading && (
-        <p className="text-sm text-muted-foreground">
-          Running OpenAI research — analyzing audience, competitors, keywords, and
-          retention angles…
-        </p>
+        <StudioLoadingState
+          label="Running AI research"
+          sublabel="Analyzing audience, competitors, keywords, and retention angles…"
+        />
       )}
 
       {research.status === "completed" && (

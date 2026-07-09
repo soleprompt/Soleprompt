@@ -1,6 +1,7 @@
-import { ArrowLeft, Calendar, Film } from "lucide-react";
+import { ArrowLeft, Calendar, Film, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { CopySection } from "@/components/studio/CopySection";
+import { StudioBrandPill } from "@/components/studio/studio-ui";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import {
@@ -68,28 +69,37 @@ export function StudioPackageView({ pkg }: StudioPackageViewProps) {
   const toneLabel = labelForTone(pkg.tone);
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-3">
+    <div className="mx-auto max-w-4xl space-y-6 pb-16">
+      <div className="flex flex-col gap-5 sm:flex-row sm:items-start sm:justify-between animate-studio-fade-in-up">
+        <div className="space-y-4">
           <Link href="/studio">
-            <Button type="button" variant="ghost" size="sm" className="-ml-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="-ml-2 text-muted-foreground hover:text-foreground"
+            >
               <ArrowLeft className="h-4 w-4" />
               Back to Studio
             </Button>
           </Link>
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight lg:text-3xl">
+          <div className="space-y-3">
+            <StudioBrandPill>
+              <Sparkles className="h-3.5 w-3.5" />
+              YouTube Package
+            </StudioBrandPill>
+            <h1 className="text-3xl font-bold tracking-[-0.02em] lg:text-4xl">
               {pkg.topic}
             </h1>
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Badge variant="electric">{labelForVideoType(pkg.videoType)}</Badge>
               {toneLabel && <Badge variant="purple">{toneLabel}</Badge>}
               {pkg.niche && <Badge variant="outline">{pkg.niche}</Badge>}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Calendar className="h-4 w-4 shrink-0" />
+        <div className="flex items-center gap-2 rounded-xl border border-white/[0.06] bg-white/[0.02] px-3 py-2 text-sm text-muted-foreground">
+          <Calendar className="h-4 w-4 shrink-0 text-electric" />
           {formatDate(pkg.createdAt)}
         </div>
       </div>
@@ -104,9 +114,11 @@ export function StudioPackageView({ pkg }: StudioPackageViewProps) {
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Film className="h-4 w-4 text-electric" />
-          <h2 className="text-lg font-semibold">Main sections</h2>
+        <div className="flex items-center gap-2.5 px-1">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-electric/10 text-electric">
+            <Film className="h-4 w-4" />
+          </div>
+          <h2 className="text-lg font-semibold tracking-tight">Main sections</h2>
         </div>
         {pkg.mainSections.map((section, index) => (
           <CopySection

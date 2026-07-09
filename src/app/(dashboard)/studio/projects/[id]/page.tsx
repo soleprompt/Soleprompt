@@ -1,7 +1,7 @@
 import { currentUser } from "@clerk/nextjs/server";
 import { notFound, redirect } from "next/navigation";
-import { StudioProjectDashboard } from "@/components/studio/StudioProjectDashboard";
-import { getStudioProjectForUser } from "@/lib/studio/projects/data";
+import { StudioMvpDashboard } from "@/components/studio/StudioMvpDashboard";
+import { getMvpProjectState } from "@/lib/studio/projects/mvp-workflow";
 import { syncCurrentUser } from "@/lib/user";
 
 export const dynamic = "force-dynamic";
@@ -22,11 +22,11 @@ export default async function StudioProjectDetailPage({
   }
 
   const { id } = await params;
-  const project = await getStudioProjectForUser(id, dbUser.id);
+  const mvp = await getMvpProjectState(id, dbUser.id);
 
-  if (!project) {
+  if (!mvp) {
     notFound();
   }
 
-  return <StudioProjectDashboard initialProject={project} />;
+  return <StudioMvpDashboard initialState={mvp} />;
 }

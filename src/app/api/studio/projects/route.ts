@@ -1,7 +1,7 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { kickstartStudioProject } from "@/lib/studio/pipeline/worker";
-import { createStudioProject, listStudioProjectsForUser } from "@/lib/studio/projects/data";
+import { createMvpStudioProject, runFullMvpWorkflow } from "@/lib/studio/projects/mvp-workflow";
+import { listStudioProjectsForUser } from "@/lib/studio/projects/data";
 import { validateStudioGenerateInput } from "@/lib/studio/validation";
 import { syncCurrentUser } from "@/lib/user";
 
@@ -44,16 +44,25 @@ export async function POST(request: Request) {
   }
 
   try {
-    const project = await createStudioProject(dbUser.id, validation.data);
+    const project = await createMvpStudioProject(dbUser.id, validation.data);
 
-    void kickstartStudioProject(project.id).catch(() => {
-      // Inline worker failures are surfaced via project status/logs.
+    void runFullMvpWorkflow(project.id, dbUser.id).catch(() => {
+      // Failures are persisted on the project record.
     });
 
-    return NextResponse.json({ project }, { status: 201 });
+    return NextResponse.json(
+      {
+        project: {
+          id: project.id,
+          topic: project.topic,
+          status: project.status,
+        },
+      },
+      { status: 201 },
+    );
   } catch {
     return NextResponse.json(
-      { error: "Failed to create production project." },
+      { error: "Failed to create project." },
       { status: 500 },
     );
   }

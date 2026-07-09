@@ -3,6 +3,13 @@
 import { Loader2, Sparkles } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import {
+  StudioAlert,
+  StudioGlassCard,
+  studioChipElectric,
+  studioInput,
+  studioLabel,
+} from "@/components/studio/studio-ui";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { parseApiError } from "@/lib/api-error";
@@ -81,16 +88,22 @@ export function StudioForm({ className }: StudioFormProps) {
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={cn(
-        "rounded-2xl border border-border bg-card/50 p-5 sm:p-6",
-        className,
-      )}
-    >
-      <div className="space-y-5">
+    <StudioGlassCard glow className={cn("p-5 sm:p-7 animate-studio-fade-in-up", className)}>
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-electric/25 to-electric/5 text-electric">
+          <Sparkles className="h-4 w-4" />
+        </div>
+        <div>
+          <h2 className="text-lg font-semibold tracking-tight">Quick package</h2>
+          <p className="text-sm text-muted-foreground">
+            Script, titles, tags & description in one generation
+          </p>
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <label htmlFor="studio-topic" className="text-sm font-medium">
+          <label htmlFor="studio-topic" className={studioLabel}>
             Video topic <span className="text-electric">*</span>
           </label>
           <Input
@@ -101,11 +114,12 @@ export function StudioForm({ className }: StudioFormProps) {
             maxLength={200}
             disabled={loading}
             required
+            className="border-white/[0.08] bg-black/30 focus:border-electric/40 focus:ring-electric/20"
           />
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="studio-niche" className="text-sm font-medium">
+          <label htmlFor="studio-niche" className={studioLabel}>
             Niche
           </label>
           <Input
@@ -115,11 +129,12 @@ export function StudioForm({ className }: StudioFormProps) {
             onChange={(event) => setNiche(event.target.value)}
             maxLength={120}
             disabled={loading}
+            className="border-white/[0.08] bg-black/30 focus:border-electric/40 focus:ring-electric/20"
           />
         </div>
 
         <div className="space-y-2">
-          <span className="text-sm font-medium">Video type</span>
+          <span className={studioLabel}>Video type</span>
           <div className="flex flex-wrap gap-2">
             {STUDIO_VIDEO_TYPES.map((type) => (
               <button
@@ -127,12 +142,7 @@ export function StudioForm({ className }: StudioFormProps) {
                 type="button"
                 disabled={loading}
                 onClick={() => setVideoType(type)}
-                className={cn(
-                  "rounded-full border px-4 py-2 text-sm font-medium transition-colors",
-                  videoType === type
-                    ? "border-electric bg-electric/10 text-electric"
-                    : "border-border text-muted-foreground hover:border-electric/40 hover:text-foreground",
-                )}
+                className={studioChipElectric(videoType === type)}
               >
                 {STUDIO_VIDEO_TYPE_LABELS[type]}
               </button>
@@ -141,7 +151,7 @@ export function StudioForm({ className }: StudioFormProps) {
         </div>
 
         <div className="space-y-2">
-          <label htmlFor="studio-tone" className="text-sm font-medium">
+          <label htmlFor="studio-tone" className={studioLabel}>
             Tone
           </label>
           <select
@@ -149,7 +159,7 @@ export function StudioForm({ className }: StudioFormProps) {
             value={tone}
             onChange={(event) => setTone(event.target.value as StudioTone)}
             disabled={loading}
-            className="flex h-12 w-full rounded-full border border-border bg-background/80 px-4 text-sm text-foreground backdrop-blur-sm transition-all duration-200 focus:border-electric/50 focus:outline-none focus:ring-2 focus:ring-electric/20"
+            className={cn(studioInput, "h-12 rounded-full px-4")}
           >
             {STUDIO_TONES.map((option) => (
               <option key={option} value={option}>
@@ -159,13 +169,14 @@ export function StudioForm({ className }: StudioFormProps) {
           </select>
         </div>
 
-        {error && (
-          <p className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-400">
-            {error}
-          </p>
-        )}
+        {error && <StudioAlert variant="error">{error}</StudioAlert>}
 
-        <Button type="submit" size="lg" className="w-full sm:w-auto" disabled={loading}>
+        <Button
+          type="submit"
+          size="lg"
+          className="w-full shadow-[0_0_32px_rgba(0,102,255,0.25)] sm:w-auto"
+          disabled={loading}
+        >
           {loading ? (
             <>
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -178,7 +189,7 @@ export function StudioForm({ className }: StudioFormProps) {
             </>
           )}
         </Button>
-      </div>
-    </form>
+      </form>
+    </StudioGlassCard>
   );
 }

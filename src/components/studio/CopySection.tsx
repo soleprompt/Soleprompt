@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Check, Copy } from "lucide-react";
+import { studioGlass } from "@/components/studio/studio-ui";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/utils";
 
@@ -27,13 +28,25 @@ export function CopySection({
   }
 
   return (
-    <section className={cn("rounded-2xl border border-border bg-card/50", className)}>
-      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
-        <h3 className="text-sm font-semibold">{title}</h3>
-        <Button type="button" variant="outline" size="sm" onClick={handleCopy}>
+    <section
+      className={cn(
+        studioGlass,
+        "overflow-hidden animate-studio-fade-in-up",
+        className,
+      )}
+    >
+      <div className="flex items-center justify-between gap-3 border-b border-white/[0.06] px-4 py-3.5 sm:px-6">
+        <h3 className="text-sm font-semibold tracking-tight">{title}</h3>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={handleCopy}
+          className="border-white/[0.1] bg-white/[0.02] hover:border-white/[0.18] hover:bg-white/[0.05]"
+        >
           {copied ? (
             <>
-              <Check className="h-4 w-4" />
+              <Check className="h-4 w-4 text-electric" />
               Copied
             </>
           ) : (
@@ -46,7 +59,7 @@ export function CopySection({
       </div>
       <div
         className={cn(
-          "whitespace-pre-wrap px-4 py-4 text-sm leading-relaxed text-muted-foreground sm:px-6",
+          "whitespace-pre-wrap px-4 py-5 text-sm leading-relaxed text-muted-foreground sm:px-6",
           mono && "font-mono text-xs",
         )}
       >
