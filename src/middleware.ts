@@ -30,6 +30,7 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhooks(.*)",
   "/api/affiliate/click(.*)",
   "/api/stripe/webhook",
+  "/api/cron(.*)",
   "/api/tool-preview(.*)",
   "/studio/welcome(.*)",
 ]);
