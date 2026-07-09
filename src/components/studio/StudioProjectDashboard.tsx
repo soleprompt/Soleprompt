@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { StudioResearchPanel } from "@/components/studio/StudioResearchPanel";
+import { StudioStoryboardTimeline } from "@/components/studio/StudioStoryboardTimeline";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { parseApiError } from "@/lib/api-error";
@@ -131,6 +132,7 @@ export function StudioProjectDashboard({
           completedAt: payload.status.completedAt,
           logs: payload.status.logs,
           research: payload.status.research,
+          sceneCount: payload.status.sceneCount,
         }));
         setPollingError(null);
       } catch (error) {
@@ -155,6 +157,11 @@ export function StudioProjectDashboard({
     if (!project.currentStep) return -1;
     return PIPELINE_STEPS.findIndex((step) => step.id === project.currentStep);
   }, [project.currentStep]);
+
+  const hasScript = useMemo(() => {
+    const script = project.metadata?.script;
+    return Boolean(script || project.packageId);
+  }, [project.metadata, project.packageId]);
 
   return (
     <div className="space-y-6">
@@ -267,6 +274,14 @@ export function StudioProjectDashboard({
 
       <div className="rounded-2xl border border-border bg-card/50 p-4 sm:p-6">
         <StudioResearchPanel research={project.research} />
+      </div>
+
+      <div className="rounded-2xl border border-border bg-card/50 p-4 sm:p-6">
+        <StudioStoryboardTimeline
+          projectId={project.id}
+          projectStatus={project.status}
+          hasScript={hasScript}
+        />
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">

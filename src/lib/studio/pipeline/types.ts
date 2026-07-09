@@ -176,8 +176,9 @@ export function estimateCompletionFromStep(stepId: PipelineStepId | null): Date 
 export const PROJECT_STATUS_LABELS: Record<StudioProjectStatus, string> = {
   queued: "Queued",
   researching: "Researching",
-  writing: "Writing",
-  storyboarding: "Storyboarding",
+  writing: "Writing Script",
+  storyboarding: "Generating Storyboard",
+  storyboard_complete: "Storyboard Complete",
   generating_assets: "Generating Assets",
   creating_voice: "Creating Voice",
   rendering_video: "Rendering Video",

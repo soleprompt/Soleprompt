@@ -206,6 +206,9 @@ export async function getStudioProjectStatusForUser(
         orderBy: { createdAt: "desc" },
         take: 20,
       },
+      _count: {
+        select: { scenes: true },
+      },
     },
   });
 
@@ -225,6 +228,7 @@ export async function getStudioProjectStatusForUser(
     research: project.research
       ? serializeStudioResearch(project.research)
       : null,
+    sceneCount: project._count.scenes,
   };
 }
 

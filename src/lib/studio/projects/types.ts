@@ -58,6 +58,7 @@ export type StudioProjectStatusPayload = {
   completedAt: string | null;
   logs: StudioProjectLogRecord[];
   research: StudioResearchRecord | null;
+  sceneCount: number;
 };
 
 export type StudioAssetRecord = {

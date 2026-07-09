@@ -504,6 +504,7 @@ enum StudioProjectStatus {
   researching
   writing
   storyboarding
+  storyboard_complete
   generating_assets
   creating_voice
   rendering_video
@@ -624,6 +625,17 @@ model StudioScene {
   script      String?  @db.Text
   durationSec Int?
   visualNotes String?  @db.Text
+  narration           String? @db.Text
+  onScreenText        String? @db.Text
+  visualDescription   String? @db.Text
+  cameraMovement      String?
+  bRollRecommendation String? @db.Text
+  aiImagePrompt       String? @db.Text
+  aiVideoPrompt       String? @db.Text
+  soundEffects        String?
+  backgroundMusicMood String?
+  transitionType      String?
+  captionText         String? @db.Text
   metadata    Json?
 
   assets    StudioAsset[]
