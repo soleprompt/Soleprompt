@@ -8,6 +8,12 @@ export const BUYER_NAV: DashboardNavItem[] = [
   { label: "Account", href: "/buyer/account", icon: "User" },
 ];
 
+export const BUYER_STUDIO_NAV: DashboardNavItem = {
+  label: "Studio",
+  href: "/studio",
+  icon: "Video",
+};
+
 export const BUYER_SCRUBBER_NAV: DashboardNavItem = {
   label: "X Scrubber",
   href: "/buyer/scrubber",

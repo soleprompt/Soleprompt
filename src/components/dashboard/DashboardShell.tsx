@@ -23,6 +23,7 @@ import {
   Upload,
   User,
   Users,
+  Video,
   X,
 } from "lucide-react";
 import { UserButton } from "@clerk/nextjs";
@@ -52,6 +53,7 @@ const ICON_MAP = {
   Flag,
   Share2,
   Tags,
+  Video,
 } as const;
 
 interface DashboardShellProps {

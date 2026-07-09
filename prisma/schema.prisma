@@ -105,6 +105,9 @@ model User {
   socialConnections   SocialConnection[]
   payoutRequests      PayoutRequest[]
   affiliate           Affiliate?
+  youtubePackages     YouTubePackage[]
+  studioProjects      StudioProject[]
+  studioResearch      StudioResearch[]
 }
 
 model XConnection {
@@ -467,6 +470,324 @@ model AffiliateReferral {
   createdAt     DateTime     @default(now())
 
   @@index([affiliateId, createdAt])
+}
+
+model YouTubePackage {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic          String
+  niche          String?
+  videoType      String
+  tone           String?
+  titles         Json
+  script         String   @db.Text
+  hook           String   @db.Text
+  intro          String   @db.Text
+  mainSections   Json
+  outro          String   @db.Text
+  callToAction   String   @db.Text
+  description    String   @db.Text
+  tags           Json
+  thumbnailIdeas Json
+  pinnedComment  String   @db.Text
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  studioProject  StudioProject?
+
+  @@index([userId, createdAt])
+}
+
+enum StudioProjectStatus {
+  queued
+  researching
+  writing
+  storyboarding
+  generating_assets
+  creating_voice
+  rendering_video
+  completed
+  failed
+  cancelled
+}
+
+enum StudioJobStatus {
+  pending
+  processing
+  completed
+  failed
+}
+
+enum StudioLogLevel {
+  info
+  warn
+  error
+  debug
+}
+
+enum StudioAssetType {
+  image
+  video_clip
+  audio
+  graphic
+  b_roll
+  other
+}
+
+enum StudioUploadStatus {
+  pending
+  uploading
+  completed
+  failed
+}
+
+model StudioProject {
+  id                    String              @id @default(cuid())
+  userId                String
+  user                  User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  topic                 String
+  niche                 String?
+  videoType             String
+  tone                  String?
+  status                StudioProjectStatus @default(queued)
+  currentStep           String?
+  progressPercent       Int                 @default(0)
+  estimatedCompletionAt DateTime?
+  error                 String?             @db.Text
+  startedAt             DateTime?
+  completedAt           DateTime?
+  packageId             String?             @unique
+  package               YouTubePackage?     @relation(fields: [packageId], references: [id], onDelete: SetNull)
+  metadata              Json?
+
+  scenes     StudioScene[]
+  assets     StudioAsset[]
+  voiceovers StudioVoiceover[]
+  videos     StudioVideo[]
+  thumbnails StudioThumbnail[]
+  uploads    StudioUpload[]
+  analytics  StudioAnalytics[]
+  logs       StudioProjectLog[]
+  jobs       StudioJob[]
+  research   StudioResearch?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
+}
+
+model StudioProjectLog {
+  id        String           @id @default(cuid())
+  projectId String
+  project   StudioProject    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  level     StudioLogLevel   @default(info)
+  step      String?
+  message   String           @db.Text
+  metadata  Json?
+  createdAt DateTime         @default(now())
+
+  @@index([projectId, createdAt])
+}
+
+model StudioJob {
+  id          String          @id @default(cuid())
+  projectId   String
+  project     StudioProject   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  step        String
+  status      StudioJobStatus @default(pending)
+  priority    Int             @default(0)
+  attempts    Int             @default(0)
+  maxAttempts Int             @default(3)
+  payload     Json?
+  result      Json?
+  error       String?         @db.Text
+  scheduledAt DateTime        @default(now())
+  startedAt   DateTime?
+  completedAt DateTime?
+  lockedAt    DateTime?
+  lockedBy    String?
+
+  @@index([status, scheduledAt])
+  @@index([projectId, step])
+}
+
+model StudioScene {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     StudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  orderIndex  Int
+  title       String
+  description String   @db.Text
+  script      String?  @db.Text
+  durationSec Int?
+  visualNotes String?  @db.Text
+  metadata    Json?
+
+  assets    StudioAsset[]
+  voiceover StudioVoiceover?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, orderIndex])
+}
+
+model StudioAsset {
+  id        String          @id @default(cuid())
+  projectId String
+  project   StudioProject   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sceneId   String?
+  scene     StudioScene?    @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  type      StudioAssetType
+  name      String
+  url       String?
+  provider  String?
+  metadata  Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([sceneId])
+}
+
+model StudioVoiceover {
+  id          String        @id @default(cuid())
+  projectId   String
+  project     StudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sceneId     String?       @unique
+  scene       StudioScene?  @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  text        String        @db.Text
+  audioUrl    String?
+  provider    String?
+  voiceId     String?
+  durationSec Int?
+  metadata    Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model StudioVideo {
+  id          String        @id @default(cuid())
+  projectId   String
+  project     StudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  status      String        @default("pending")
+  url         String?
+  durationSec Int?
+  provider    String?
+  metadata    Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model StudioThumbnail {
+  id        String        @id @default(cuid())
+  projectId String
+  project   StudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title     String
+  imageUrl  String?
+  provider  String?
+  metadata  Json?
+  isPrimary Boolean       @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model StudioUpload {
+  id          String             @id @default(cuid())
+  projectId   String
+  project     StudioProject      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  platform    String             @default("youtube")
+  status      StudioUploadStatus @default(pending)
+  externalId  String?
+  externalUrl String?
+  error       String?            @db.Text
+  metadata    Json?
+  uploadedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model StudioAnalytics {
+  id           String        @id @default(cuid())
+  projectId    String
+  project      StudioProject @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  views        Int           @default(0)
+  likes        Int           @default(0)
+  comments     Int           @default(0)
+  watchTimeSec Int           @default(0)
+  ctr          Float?
+  metadata     Json?
+  fetchedAt    DateTime      @default(now())
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([projectId, fetchedAt])
+}
+
+enum StudioResearchStatus {
+  queued
+  researching
+  completed
+  failed
+}
+
+model StudioResearch {
+  id        String               @id @default(cuid())
+  userId    String
+  user      User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  projectId String?              @unique
+  project   StudioProject?       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  topic     String
+  niche     String?
+  videoType String?
+  tone      String?
+
+  status    StudioResearchStatus @default(queued)
+  error     String?              @db.Text
+
+  targetAudience         String? @db.Text
+  searchIntent           String? @db.Text
+  competitorChannels     Json?
+  trendingVideoAngles    Json?
+  viralHooks             Json?
+  keywordClusters        Json?
+  longTailKeywords       Json?
+  questionsPeopleAsk     Json?
+  emotionalTriggers      Json?
+  thumbnailPsychology    Json?
+  viewerObjections       Json?
+  retentionOpportunities Json?
+  suggestedCta           String? @db.Text
+  monetizationIdeas      Json?
+  affiliateOpportunities Json?
+
+  provider    String?
+  model       String?
+  completedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId, createdAt])
+  @@index([status, createdAt])
 }
 
 model SocialReply {

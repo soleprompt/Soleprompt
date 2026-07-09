@@ -122,6 +122,6 @@ ALTER TABLE "AffiliateReferral"
 -- Backfill commission splits on existing paid transactions
 UPDATE "Transaction"
 SET
-  "creatorShare" = ROUND("amount" * 0.70::numeric, 2),
-  "platformFee" = ROUND("amount" * 0.30::numeric, 2)
+  "creatorShare" = ROUND(("amount"::numeric * 0.70), 2),
+  "platformFee" = ROUND(("amount"::numeric * 0.30), 2)
 WHERE "amount" > 0 AND "creatorShare" = 0;

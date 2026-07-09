@@ -48,6 +48,12 @@ export const TRACKED_TOOLS = [
     path: "/tools/x-checker",
   },
   {
+    slug: "studio",
+    label: "SolePrompt Studio",
+    description: "AI YouTube video package generator",
+    path: "/studio",
+  },
+  {
     slug: "x-scrubber",
     label: "X Scrubber",
     description: "Premium tweet deletion tool",
