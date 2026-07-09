@@ -6,6 +6,9 @@ import {
   Clapperboard,
   FileText,
   ImageIcon,
+  Loader2,
+  Mic,
+  RefreshCw,
   Search,
   Sparkles,
 } from "lucide-react";
@@ -20,7 +23,9 @@ import {
   StudioBrandPill,
   StudioEmptyState,
   StudioInfoBlock,
+  StudioLoadingState,
   StudioTagBlock,
+  studioGlass,
   studioInput,
   studioLabel,
 } from "@/components/studio/studio-ui";
@@ -34,6 +39,7 @@ import {
 } from "@/lib/studio/projects/mvp-types";
 import type { StudioGeneratedContent } from "@/lib/studio/types";
 import type { StudioResearchRecord } from "@/lib/studio/research/types";
+import type { MvpVoiceoverState } from "@/lib/studio/voiceover/types";
 import { cn } from "@/lib/utils";
 
 type StudioMvpDashboardProps = {
@@ -228,6 +234,9 @@ export function StudioMvpDashboard({ initialState }: StudioMvpDashboardProps) {
     [mvp.mvpProgress],
   );
 
+  const hasScript = Boolean(mvp.script);
+  const isVoiceoverGenerating = mvp.voiceover.status === "generating";
+
   const refresh = useCallback(async () => {
     const response = await fetch(`/api/studio/projects/${mvp.projectId}/mvp`, {
       cache: "no-store",
@@ -265,6 +274,36 @@ export function StudioMvpDashboard({ initialState }: StudioMvpDashboardProps) {
       window.clearInterval(intervalId);
     };
   }, [isComplete, isGenerating, refresh]);
+
+  useEffect(() => {
+    if (!isVoiceoverGenerating) return;
+
+    let cancelled = false;
+
+    async function pollVoiceover() {
+      try {
+        const response = await fetch(
+          `/api/studio/projects/${mvp.projectId}/voiceover`,
+          { cache: "no-store" },
+        );
+        if (!response.ok) return;
+        const payload = (await response.json()) as { voiceover: MvpVoiceoverState };
+        if (!cancelled && payload.voiceover.status !== "generating") {
+          setMvp((current) => ({ ...current, voiceover: payload.voiceover }));
+        }
+      } catch {
+        // ignore transient polling errors
+      }
+    }
+
+    const intervalId = window.setInterval(pollVoiceover, 2000);
+    void pollVoiceover();
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [isVoiceoverGenerating, mvp.projectId]);
 
   async function regenerate(step: MvpStep) {
     const response = await fetch(
@@ -438,6 +477,13 @@ export function StudioMvpDashboard({ initialState }: StudioMvpDashboardProps) {
           )}
         </StudioMvpSection>
 
+        <StudioVoiceoverSection
+          projectId={mvp.projectId}
+          voiceover={mvp.voiceover}
+          hasScript={hasScript}
+          onUpdate={(voiceover) => setMvp((current) => ({ ...current, voiceover }))}
+        />
+
         <StudioMvpSection
           id="storyboard"
           title="Storyboard"
@@ -551,6 +597,163 @@ export function StudioMvpDashboard({ initialState }: StudioMvpDashboardProps) {
         </StudioMvpSection>
       </div>
     </div>
+  );
+}
+
+function StudioVoiceoverSection({
+  projectId,
+  voiceover,
+  hasScript,
+  onUpdate,
+}: {
+  projectId: string;
+  voiceover: MvpVoiceoverState;
+  hasScript: boolean;
+  onUpdate: (voiceover: MvpVoiceoverState) => void;
+}) {
+  const [generating, setGenerating] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  const isGenerating = generating || voiceover.status === "generating";
+  const hasAudio = voiceover.status === "completed" && Boolean(voiceover.audioUrl);
+
+  async function handleGenerate(regenerate = false) {
+    setActionError(null);
+    setGenerating(true);
+    onUpdate({ ...voiceover, status: "generating", error: null });
+
+    try {
+      const response = await fetch(`/api/studio/projects/${projectId}/voiceover`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ regenerate }),
+      });
+      if (!response.ok) {
+        throw new Error(await parseApiError(response, "Voiceover generation failed."));
+      }
+      const payload = (await response.json()) as { voiceover: MvpVoiceoverState };
+      onUpdate(payload.voiceover);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "Voiceover generation failed.";
+      setActionError(message);
+      onUpdate({
+        ...voiceover,
+        status: "failed",
+        error: message,
+      });
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  return (
+    <section id="voiceover" className={cn(studioGlass, "overflow-hidden p-6")}>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-purple/25 bg-purple/10 text-purple">
+            <Mic className="h-4 w-4" />
+          </div>
+          <div>
+            <h2 className="text-lg font-semibold tracking-tight">Voiceover</h2>
+            <p className="text-sm text-muted-foreground">
+              AI narration from your final script
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="primary"
+            size="sm"
+            disabled={isGenerating || !hasScript}
+            onClick={() => void handleGenerate(hasAudio)}
+          >
+            {isGenerating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : hasAudio ? (
+              <RefreshCw className="h-4 w-4" />
+            ) : (
+              <Mic className="h-4 w-4" />
+            )}
+            {hasAudio ? "Regenerate voiceover" : "Generate voiceover"}
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-5">
+        {actionError && (
+          <div className="mb-4">
+            <StudioAlert variant="error">{actionError}</StudioAlert>
+          </div>
+        )}
+
+        {voiceover.error && voiceover.status === "failed" && !actionError && (
+          <div className="mb-4">
+            <StudioAlert variant="error">{voiceover.error}</StudioAlert>
+          </div>
+        )}
+
+        {!hasScript ? (
+          <StudioEmptyState
+            icon={Mic}
+            variant="purple"
+            title="Script required"
+            description="Generate your script first — voiceover uses the full narration text."
+          />
+        ) : isGenerating ? (
+          <StudioLoadingState label="Synthesizing voiceover…" />
+        ) : hasAudio && voiceover.audioUrl ? (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-electric/20 bg-gradient-to-br from-electric/10 to-transparent p-5">
+              <audio
+                controls
+                preload="metadata"
+                className="w-full"
+                src={voiceover.audioUrl}
+              >
+                Your browser does not support audio playback.
+              </audio>
+            </div>
+            <div className="flex flex-wrap gap-4 text-xs text-muted-foreground">
+              {voiceover.provider && (
+                <span>
+                  Provider: <span className="text-foreground">{voiceover.provider}</span>
+                </span>
+              )}
+              {voiceover.voiceId && (
+                <span>
+                  Voice: <span className="text-foreground">{voiceover.voiceId}</span>
+                </span>
+              )}
+              {voiceover.durationSec != null && (
+                <span>
+                  Est. duration:{" "}
+                  <span className="text-foreground">
+                    {Math.floor(voiceover.durationSec / 60)}:
+                    {String(voiceover.durationSec % 60).padStart(2, "0")}
+                  </span>
+                </span>
+              )}
+            </div>
+            {voiceover.textPreview && (
+              <StudioInfoBlock
+                title="Narration preview"
+                content={`${voiceover.textPreview}${voiceover.textPreview.length >= 160 ? "…" : ""}`}
+              />
+            )}
+          </div>
+        ) : (
+          <StudioEmptyState
+            icon={Mic}
+            variant="electric"
+            title="No voiceover yet"
+            description="Turn your script into a studio-quality MP3 narration with one click."
+          />
+        )}
+      </div>
+    </section>
   );
 }
 

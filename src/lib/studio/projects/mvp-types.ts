@@ -1,6 +1,7 @@
 import type { StudioResearchRecord } from "@/lib/studio/research/types";
 import type { StoryboardSceneRecord } from "@/lib/studio/storyboard/types";
 import type { StudioGeneratedContent } from "@/lib/studio/types";
+import type { MvpVoiceoverState } from "@/lib/studio/voiceover/types";
 
 export const MVP_STEPS = [
   "research",
@@ -44,6 +45,7 @@ export type MvpProjectState = {
   scenes: StoryboardSceneRecord[];
   thumbnails: MvpThumbnailConcept[];
   seo: MvpSeoPackage | null;
+  voiceover: MvpVoiceoverState;
   packageId: string | null;
 };
 
