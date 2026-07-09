@@ -24,7 +24,7 @@ export default function StudioProjectNotFound() {
         <div className="border-t border-white/[0.06] px-6 pb-8 text-center">
           <Link href="/studio/projects">
             <Button type="button" variant="secondary">
-              Back to projects
+              Back to SolePrompt Studio Projects
             </Button>
           </Link>
         </div>

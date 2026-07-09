@@ -170,7 +170,7 @@ export function StudioProjectDashboard({
           <Link href="/studio/projects">
             <Button type="button" variant="ghost" size="sm" className="-ml-2">
               <ArrowLeft className="h-4 w-4" />
-              All projects
+              SolePrompt Studio Projects
             </Button>
           </Link>
           <div>

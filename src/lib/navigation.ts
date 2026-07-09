@@ -9,7 +9,7 @@ export const BUYER_NAV: DashboardNavItem[] = [
 ];
 
 export const BUYER_STUDIO_NAV: DashboardNavItem = {
-  label: "Studio",
+  label: "SolePrompt Studio",
   href: "/studio",
   icon: "Video",
 };

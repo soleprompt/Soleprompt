@@ -24,7 +24,7 @@ export default function StudioPackageNotFound() {
         <div className="border-t border-white/[0.06] px-6 pb-8 text-center">
           <Link href="/studio">
             <Button type="button" variant="primary">
-              Back to Studio
+              Back to SolePrompt Studio
             </Button>
           </Link>
         </div>

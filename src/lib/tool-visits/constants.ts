@@ -50,7 +50,7 @@ export const TRACKED_TOOLS = [
   {
     slug: "studio",
     label: "SolePrompt Studio",
-    description: "AI YouTube video package generator",
+    description: "AI YouTube video package generator — SolePrompt Studio",
     path: "/studio",
   },
   {

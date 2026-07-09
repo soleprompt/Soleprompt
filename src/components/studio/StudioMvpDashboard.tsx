@@ -12,8 +12,8 @@ import {
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { StudioMvpProgress } from "@/components/studio/StudioMvpProgress";
-import { StudioMvpSection } from "@/components/studio/StudioMvpSection";
 import { StudioProductionFlow } from "@/components/studio/StudioProductionFlow";
+import { StudioMvpSection } from "@/components/studio/StudioMvpSection";
 import { StudioStoryboardTimeline } from "@/components/studio/StudioStoryboardTimeline";
 import {
   StudioAlert,
@@ -308,7 +308,7 @@ export function StudioMvpDashboard({ initialState }: StudioMvpDashboardProps) {
             className="-ml-2 text-muted-foreground hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
-            Projects
+            SolePrompt Studio Projects
           </Button>
         </Link>
 

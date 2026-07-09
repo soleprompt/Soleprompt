@@ -80,13 +80,13 @@ export function StudioPackageView({ pkg }: StudioPackageViewProps) {
               className="-ml-2 text-muted-foreground hover:text-foreground"
             >
               <ArrowLeft className="h-4 w-4" />
-              Back to Studio
+              Back to SolePrompt Studio
             </Button>
           </Link>
           <div className="space-y-3">
             <StudioBrandPill>
               <Sparkles className="h-3.5 w-3.5" />
-              YouTube Package
+              SolePrompt Studio
             </StudioBrandPill>
             <h1 className="text-3xl font-bold tracking-[-0.02em] lg:text-4xl">
               {pkg.topic}
