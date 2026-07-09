@@ -29,6 +29,7 @@
 # misc
 .DS_Store
 *.pem
+/storage/studio/
 
 # debug
 npm-debug.log*
