@@ -15,7 +15,7 @@ export const SOCIAL_LINKS = {
 
 export const NAV_LINKS = [
   { label: "Explore", href: "/explore" },
-  { label: "SolePrompt Studio", href: "/studio/welcome" },
+  { label: "SolePrompt Studio", href: "/studio/welcome", highlight: true },
   { label: "Academy", href: "/academy" },
   { label: "Categories", href: "/categories" },
   { label: "Free X Checker", href: "/tools/x-checker" },

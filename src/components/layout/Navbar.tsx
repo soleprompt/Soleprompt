@@ -76,7 +76,12 @@ export function Navbar() {
             <Link
               key={link.href}
               href={link.href}
-              className="text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className={cn(
+                "text-sm transition-colors",
+                "highlight" in link && link.highlight
+                  ? "font-medium text-electric hover:text-electric/80"
+                  : "text-muted-foreground hover:text-foreground",
+              )}
             >
               {link.label}
             </Link>
@@ -155,7 +160,12 @@ export function Navbar() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setIsOpen(false)}
-                  className="rounded-lg px-3 py-2.5 text-sm text-muted-foreground transition-colors hover:bg-foreground/5 hover:text-foreground"
+                  className={cn(
+                    "rounded-lg px-3 py-2.5 text-sm transition-colors hover:bg-foreground/5",
+                    "highlight" in link && link.highlight
+                      ? "font-medium text-electric hover:text-electric/80"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
                 >
                   {link.label}
                 </Link>
